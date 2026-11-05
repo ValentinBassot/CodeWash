@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+release/
+
+# Test & coverage reports
+coverage/
+
+# OS / editor junk
+._*
+.DS_Store
+Thumbs.db
+*.log
