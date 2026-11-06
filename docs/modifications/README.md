@@ -12,3 +12,4 @@ Every change to the project has its own short note in this folder, written in th
 | 001 | 2026-11-05 | [Remove AppleDouble files, add .gitignore](001-remove-appledouble-add-gitignore.md) |
 | 002 | 2026-11-05 | [Environment doctor and one-command launch](002-add-doctor-and-launcher.md) |
 | 003 | 2026-11-05 | [README and first launch log](003-add-readme-and-launch-log.md) |
+| 004 | 2026-11-06 | [Technical debt register](004-add-debt-register.md) |

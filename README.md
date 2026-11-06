@@ -56,6 +56,7 @@ docs/                 Project documentation
 
 ## Documentation
 
+- [docs/DEBT.md](docs/DEBT.md): technical debt register (map, metrics, items, risk matrix, plan)
 - [docs/modifications/](docs/modifications/README.md): one short note per change (what, why, proof)
 - [docs/LAUNCH.md](docs/LAUNCH.md): first-launch log, the problems found and how they were fixed
 - [docs/MICROPHONE_FEATURE.md](docs/MICROPHONE_FEATURE.md): how voice recognition works in the Reading game
