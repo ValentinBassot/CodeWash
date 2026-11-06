@@ -128,12 +128,13 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D05 | Launch broken with npm < 10 and in VS Code terminals | `package.json` overrides, `electron/main.cjs:40` | fragile setup | 4 | 4 | 16 | S | P0 | Done (#1) |
 | D06 | Original workflow publishes a release on every push to `main`, without tests or lint | `.github/workflows/build-exe.yml` | unsafe pipeline | 3 | 5 | 15 | S | P1 | Identified |
 | D07 | No branch protection: quality gates cannot be enforced | GitHub settings | missing gate | 4 | 3 | 12 | S | P1 | Identified |
-| D08 | No formatter: the format check required by the subject is impossible | `package.json` | missing tool | 2 | 4 | 8 | M | P2 | Identified |
+| D08 | No formatter: the format check required by the subject is impossible | `package.json` | missing tool | 2 | 4 | 8 | M | P2 | Done (006) |
 | D09 | 31 npm vulnerabilities, all in dev dependencies | `package-lock.json` (electron, electron-builder, eslint, postcss, tar) | outdated deps | 3 | 3 | 9 | M | P2 | Identified |
-| D10 | Vitest 3.2.4 adds 2 critical dev-only vulnerabilities (introduced by us) | `package.json` (vitest, tinypool) | outdated deps | 2 | 2 | 4 | S | P2 | Identified |
+| D10 | Vitest 3.2.4 adds 2 critical dev-only vulnerabilities (introduced by us) | `package.json` (vitest, tinypool) | outdated deps | 2 | 2 | 4 | S | P2 | Done (005) |
 | D11 | Electron entry point outside lint and tests | `electron/main.cjs`, `eslint.config.js:8` | blind spot | 2 | 2 | 4 | S | P3 | Identified |
 | D12 | Dead components never imported | `MenuDrawer_old.jsx` (231 lines), `constants/assets.js` | dead code | 2 | 5 | 10 | S | P3 | Identified |
 | D13 | Dead functions and unreachable branches | `gameUtils.js:321`, `gameData.jsx:240,397,408`, `achievements.js:313,316`, `achievementUtils.js:189`, `mobDisplayUtils.js:36` | dead code | 2 | 5 | 10 | S | P3 | Identified |
+| D43 | Lint rule `react-hooks/set-state-in-effect` silenced instead of fixed | `SafeImage.jsx:6`, `ProfileCard.jsx:14` (`eslint-disable-next-line`) | silenced check | 2 | 3 | 6 | S | P3 | Identified |
 
 ### Phase 2: separate the domain from I/O
 
@@ -188,7 +189,7 @@ Impact (rows) × likelihood (columns). Top-right is treated first.
 | **5** | | | | D26, D27 | D01 |
 | **4** | | | D07, D14, D19 | D05, D15, D16, D18, D31, D38 | D30, D33 |
 | **3** | | | D03, D09, D17, D28, D29, D40, D41 | D20 | D02, D04, D06, D32, D34, D35, D36, D37, D39 |
-| **2** | | D10, D11, D21, D25 | D22 | D08 | D12, D13, D23, D24, D42 |
+| **2** | | D10, D11, D21, D25 | D22, D43 | D08 | D12, D13, D23, D24, D42 |
 | **1** | | | | | |
 
 ## 5. Attack plan

@@ -13,3 +13,5 @@ Every change to the project has its own short note in this folder, written in th
 | 002 | 2026-11-05 | [Environment doctor and one-command launch](002-add-doctor-and-launcher.md) |
 | 003 | 2026-11-05 | [README and first launch log](003-add-readme-and-launch-log.md) |
 | 004 | 2026-11-06 | [Technical debt register](004-add-debt-register.md) |
+| 005 | 2026-11-06 | [Upgrade Vitest to 5.1.0](005-upgrade-vitest.md) |
+| 006 | 2026-11-06 | [Prettier formatter and format check](006-add-prettier.md) |
