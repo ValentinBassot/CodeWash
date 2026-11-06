@@ -28,6 +28,8 @@ Works on Windows, Linux (including WSL2 with WSLg) and macOS.
 | `npm start` | Builds, then launches the desktop (Electron) version |
 | `npm test` | Runs the test suite once (Vitest) |
 | `npm run lint` | Runs ESLint |
+| `npm run format` | Formats every file with Prettier |
+| `npm run format:check` | Fails if a file is not formatted (used by CI) |
 | `npm run build` | Builds the web bundle into `dist/` |
 | `npm run electron:build` | Builds the Windows portable `.exe` into `release/` (run it on Windows, or let CI do it) |
 
