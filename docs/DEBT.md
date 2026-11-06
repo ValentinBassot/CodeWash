@@ -130,7 +130,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D07 | No branch protection: quality gates cannot be enforced | GitHub settings | missing gate | 4 | 3 | 12 | S | P1 | Identified |
 | D08 | No formatter: the format check required by the subject is impossible | `package.json` | missing tool | 2 | 4 | 8 | M | P2 | Identified |
 | D09 | 31 npm vulnerabilities, all in dev dependencies | `package-lock.json` (electron, electron-builder, eslint, postcss, tar) | outdated deps | 3 | 3 | 9 | M | P2 | Identified |
-| D10 | Vitest 3.2.4 adds 2 critical dev-only vulnerabilities (introduced by us) | `package.json` (vitest, tinypool) | outdated deps | 2 | 2 | 4 | S | P2 | Identified |
+| D10 | Vitest 3.2.4 adds 2 critical dev-only vulnerabilities (introduced by us) | `package.json` (vitest, tinypool) | outdated deps | 2 | 2 | 4 | S | P2 | Done (005) |
 | D11 | Electron entry point outside lint and tests | `electron/main.cjs`, `eslint.config.js:8` | blind spot | 2 | 2 | 4 | S | P3 | Identified |
 | D12 | Dead components never imported | `MenuDrawer_old.jsx` (231 lines), `constants/assets.js` | dead code | 2 | 5 | 10 | S | P3 | Identified |
 | D13 | Dead functions and unreachable branches | `gameUtils.js:321`, `gameData.jsx:240,397,408`, `achievements.js:313,316`, `achievementUtils.js:189`, `mobDisplayUtils.js:36` | dead code | 2 | 5 | 10 | S | P3 | Identified |
