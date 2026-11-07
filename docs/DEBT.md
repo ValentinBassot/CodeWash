@@ -140,7 +140,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 
 | ID | Item | Location | Smell | I | L | Risk | Effort | Prio | Status |
 |---|---|---|---|---|---|---|---|---|---|
-| D14 | `JSON.parse` without `try/catch` in state initializers: a corrupted save crashes the game at startup | `App.jsx:51,52,971,977` | fragile parser | 4 | 3 | 12 | S | P1 | Identified |
+| D14 | `JSON.parse` without `try/catch` in state initializers: a corrupted save crashes the game at startup | `App.jsx:51,52,971,977` | fragile parser | 4 | 3 | 12 | S | P1 | Pinned (010) |
 | D15 | Persistence scattered, legacy migrations duplicated | `App.jsx:50-285,966`, `PhantomEvent.jsx:21,55` | duplication | 4 | 4 | 16 | M | P1 | Identified |
 | D16 | `Math.random` called directly (34 times): untestable | `gameUtils.js`, `SkillCard.jsx`, `PhantomEvent.jsx`, others | global | 4 | 4 | 16 | M | P1 | Identified |
 | D17 | Clock and timers not injectable (28 timers) | `PhantomEvent.jsx:21,55`, timers across `src/` | global | 3 | 3 | 9 | M | P2 | Identified |
@@ -152,6 +152,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D23 | Wrong answer has no penalty in the writing game | `SkillCard.jsx` (writing input `onChange`) | bug | 2 | 5 | 10 | S | P3 | Identified |
 | D24 | Progressive damage of the axolotl game ignored | `SkillCard.jsx:348`, `App.jsx:1421` | bug | 2 | 5 | 10 | S | P3 | Identified |
 | D25 | "Jack of All Trades" reaches its top tier with no skill | `achievements.js:105` | bug | 2 | 2 | 4 | S | P3 | Pinned (008) |
+| D44 | Old saves without mob health get a difficulty-1 mob whatever their difficulty: the backfill never runs because defaults are merged first | `App.jsx` (`loadSkills`, mob health backfill) | bug | 3 | 2 | 6 | S | P3 | Pinned (010) |
 
 ### Phase 3: hot spots
 
@@ -159,7 +160,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 |---|---|---|---|---|---|---|---|---|---|
 | D26 | God component: `App` is one 1172-line function with 31 `useState` | `App.jsx:49` (also complexity 31 at `:94`, 24 at `:569`) | tight coupling | 5 | 4 | 20 | XL | P1 | Identified |
 | D27 | `SkillCard`: 611-line function, complexity 107, every mini-game inside | `SkillCard.jsx:65` | complexity | 5 | 4 | 20 | XL | P1 | Identified |
-| D28 | Errors swallowed (`console.warn`, empty `.play().catch`) | `App.jsx:168,180,197,237`, `soundManager.js:127,136,185,255,269,283` | silent error | 3 | 3 | 9 | S | P2 | Identified |
+| D28 | Errors swallowed (`console.warn`, empty `.play().catch`) | `App.jsx:168,180,197,237`, `soundManager.js:127,136,185,255,269,283` | silent error | 3 | 3 | 9 | S | P2 | Pinned (010) |
 | D29 | 1217 lines of CSS inside a component | `GlobalStyles.jsx:3` | large file | 3 | 3 | 9 | M | P3 | Identified |
 
 ### Phase 4: features and their debt
@@ -188,7 +189,7 @@ Impact (rows) × likelihood (columns). Top-right is treated first.
 |---|---|---|---|---|---|
 | **5** | | | | D26, D27 | D01 |
 | **4** | | | D07, D14, D19 | D05, D15, D16, D18, D31, D38 | D30, D33 |
-| **3** | | | D03, D09, D17, D28, D29, D40, D41 | D20 | D02, D04, D06, D32, D34, D35, D36, D37, D39 |
+| **3** | | D44 | D03, D09, D17, D28, D29, D40, D41 | D20 | D02, D04, D06, D32, D34, D35, D36, D37, D39 |
 | **2** | | D10, D11, D21, D25 | D22, D43 | D08 | D12, D13, D23, D24, D42 |
 | **1** | | | | | |
 
