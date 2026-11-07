@@ -27,6 +27,8 @@ Works on Windows, Linux (including WSL2 with WSLg) and macOS.
 | `npm run dev` | Starts the game in the browser with hot reload (http://localhost:5173) |
 | `npm start` | Builds, then launches the desktop (Electron) version |
 | `npm test` | Runs the test suite once (Vitest) |
+| `npm run test:watch` | Re-runs the tests on every file change |
+| `npm run test:coverage` | Runs the tests and writes the coverage report to `coverage/` |
 | `npm run lint` | Runs ESLint |
 | `npm run format` | Formats every file with Prettier |
 | `npm run format:check` | Fails if a file is not formatted (used by CI) |

@@ -3,7 +3,7 @@
 Living document: what is wrong with the codebase and how we deal with it.
 Every refactoring pull request names the item it addresses (`D01`...), updates its status here and re-measures what it changed.
 
-- **Baseline:** commit `ade7726` (`init`, the project as received). `src/` is still identical to it.
+- **Baseline:** commit `ade7726` (`init`, the project as received). Line numbers in this file refer to that commit: the code was reformatted by Prettier afterwards (006), which moved lines.
 - **First version:** 2026-11-06, for the Mid-term Defense (2026-11-20).
 
 ## 1. Codebase map
@@ -115,7 +115,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 
 **Risk** = impact (1-5) × likelihood (1-5). **Effort**: S (< half a day), M (1 day), L (2-3 days), XL (more).
 **Priority**: P0 blocks everything, P1 next, P2 planned, P3 if time allows.
-**Status**: Identified (found by reading the code, not yet pinned by a test), Planned, In progress, Done, Residual (left on purpose).
+**Status**: Identified (found by reading the code, not yet pinned by a test), Pinned (confirmed by a characterization test, marked `KNOWN DEBT` in the test name), Planned, In progress, Done, Residual (left on purpose).
 
 ### Phase 1: hygiene and safety net
 
@@ -146,7 +146,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D17 | Clock and timers not injectable (28 timers) | `PhantomEvent.jsx:21,55`, timers across `src/` | global | 3 | 3 | 9 | M | P2 | Identified |
 | D18 | Audio mixed with game logic (11 `new Audio`) | `soundManager.js`, `SkillCard.jsx` | I/O in domain | 4 | 4 | 16 | M | P1 | Identified |
 | D19 | Speech recognition hard-wired in `App` | `App.jsx:913,1000,1012,1086` | I/O in domain | 4 | 3 | 12 | M | P1 | Identified |
-| D20 | Subtraction can ask `0 - 1` | `gameUtils.js:254` (`generateMathProblem`, case `-`) | bug | 3 | 4 | 12 | S | P2 | Identified |
+| D20 | Subtraction can ask `0 - 1` | `gameUtils.js:254` (`generateMathProblem`, case `-`) | bug | 3 | 4 | 12 | S | P2 | Pinned (007) |
 | D21 | Out-of-range difficulty or level accepted silently | `gameUtils.js` (`getEncounterType`, `getDifficultyMultiplier`, `getWordForDifficulty`, `generateMathProblem`, `getReadingWord`) | fragile parser | 2 | 2 | 4 | S | P3 | Identified |
 | D22 | Login day computed in UTC, not local time | `App.jsx:1117`, `achievementUtils.js:190` | bug | 2 | 3 | 6 | S | P3 | Identified |
 | D23 | Wrong answer has no penalty in the writing game | `SkillCard.jsx` (writing input `onChange`) | bug | 2 | 5 | 10 | S | P3 | Identified |

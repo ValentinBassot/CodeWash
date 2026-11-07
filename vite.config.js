@@ -5,4 +5,12 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
     plugins: [react()],
     base: './', // Use relative paths for Electron compatibility
+    test: {
+        coverage: {
+            provider: 'v8',
+            include: ['src/**/*.{js,jsx}', 'scripts/**/*.mjs'],
+            exclude: ['**/*.test.*', 'src/main.jsx'],
+            reporter: ['text', 'html', 'lcov', 'json-summary'],
+        },
+    },
 });

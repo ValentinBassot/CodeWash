@@ -15,3 +15,4 @@ Every change to the project has its own short note in this folder, written in th
 | 004 | 2026-11-06 | [Technical debt register](004-add-debt-register.md) |
 | 005 | 2026-11-06 | [Upgrade Vitest to 5.1.0](005-upgrade-vitest.md) |
 | 006 | 2026-11-06 | [Prettier formatter and format check](006-add-prettier.md) |
+| 007 | 2026-11-07 | [Coverage and characterization tests of the game rules](007-characterize-game-rules.md) |
