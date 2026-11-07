@@ -1,11 +1,12 @@
-import { afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
-if (typeof window !== 'undefined') {
+beforeEach(() => {
+    if (typeof window === 'undefined') return;
     vi.spyOn(window.HTMLMediaElement.prototype, 'play').mockImplementation(() => Promise.resolve());
     vi.spyOn(window.HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
     vi.spyOn(window.HTMLMediaElement.prototype, 'load').mockImplementation(() => {});
-}
+});
 
 afterEach(() => {
     cleanup();

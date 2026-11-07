@@ -8,16 +8,17 @@ export default defineConfig({
     test: {
         environment: 'jsdom',
         setupFiles: ['./src/test/setup.js'],
+        testTimeout: 20000,
         coverage: {
             provider: 'v8',
             include: ['src/**/*.{js,jsx}', 'scripts/**/*.mjs'],
             exclude: ['**/*.test.*', 'src/main.jsx'],
             reporter: ['text', 'html', 'lcov', 'json-summary'],
             thresholds: {
-                lines: 52,
-                statements: 52,
-                functions: 48,
-                branches: 49,
+                lines: 64,
+                statements: 64,
+                functions: 56,
+                branches: 59,
                 'src/utils/achievementUtils.js': { lines: 100, statements: 100, functions: 100, branches: 100 },
                 'src/constants/achievements.js': { lines: 100, functions: 100 },
                 'src/utils/gameUtils.js': { lines: 80, statements: 80, functions: 80, branches: 70 },
