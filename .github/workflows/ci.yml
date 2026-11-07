@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Environment
+        run: npm run doctor
+
+      - name: Lint and static analysis
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Tests and coverage gates
+        run: npm run test:coverage
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          node -e '
+            const t = require("./coverage/coverage-summary.json").total;
+            const rows = ["lines", "statements", "functions", "branches"].map((k) => `| ${k} | ${t[k].pct} % |`);
+            console.log(["### Coverage", "", "| Metric | Covered |", "|---|---|", ...rows].join("\n"));
+          ' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          if-no-files-found: ignore
+
+      - name: Build
+        run: npm run build
+
+  windows-build:
+    needs: quality
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build portable exe
+        run: npm run electron:build
+
+      - name: Upload portable exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: LevelUpRPG-Windows-Portable
+          path: release/LevelUpRPG-Portable.exe
+          if-no-files-found: error
+
+  release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: windows-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: LevelUpRPG-Windows-Portable
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Level Up RPG v${{ github.run_number }}
+          body: Download `LevelUpRPG-Portable.exe` and double-click it to play. No installation needed.
+          files: LevelUpRPG-Portable.exe

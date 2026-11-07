@@ -35,6 +35,16 @@ Works on Windows, Linux (including WSL2 with WSLg) and macOS.
 | `npm run build` | Builds the web bundle into `dist/` |
 | `npm run electron:build` | Builds the Windows portable `.exe` into `release/` (run it on Windows, or let CI do it) |
 
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request and push to `develop` and `main`:
+
+1. **quality** (Linux): `npm ci`, `npm run doctor`, `npm run lint`, `npm run format:check`, `npm run test:coverage` (fails if coverage drops below the thresholds in `vite.config.js`), `npm run build`. The coverage table is shown in the run summary and the full report is uploaded as an artifact.
+2. **windows-build**: builds `LevelUpRPG-Portable.exe` and uploads it as an artifact.
+3. **release**: only on a push to `main`, publishes the `.exe` as a GitHub release.
+
+No merge on red: a failing step blocks the pull request.
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
