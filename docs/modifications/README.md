@@ -19,3 +19,4 @@ Every change to the project has its own short note in this folder, written in th
 | 008 | 2026-11-07 | [Characterization tests of the achievements](008-characterize-achievements.md) |
 | 009 | 2026-11-07 | [CI pipeline and coverage gates](009-add-ci-pipeline.md) |
 | 010 | 2026-11-07 | [Characterization tests of the save format](010-characterize-save-format.md) |
+| 011 | 2026-11-07 | [Characterization tests of the sound manager](011-characterize-sound-manager.md) |
