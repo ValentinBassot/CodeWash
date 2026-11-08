@@ -1,46 +1,24 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import App from './App';
+import { playWith, pressCard, save, skill, typeInto, useGameClock, wait } from './test/game';
 
-const save = () => JSON.parse(localStorage.getItem('heroSkills_v23_p1'));
-const math = () => save().skills.math;
-
-const startNewGame = () => {
-    const { unmount } = render(<App />);
-    const fresh = save();
-    unmount();
-    localStorage.clear();
-    return fresh;
-};
-
-const playWith = (edit) => {
-    const fresh = startNewGame();
-    edit(fresh);
-    localStorage.setItem('heroSkills_v23_p1', JSON.stringify(fresh));
-    render(<App />);
-};
-
-const startMathBattle = () => fireEvent.click(screen.getByRole('button', { name: 'Calculate!' }));
+const math = () => skill('math');
+const startMathBattle = () => pressCard('Calculate!');
 const mathInput = () => document.querySelector('input[inputmode="numeric"]');
 const currentAnswer = () => {
     const question = screen.getByText(/^\d+ \+ \d+ = \?$/).textContent;
     const [a, b] = question.match(/\d+/g).map(Number);
     return String(a + b);
 };
-const answerRight = () => fireEvent.change(mathInput(), { target: { value: currentAnswer() } });
+const answerRight = () => typeInto(mathInput(), currentAnswer());
 const answerWrong = () => {
     const right = currentAnswer();
-    const wrong = right.slice(0, -1) + ((Number(right.at(-1)) + 1) % 10);
-    fireEvent.change(mathInput(), { target: { value: wrong } });
-    act(() => vi.advanceTimersByTime(600));
+    typeInto(mathInput(), right.slice(0, -1) + ((Number(right.at(-1)) + 1) % 10));
+    wait(600);
 };
 
-beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-11-09T10:00:00Z'));
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'log').mockImplementation(() => {});
-});
+beforeEach(useGameClock);
 
 afterEach(() => {
     vi.useRealTimers();
@@ -111,7 +89,7 @@ describe('dying', () => {
         for (let miss = 0; miss < 10; miss++) answerWrong();
         expect(math()).toMatchObject({ level: 4, lostLevel: true, recoveryDifficulty: 1 });
 
-        act(() => vi.advanceTimersByTime(2000));
+        wait(2000);
         startMathBattle();
         for (let hit = 0; hit < 5; hit++) answerRight();
         expect(math()).toMatchObject({ level: 5, xp: 110, lostLevel: false, recoveryDifficulty: null });
