@@ -135,6 +135,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D12 | Dead components never imported | `MenuDrawer_old.jsx` (231 lines), `constants/assets.js` | dead code | 2 | 5 | 10 | S | P3 | Identified |
 | D13 | Dead functions and unreachable branches | `gameUtils.js:321`, `gameData.jsx:240,397,408`, `achievements.js:313,316`, `achievementUtils.js:189`, `mobDisplayUtils.js:36` | dead code | 2 | 5 | 10 | S | P3 | Identified |
 | D43 | Lint rule `react-hooks/set-state-in-effect` silenced instead of fixed | `SafeImage.jsx:6`, `ProfileCard.jsx:14` (`eslint-disable-next-line`) | silenced check | 2 | 3 | 6 | S | P3 | Identified |
+| D45 | "Skip / Manual Success" button shown to the player during reading battles: wins the fight without reading | `SkillCard.jsx` (generic challenge branch, `onMathSubmit(challenge?.answer)`) | leftover debug feature | 3 | 4 | 12 | S | P2 | Pinned (017) |
 
 ### Phase 2: separate the domain from I/O
 
@@ -178,7 +179,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D38 | 201 MB of uncompressed WAV shipped in the `.exe` | `public/assets/sounds/` | large assets | 4 | 4 | 16 | L | P1 | Identified |
 | D39 | Speech recognition feels very slow | `App.jsx:999-1090`, `SkillCard.jsx:266-282` | I/O in domain | 3 | 5 | 15 | M | P2 | Identified |
 | D40 | Achievements copy the mob, boss and miniboss lists by hand | `achievements.js` | duplication | 3 | 3 | 9 | S | P2 | Identified |
-| D41 | Parental check: one fixed answer unlocks everything | `ParentalVerificationModal.jsx:8`, `App.jsx:937`, `SkillCard.jsx:115` | hardcoded values | 3 | 3 | 9 | S | P3 | Identified |
+| D41 | Parental check: one fixed answer unlocks everything | `ParentalVerificationModal.jsx:8`, `App.jsx:937`, `SkillCard.jsx:115` | hardcoded values | 3 | 3 | 9 | S | P3 | Pinned (017) |
 | D42 | 8-letter reading list contains `CROCODILE` (9) and `I LOVE MOM` | `gameData.jsx:224` | data error | 2 | 5 | 10 | S | P3 | Pinned (012) |
 
 ## 4. Risk matrix
@@ -189,7 +190,7 @@ Impact (rows) × likelihood (columns). Top-right is treated first.
 |---|---|---|---|---|---|
 | **5** | | | | D26, D27 | D01 |
 | **4** | | | D07, D14, D19 | D05, D15, D16, D18, D31, D38 | D30, D33 |
-| **3** | | D44 | D03, D09, D17, D28, D29, D40, D41 | D20 | D02, D04, D06, D32, D34, D35, D36, D37, D39 |
+| **3** | | D44 | D03, D09, D17, D28, D29, D40, D41 | D20, D45 | D02, D04, D06, D32, D34, D35, D36, D37, D39 |
 | **2** | | D10, D11, D21, D25 | D22, D43 | D08 | D12, D13, D23, D24, D42 |
 | **1** | | | | | |
 
