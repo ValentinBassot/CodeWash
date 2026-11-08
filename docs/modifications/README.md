@@ -23,3 +23,4 @@ Every change to the project has its own short note in this folder, written in th
 | 012 | 2026-11-07 | [Characterization tests of the game data](012-characterize-game-data.md) |
 | 013 | 2026-11-07 | [Characterization tests of the math battles](013-characterize-math-battles.md) |
 | 014 | 2026-11-08 | [.env configuration](014-add-env-configuration.md) |
+| 015 | 2026-11-08 | [Characterization tests of the writing battles](015-characterize-writing-battles.md) |
