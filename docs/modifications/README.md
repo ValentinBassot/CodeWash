@@ -27,3 +27,4 @@ Every change to the project has its own short note in this folder, written in th
 | 016 | 2026-11-08 | [Characterization tests of the reading battles](016-characterize-reading-battles.md) |
 | 017 | 2026-11-08 | [Characterization tests of cleaning and the manual success button](017-characterize-cleaning.md) |
 | 018 | 2026-11-08 | [Characterization tests of the memory game](018-characterize-memory.md) |
+| 019 | 2026-11-08 | [Characterization tests of the patterns game](019-characterize-patterns.md) |
