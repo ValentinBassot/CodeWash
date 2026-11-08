@@ -19,6 +19,21 @@ npm start        # builds the game and opens it in an Electron window
 
 Works on Windows, Linux (including WSL2 with WSLg) and macOS.
 
+## Configuration
+
+Settings live in a `.env` file at the project root, which is not committed. Create it from the template:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Used for | Format | Default |
+|---|---|---|---|
+| `VITE_BUG_REPORT_EMAIL` | Contact that receives bug reports | e-mail address | none |
+| `VITE_TRIVIA_API_URL` | Question source of the trivia game | `http(s)://` URL | none |
+
+Every variable is optional. Values are read once at startup by `src/config.js`, which rejects a malformed value with an error naming the variable. Vite copies them into the bundle at build time: rebuild (`npm run build`, `npm start`) after changing `.env`. Only variables starting with `VITE_` reach the game, and they are visible in the built files, so never put a secret there.
+
 ## Commands
 
 | Command | What it does |

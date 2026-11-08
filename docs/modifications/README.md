@@ -22,3 +22,4 @@ Every change to the project has its own short note in this folder, written in th
 | 011 | 2026-11-07 | [Characterization tests of the sound manager](011-characterize-sound-manager.md) |
 | 012 | 2026-11-07 | [Characterization tests of the game data](012-characterize-game-data.md) |
 | 013 | 2026-11-07 | [Characterization tests of the math battles](013-characterize-math-battles.md) |
+| 014 | 2026-11-08 | [.env configuration](014-add-env-configuration.md) |
