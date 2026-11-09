@@ -31,3 +31,4 @@ Every change to the project has its own short note in this folder, written in th
 | 020 | 2026-11-08 | [Characterization tests of profiles, themes, parent mode and reset](020-characterize-app-flows.md) |
 | 021 | 2026-11-09 | [Stable and faster test runs](021-stabilize-test-runs.md) |
 | 022 | 2026-11-09 | [Characterization tests of navigation, drawers and difficulty](022-characterize-navigation.md) |
+| 023 | 2026-11-09 | [Remove an unreachable branch in PixelHeart](023-remove-unreachable-heart-color.md) |

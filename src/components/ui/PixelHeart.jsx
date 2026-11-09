@@ -63,8 +63,6 @@ const PixelHeart = ({ size = 32, filled = true }) => {
                 return palette.dark;
             case PIXEL.HIGHLIGHT:
                 return palette.highlight;
-            default:
-                return 'transparent';
         }
     };
 
