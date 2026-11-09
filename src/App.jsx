@@ -5,6 +5,7 @@ import { Menu, Sparkles, Gift, Maximize, Minimize, Settings, Bug } from 'lucide-
 import GlobalStyles from './components/ui/GlobalStyles';
 import SafeImage from './components/ui/SafeImage';
 import PixelHeart from './components/ui/PixelHeart';
+import { SAVE_KEYS, readProfileSave } from './persistence/profileStorage';
 import ResetModal from './components/modals/ResetModal';
 import BugReportModal from './components/modals/BugReportModal';
 import SettingsDrawer from './components/drawers/SettingsDrawer';
@@ -78,21 +79,20 @@ const BOSS_HEALING_ANIMATION_DURATION = 600;
 
 const App = () => {
     const [currentProfile, setCurrentProfile] = useState(() =>
-        localStorage.getItem('currentProfile_v1') ? parseInt(localStorage.getItem('currentProfile_v1')) : 1,
+        localStorage.getItem(SAVE_KEYS.currentProfile) ? parseInt(localStorage.getItem(SAVE_KEYS.currentProfile)) : 1,
     );
     const [profileNames, setProfileNames] = useState(() =>
-        localStorage.getItem('heroProfileNames_v1')
-            ? JSON.parse(localStorage.getItem('heroProfileNames_v1'))
+        localStorage.getItem(SAVE_KEYS.profileNames)
+            ? JSON.parse(localStorage.getItem(SAVE_KEYS.profileNames))
             : { 1: 'Player 1', 2: 'Player 2', 3: 'Player 3' },
     );
     const [parentStatus, setParentStatus] = useState(() =>
-        localStorage.getItem('heroParentStatus_v1')
-            ? JSON.parse(localStorage.getItem('heroParentStatus_v1'))
+        localStorage.getItem(SAVE_KEYS.parentStatus)
+            ? JSON.parse(localStorage.getItem(SAVE_KEYS.parentStatus))
             : { 1: false, 2: false, 3: false },
     );
     const [playerHealth, setPlayerHealth] = useState(10);
 
-    const getStorageKey = (profileId) => `heroSkills_v23_p${profileId}`;
     const loadSkills = (profileId) => {
         const initial = {};
         // Initialize each skill with level, xp, currentMob, difficulty (1-7), earnedBadges array,
@@ -125,8 +125,7 @@ const App = () => {
                 currentBossAura: getRandomAura(), // Aura for boss encounters
             };
         });
-        let saved = localStorage.getItem(getStorageKey(profileId));
-        if (!saved && profileId === 1) saved = localStorage.getItem('heroSkills_v23');
+        const saved = readProfileSave(localStorage, profileId);
         try {
             if (saved) {
                 const parsed = JSON.parse(saved);
@@ -210,10 +209,7 @@ const App = () => {
         return initial;
     };
     const loadTheme = (profileId) => {
-        let saved = localStorage.getItem(getStorageKey(profileId));
-        if (!saved && profileId === 1) {
-            saved = localStorage.getItem('heroSkills_v23');
-        }
+        const saved = readProfileSave(localStorage, profileId);
         try {
             return JSON.parse(saved).theme || 'minecraft';
         } catch (e) {
@@ -223,10 +219,7 @@ const App = () => {
     };
 
     const loadStats = (profileId) => {
-        let saved = localStorage.getItem(getStorageKey(profileId));
-        if (!saved && profileId === 1) {
-            saved = localStorage.getItem('heroSkills_v23');
-        }
+        const saved = readProfileSave(localStorage, profileId);
         try {
             const data = JSON.parse(saved);
             if (data.stats) {
@@ -258,9 +251,7 @@ const App = () => {
             return { totalLevel, highestLevel, skills: liveSkills, theme: activeTheme };
         }
 
-        const key = getStorageKey(id);
-        let saved = localStorage.getItem(key);
-        if (!saved && id === 1) saved = localStorage.getItem('heroSkills_v23');
+        const saved = readProfileSave(localStorage, id);
         if (!saved) return null;
         try {
             const data = JSON.parse(saved);
@@ -314,26 +305,26 @@ const App = () => {
 
     // Cosmetics state
     const [selectedBorder, setSelectedBorder] = useState(() => {
-        const saved = localStorage.getItem(`borderEffect_p${currentProfile}`);
+        const saved = localStorage.getItem(SAVE_KEYS.borderEffect(currentProfile));
         return saved || 'solid';
     });
     const [borderColor, setBorderColor] = useState(() => {
-        const saved = localStorage.getItem(`borderColor_p${currentProfile}`);
+        const saved = localStorage.getItem(SAVE_KEYS.borderColor(currentProfile));
         return saved || '#FFD700';
     });
 
     useEffect(() => {
         const dataToSave = { skills: skills, theme: activeTheme, stats: stats };
-        localStorage.setItem(getStorageKey(currentProfile), JSON.stringify(dataToSave));
-        localStorage.setItem('currentProfile_v1', currentProfile);
-        localStorage.setItem('heroProfileNames_v1', JSON.stringify(profileNames));
-        localStorage.setItem('heroParentStatus_v1', JSON.stringify(parentStatus));
+        localStorage.setItem(SAVE_KEYS.profileSave(currentProfile), JSON.stringify(dataToSave));
+        localStorage.setItem(SAVE_KEYS.currentProfile, currentProfile);
+        localStorage.setItem(SAVE_KEYS.profileNames, JSON.stringify(profileNames));
+        localStorage.setItem(SAVE_KEYS.parentStatus, JSON.stringify(parentStatus));
     }, [skills, currentProfile, activeTheme, profileNames, parentStatus, stats]);
 
     // Save cosmetics preferences
     useEffect(() => {
-        localStorage.setItem(`borderEffect_p${currentProfile}`, selectedBorder);
-        localStorage.setItem(`borderColor_p${currentProfile}`, borderColor);
+        localStorage.setItem(SAVE_KEYS.borderEffect(currentProfile), selectedBorder);
+        localStorage.setItem(SAVE_KEYS.borderColor(currentProfile), borderColor);
     }, [selectedBorder, borderColor, currentProfile]);
 
     // Calculate unlocked borders based on earned badges (memoized)
@@ -1020,24 +1011,24 @@ const App = () => {
     };
     const handleReset = () => {
         // Remove skills data for current profile
-        localStorage.removeItem(getStorageKey(currentProfile));
-        if (currentProfile === 1) localStorage.removeItem('heroSkills_v23');
+        localStorage.removeItem(SAVE_KEYS.profileSave(currentProfile));
+        if (currentProfile === 1) localStorage.removeItem(SAVE_KEYS.legacySkills);
 
         // Update parent status in localStorage directly
-        const currentParentStatus = localStorage.getItem('heroParentStatus_v1');
+        const currentParentStatus = localStorage.getItem(SAVE_KEYS.parentStatus);
         const parentStatusObj = currentParentStatus
             ? JSON.parse(currentParentStatus)
             : { 1: false, 2: false, 3: false };
         parentStatusObj[currentProfile] = false;
-        localStorage.setItem('heroParentStatus_v1', JSON.stringify(parentStatusObj));
+        localStorage.setItem(SAVE_KEYS.parentStatus, JSON.stringify(parentStatusObj));
 
         // Update profile name in localStorage directly
-        const currentProfileNames = localStorage.getItem('heroProfileNames_v1');
+        const currentProfileNames = localStorage.getItem(SAVE_KEYS.profileNames);
         const profileNamesObj = currentProfileNames
             ? JSON.parse(currentProfileNames)
             : { 1: 'Player 1', 2: 'Player 2', 3: 'Player 3' };
         profileNamesObj[currentProfile] = `Player ${currentProfile}`;
-        localStorage.setItem('heroProfileNames_v1', JSON.stringify(profileNamesObj));
+        localStorage.setItem(SAVE_KEYS.profileNames, JSON.stringify(profileNamesObj));
 
         window.location.reload();
     };
