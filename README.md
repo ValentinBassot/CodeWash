@@ -19,6 +19,21 @@ npm start        # builds the game and opens it in an Electron window
 
 Works on Windows, Linux (including WSL2 with WSLg) and macOS.
 
+## Configuration
+
+Settings live in a `.env` file at the project root, which is not committed. Create it from the template:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Used for | Format | Default |
+|---|---|---|---|
+| `VITE_BUG_REPORT_EMAIL` | Contact that receives bug reports | e-mail address | none |
+| `VITE_TRIVIA_API_URL` | Question source of the trivia game | `http(s)://` URL | none |
+
+Every variable is optional. Values are read once at startup by `src/config.js`, which rejects a malformed value with an error naming the variable. Vite copies them into the bundle at build time: rebuild (`npm run build`, `npm start`) after changing `.env`. Only variables starting with `VITE_` reach the game, and they are visible in the built files, so never put a secret there.
+
 ## Commands
 
 | Command | What it does |
@@ -27,11 +42,23 @@ Works on Windows, Linux (including WSL2 with WSLg) and macOS.
 | `npm run dev` | Starts the game in the browser with hot reload (http://localhost:5173) |
 | `npm start` | Builds, then launches the desktop (Electron) version |
 | `npm test` | Runs the test suite once (Vitest) |
+| `npm run test:watch` | Re-runs the tests on every file change |
+| `npm run test:coverage` | Runs the tests and writes the coverage report to `coverage/` |
 | `npm run lint` | Runs ESLint |
 | `npm run format` | Formats every file with Prettier |
 | `npm run format:check` | Fails if a file is not formatted (used by CI) |
 | `npm run build` | Builds the web bundle into `dist/` |
 | `npm run electron:build` | Builds the Windows portable `.exe` into `release/` (run it on Windows, or let CI do it) |
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request and push to `develop` and `main`:
+
+1. **quality** (Linux): `npm ci`, `npm run doctor`, `npm run lint`, `npm run format:check`, `npm run test:coverage` (fails if coverage drops below the thresholds in `vite.config.js`), `npm run build`. The coverage table is shown in the run summary and the full report is uploaded as an artifact.
+2. **windows-build**: builds `LevelUpRPG-Portable.exe` and uploads it as an artifact.
+3. **release**: only on a push to `main`, publishes the `.exe` as a GitHub release.
+
+No merge on red: a failing step blocks the pull request.
 
 ## Troubleshooting
 

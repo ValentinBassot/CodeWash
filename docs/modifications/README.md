@@ -15,3 +15,21 @@ Every change to the project has its own short note in this folder, written in th
 | 004 | 2026-11-06 | [Technical debt register](004-add-debt-register.md) |
 | 005 | 2026-11-06 | [Upgrade Vitest to 5.1.0](005-upgrade-vitest.md) |
 | 006 | 2026-11-06 | [Prettier formatter and format check](006-add-prettier.md) |
+| 007 | 2026-11-07 | [Coverage and characterization tests of the game rules](007-characterize-game-rules.md) |
+| 008 | 2026-11-07 | [Characterization tests of the achievements](008-characterize-achievements.md) |
+| 009 | 2026-11-07 | [CI pipeline and coverage gates](009-add-ci-pipeline.md) |
+| 010 | 2026-11-07 | [Characterization tests of the save format](010-characterize-save-format.md) |
+| 011 | 2026-11-07 | [Characterization tests of the sound manager](011-characterize-sound-manager.md) |
+| 012 | 2026-11-07 | [Characterization tests of the game data](012-characterize-game-data.md) |
+| 013 | 2026-11-07 | [Characterization tests of the math battles](013-characterize-math-battles.md) |
+| 014 | 2026-11-08 | [.env configuration](014-add-env-configuration.md) |
+| 015 | 2026-11-08 | [Characterization tests of the writing battles](015-characterize-writing-battles.md) |
+| 016 | 2026-11-08 | [Characterization tests of the reading battles](016-characterize-reading-battles.md) |
+| 017 | 2026-11-08 | [Characterization tests of cleaning and the manual success button](017-characterize-cleaning.md) |
+| 018 | 2026-11-08 | [Characterization tests of the memory game](018-characterize-memory.md) |
+| 019 | 2026-11-08 | [Characterization tests of the patterns game](019-characterize-patterns.md) |
+| 020 | 2026-11-08 | [Characterization tests of profiles, themes, parent mode and reset](020-characterize-app-flows.md) |
+| 021 | 2026-11-09 | [Stable and faster test runs](021-stabilize-test-runs.md) |
+| 022 | 2026-11-09 | [Characterization tests of navigation, drawers and difficulty](022-characterize-navigation.md) |
+| 023 | 2026-11-09 | [Remove an unreachable branch in PixelHeart](023-remove-unreachable-heart-color.md) |
+| 024 | 2026-11-09 | [Coverage gate on changed lines](024-gate-changed-lines-coverage.md) |

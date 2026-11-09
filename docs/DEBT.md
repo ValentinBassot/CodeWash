@@ -3,7 +3,7 @@
 Living document: what is wrong with the codebase and how we deal with it.
 Every refactoring pull request names the item it addresses (`D01`...), updates its status here and re-measures what it changed.
 
-- **Baseline:** commit `ade7726` (`init`, the project as received). `src/` is still identical to it.
+- **Baseline:** commit `ade7726` (`init`, the project as received). Line numbers in this file refer to that commit: the code was reformatted by Prettier afterwards (006), which moved lines.
 - **First version:** 2026-11-06, for the Mid-term Defense (2026-11-20).
 
 ## 1. Codebase map
@@ -115,7 +115,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 
 **Risk** = impact (1-5) × likelihood (1-5). **Effort**: S (< half a day), M (1 day), L (2-3 days), XL (more).
 **Priority**: P0 blocks everything, P1 next, P2 planned, P3 if time allows.
-**Status**: Identified (found by reading the code, not yet pinned by a test), Planned, In progress, Done, Residual (left on purpose).
+**Status**: Identified (found by reading the code, not yet pinned by a test), Pinned (confirmed by a characterization test, marked `KNOWN DEBT` in the test name), Planned, In progress, Done, Residual (left on purpose).
 
 ### Phase 1: hygiene and safety net
 
@@ -126,7 +126,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D03 | No `.gitignore` | repo root | missing config | 3 | 3 | 9 | S | P2 | Done (#1) |
 | D04 | No README or launch instructions | repo root | missing docs | 3 | 5 | 15 | S | P0 | Done (#1) |
 | D05 | Launch broken with npm < 10 and in VS Code terminals | `package.json` overrides, `electron/main.cjs:40` | fragile setup | 4 | 4 | 16 | S | P0 | Done (#1) |
-| D06 | Original workflow publishes a release on every push to `main`, without tests or lint | `.github/workflows/build-exe.yml` | unsafe pipeline | 3 | 5 | 15 | S | P1 | Identified |
+| D06 | Original workflow publishes a release on every push to `main`, without tests or lint | `.github/workflows/build-exe.yml` | unsafe pipeline | 3 | 5 | 15 | S | P1 | Done (009) |
 | D07 | No branch protection: quality gates cannot be enforced | GitHub settings | missing gate | 4 | 3 | 12 | S | P1 | Identified |
 | D08 | No formatter: the format check required by the subject is impossible | `package.json` | missing tool | 2 | 4 | 8 | M | P2 | Done (006) |
 | D09 | 31 npm vulnerabilities, all in dev dependencies | `package-lock.json` (electron, electron-builder, eslint, postcss, tar) | outdated deps | 3 | 3 | 9 | M | P2 | Identified |
@@ -135,23 +135,25 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D12 | Dead components never imported | `MenuDrawer_old.jsx` (231 lines), `constants/assets.js` | dead code | 2 | 5 | 10 | S | P3 | Identified |
 | D13 | Dead functions and unreachable branches | `gameUtils.js:321`, `gameData.jsx:240,397,408`, `achievements.js:313,316`, `achievementUtils.js:189`, `mobDisplayUtils.js:36` | dead code | 2 | 5 | 10 | S | P3 | Identified |
 | D43 | Lint rule `react-hooks/set-state-in-effect` silenced instead of fixed | `SafeImage.jsx:6`, `ProfileCard.jsx:14` (`eslint-disable-next-line`) | silenced check | 2 | 3 | 6 | S | P3 | Identified |
+| D45 | "Skip / Manual Success" button shown to the player during reading battles: wins the fight without reading | `SkillCard.jsx` (generic challenge branch, `onMathSubmit(challenge?.answer)`) | leftover debug feature | 3 | 4 | 12 | S | P2 | Pinned (017) |
 
 ### Phase 2: separate the domain from I/O
 
 | ID | Item | Location | Smell | I | L | Risk | Effort | Prio | Status |
 |---|---|---|---|---|---|---|---|---|---|
-| D14 | `JSON.parse` without `try/catch` in state initializers: a corrupted save crashes the game at startup | `App.jsx:51,52,971,977` | fragile parser | 4 | 3 | 12 | S | P1 | Identified |
+| D14 | `JSON.parse` without `try/catch` in state initializers: a corrupted save crashes the game at startup | `App.jsx:51,52,971,977` | fragile parser | 4 | 3 | 12 | S | P1 | Pinned (010) |
 | D15 | Persistence scattered, legacy migrations duplicated | `App.jsx:50-285,966`, `PhantomEvent.jsx:21,55` | duplication | 4 | 4 | 16 | M | P1 | Identified |
 | D16 | `Math.random` called directly (34 times): untestable | `gameUtils.js`, `SkillCard.jsx`, `PhantomEvent.jsx`, others | global | 4 | 4 | 16 | M | P1 | Identified |
 | D17 | Clock and timers not injectable (28 timers) | `PhantomEvent.jsx:21,55`, timers across `src/` | global | 3 | 3 | 9 | M | P2 | Identified |
 | D18 | Audio mixed with game logic (11 `new Audio`) | `soundManager.js`, `SkillCard.jsx` | I/O in domain | 4 | 4 | 16 | M | P1 | Identified |
 | D19 | Speech recognition hard-wired in `App` | `App.jsx:913,1000,1012,1086` | I/O in domain | 4 | 3 | 12 | M | P1 | Identified |
-| D20 | Subtraction can ask `0 - 1` | `gameUtils.js:254` (`generateMathProblem`, case `-`) | bug | 3 | 4 | 12 | S | P2 | Identified |
+| D20 | Subtraction can ask `0 - 1` | `gameUtils.js:254` (`generateMathProblem`, case `-`) | bug | 3 | 4 | 12 | S | P2 | Pinned (007) |
 | D21 | Out-of-range difficulty or level accepted silently | `gameUtils.js` (`getEncounterType`, `getDifficultyMultiplier`, `getWordForDifficulty`, `generateMathProblem`, `getReadingWord`) | fragile parser | 2 | 2 | 4 | S | P3 | Identified |
-| D22 | Login day computed in UTC, not local time | `App.jsx:1117`, `achievementUtils.js:190` | bug | 2 | 3 | 6 | S | P3 | Identified |
-| D23 | Wrong answer has no penalty in the writing game | `SkillCard.jsx` (writing input `onChange`) | bug | 2 | 5 | 10 | S | P3 | Identified |
-| D24 | Progressive damage of the axolotl game ignored | `SkillCard.jsx:348`, `App.jsx:1421` | bug | 2 | 5 | 10 | S | P3 | Identified |
-| D25 | "Jack of All Trades" reaches its top tier with no skill | `achievements.js:105` | bug | 2 | 2 | 4 | S | P3 | Identified |
+| D22 | Login day computed in UTC, not local time | `App.jsx:1117`, `achievementUtils.js:190` | bug | 2 | 3 | 6 | S | P3 | Pinned (008) |
+| D23 | Wrong answer has no penalty in the writing game | `SkillCard.jsx` (writing input `onChange`) | bug | 2 | 5 | 10 | S | P3 | Pinned (015) |
+| D24 | Progressive damage of the axolotl game ignored | `SkillCard.jsx:348`, `App.jsx:1421` | bug | 2 | 5 | 10 | S | P3 | Pinned (019) |
+| D25 | "Jack of All Trades" reaches its top tier with no skill | `achievements.js:105` | bug | 2 | 2 | 4 | S | P3 | Pinned (008) |
+| D44 | Old saves without mob health get a difficulty-1 mob whatever their difficulty: the backfill never runs because defaults are merged first | `App.jsx` (`loadSkills`, mob health backfill) | bug | 3 | 2 | 6 | S | P3 | Pinned (010) |
 
 ### Phase 3: hot spots
 
@@ -159,26 +161,26 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 |---|---|---|---|---|---|---|---|---|---|
 | D26 | God component: `App` is one 1172-line function with 31 `useState` | `App.jsx:49` (also complexity 31 at `:94`, 24 at `:569`) | tight coupling | 5 | 4 | 20 | XL | P1 | Identified |
 | D27 | `SkillCard`: 611-line function, complexity 107, every mini-game inside | `SkillCard.jsx:65` | complexity | 5 | 4 | 20 | XL | P1 | Identified |
-| D28 | Errors swallowed (`console.warn`, empty `.play().catch`) | `App.jsx:168,180,197,237`, `soundManager.js:127,136,185,255,269,283` | silent error | 3 | 3 | 9 | S | P2 | Identified |
+| D28 | Errors swallowed (`console.warn`, empty `.play().catch`) | `App.jsx:168,180,197,237`, `soundManager.js:127,136,185,255,269,283` | silent error | 3 | 3 | 9 | S | P2 | Pinned (010) |
 | D29 | 1217 lines of CSS inside a component | `GlobalStyles.jsx:3` | large file | 3 | 3 | 9 | M | P3 | Identified |
 
 ### Phase 4: features and their debt
 
 | ID | Item | Location | Smell | I | L | Risk | Effort | Prio | Status |
 |---|---|---|---|---|---|---|---|---|---|
-| D30 | UI and mob sounds sit in nested folders: none of them plays | `public/assets/sounds/ui/ui/`, `sounds/mob/mob/`, `soundManager.js` | bug | 4 | 5 | 20 | S | P1 | Identified |
-| D31 | Microphone never restarts after a session ends, its button does nothing | `App.jsx:999-1090` | I/O in domain | 4 | 4 | 16 | S | P1 | Identified |
-| D32 | Memory and patterns sounds point to 10 missing files | `gameData.jsx:4`, `SkillCard.jsx:228,338,374,409,417` | bug | 3 | 5 | 15 | S | P2 | Identified |
-| D33 | Themes: missing assets, inconsistent configuration | `gameData.jsx:175-214` | hardcoded values | 4 | 5 | 20 | M | P1 | Identified |
+| D30 | UI and mob sounds sit in nested folders: none of them plays | `public/assets/sounds/ui/ui/`, `sounds/mob/mob/`, `soundManager.js` | bug | 4 | 5 | 20 | S | P1 | Pinned (011) |
+| D31 | Microphone never restarts after a session ends, its button does nothing | `App.jsx:999-1090` | I/O in domain | 4 | 4 | 16 | S | P1 | Pinned (016) |
+| D32 | Memory and patterns sounds point to 10 missing files | `gameData.jsx:4`, `SkillCard.jsx:228,338,374,409,417` | bug | 3 | 5 | 15 | S | P2 | Pinned (012) |
+| D33 | Themes: missing assets, inconsistent configuration | `gameData.jsx:175-214` | hardcoded values | 4 | 5 | 20 | M | P1 | Pinned (012) |
 | D34 | Music and sounds not tied to the theme | `soundManager.js:7-13` | hardcoded values | 3 | 5 | 15 | M | P2 | Identified |
 | D35 | Minecraft branding hard-coded | `gameData.jsx:411-416`, `achievements.js`, UI texts | hardcoded values | 3 | 5 | 15 | M | P2 | Identified |
 | D36 | No translation system: UI texts hard-coded in English | `src/components/**`, `gameData.jsx`, `achievements.js` | hardcoded values | 3 | 5 | 15 | L | P2 | Identified |
-| D37 | Bug report button opens a placeholder | `BugReportModal.jsx` | missing feature | 3 | 5 | 15 | M | P2 | Identified |
+| D37 | Bug report button opens a placeholder | `BugReportModal.jsx` | missing feature | 3 | 5 | 15 | M | P2 | Pinned (022) |
 | D38 | 201 MB of uncompressed WAV shipped in the `.exe` | `public/assets/sounds/` | large assets | 4 | 4 | 16 | L | P1 | Identified |
 | D39 | Speech recognition feels very slow | `App.jsx:999-1090`, `SkillCard.jsx:266-282` | I/O in domain | 3 | 5 | 15 | M | P2 | Identified |
 | D40 | Achievements copy the mob, boss and miniboss lists by hand | `achievements.js` | duplication | 3 | 3 | 9 | S | P2 | Identified |
-| D41 | Parental check: one fixed answer unlocks everything | `ParentalVerificationModal.jsx:8`, `App.jsx:937`, `SkillCard.jsx:115` | hardcoded values | 3 | 3 | 9 | S | P3 | Identified |
-| D42 | 8-letter reading list contains `CROCODILE` (9) and `I LOVE MOM` | `gameData.jsx:224` | data error | 2 | 5 | 10 | S | P3 | Identified |
+| D41 | Parental check: one fixed answer unlocks everything | `ParentalVerificationModal.jsx:8`, `App.jsx:937`, `SkillCard.jsx:115` | hardcoded values | 3 | 3 | 9 | S | P3 | Pinned (017) |
+| D42 | 8-letter reading list contains `CROCODILE` (9) and `I LOVE MOM` | `gameData.jsx:224` | data error | 2 | 5 | 10 | S | P3 | Pinned (012) |
 
 ## 4. Risk matrix
 
@@ -188,7 +190,7 @@ Impact (rows) × likelihood (columns). Top-right is treated first.
 |---|---|---|---|---|---|
 | **5** | | | | D26, D27 | D01 |
 | **4** | | | D07, D14, D19 | D05, D15, D16, D18, D31, D38 | D30, D33 |
-| **3** | | | D03, D09, D17, D28, D29, D40, D41 | D20 | D02, D04, D06, D32, D34, D35, D36, D37, D39 |
+| **3** | | D44 | D03, D09, D17, D28, D29, D40, D41 | D20, D45 | D02, D04, D06, D32, D34, D35, D36, D37, D39 |
 | **2** | | D10, D11, D21, D25 | D22, D43 | D08 | D12, D13, D23, D24, D42 |
 | **1** | | | | | |
 

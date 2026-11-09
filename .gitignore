@@ -13,3 +13,8 @@ coverage/
 .DS_Store
 Thumbs.db
 *.log
+
+# Local configuration (copy .env.example to .env)
+.env
+.env.local
+.env.*.local
