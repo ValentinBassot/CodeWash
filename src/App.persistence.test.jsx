@@ -150,14 +150,34 @@ describe('loading an existing save', () => {
     });
 });
 
-describe('known debt', () => {
-    it('KNOWN DEBT D14: a corrupted profile names entry crashes the game at startup', () => {
-        vi.spyOn(console, 'error').mockImplementation(() => {});
-        localStorage.setItem('heroProfileNames_v1', '{oops');
+describe('corrupted profile entries (D14)', () => {
+    it.each([
+        ['heroProfileNames_v1', '{oops', { 1: 'Player 1', 2: 'Player 2', 3: 'Player 3' }],
+        ['heroProfileNames_v1', '"just text"', { 1: 'Player 1', 2: 'Player 2', 3: 'Player 3' }],
+        ['heroParentStatus_v1', '{oops', { 1: false, 2: false, 3: false }],
+        ['heroParentStatus_v1', 'null', { 1: false, 2: false, 3: false }],
+    ])('%s = %s: the game starts with the defaults and repairs the entry', (key, value, defaults) => {
+        localStorage.setItem(key, value);
 
-        expect(() => render(<App />)).toThrow(SyntaxError);
+        render(<App />);
+
+        expect(read(key)).toEqual(defaults);
+        expect(saveOf(1).skills.reading.level).toBe(1);
     });
 
+    it('a corrupted entry does not erase the progress saved elsewhere', () => {
+        const save = freshSave();
+        save.skills.math.level = 9;
+        localStorage.setItem('heroSkills_v23_p1', JSON.stringify(save));
+        localStorage.setItem('heroProfileNames_v1', '{oops');
+
+        render(<App />);
+
+        expect(saveOf(1).skills.math.level).toBe(9);
+    });
+});
+
+describe('known debt', () => {
     it('KNOWN DEBT D44: an old save without mob health gets a difficulty-1 mob whatever its difficulty', () => {
         localStorage.setItem(
             'heroSkills_v23_p1',

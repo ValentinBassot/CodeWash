@@ -5,7 +5,13 @@ import { Menu, Sparkles, Gift, Maximize, Minimize, Settings, Bug } from 'lucide-
 import GlobalStyles from './components/ui/GlobalStyles';
 import SafeImage from './components/ui/SafeImage';
 import PixelHeart from './components/ui/PixelHeart';
-import { SAVE_KEYS, readProfileSave } from './persistence/profileStorage';
+import {
+    DEFAULT_PARENT_STATUS,
+    DEFAULT_PROFILE_NAMES,
+    SAVE_KEYS,
+    readObject,
+    readProfileSave,
+} from './persistence/profileStorage';
 import ResetModal from './components/modals/ResetModal';
 import BugReportModal from './components/modals/BugReportModal';
 import SettingsDrawer from './components/drawers/SettingsDrawer';
@@ -82,14 +88,10 @@ const App = () => {
         localStorage.getItem(SAVE_KEYS.currentProfile) ? parseInt(localStorage.getItem(SAVE_KEYS.currentProfile)) : 1,
     );
     const [profileNames, setProfileNames] = useState(() =>
-        localStorage.getItem(SAVE_KEYS.profileNames)
-            ? JSON.parse(localStorage.getItem(SAVE_KEYS.profileNames))
-            : { 1: 'Player 1', 2: 'Player 2', 3: 'Player 3' },
+        readObject(localStorage, SAVE_KEYS.profileNames, DEFAULT_PROFILE_NAMES),
     );
     const [parentStatus, setParentStatus] = useState(() =>
-        localStorage.getItem(SAVE_KEYS.parentStatus)
-            ? JSON.parse(localStorage.getItem(SAVE_KEYS.parentStatus))
-            : { 1: false, 2: false, 3: false },
+        readObject(localStorage, SAVE_KEYS.parentStatus, DEFAULT_PARENT_STATUS),
     );
     const [playerHealth, setPlayerHealth] = useState(10);
 
@@ -1015,18 +1017,12 @@ const App = () => {
         if (currentProfile === 1) localStorage.removeItem(SAVE_KEYS.legacySkills);
 
         // Update parent status in localStorage directly
-        const currentParentStatus = localStorage.getItem(SAVE_KEYS.parentStatus);
-        const parentStatusObj = currentParentStatus
-            ? JSON.parse(currentParentStatus)
-            : { 1: false, 2: false, 3: false };
+        const parentStatusObj = readObject(localStorage, SAVE_KEYS.parentStatus, DEFAULT_PARENT_STATUS);
         parentStatusObj[currentProfile] = false;
         localStorage.setItem(SAVE_KEYS.parentStatus, JSON.stringify(parentStatusObj));
 
         // Update profile name in localStorage directly
-        const currentProfileNames = localStorage.getItem(SAVE_KEYS.profileNames);
-        const profileNamesObj = currentProfileNames
-            ? JSON.parse(currentProfileNames)
-            : { 1: 'Player 1', 2: 'Player 2', 3: 'Player 3' };
+        const profileNamesObj = readObject(localStorage, SAVE_KEYS.profileNames, DEFAULT_PROFILE_NAMES);
         profileNamesObj[currentProfile] = `Player ${currentProfile}`;
         localStorage.setItem(SAVE_KEYS.profileNames, JSON.stringify(profileNamesObj));
 

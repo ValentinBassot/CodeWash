@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SAVE_KEYS, readProfileSave } from './profileStorage';
+import { SAVE_KEYS, readObject, readProfileSave } from './profileStorage';
 
 const storageWith = (entries) => ({ getItem: (key) => (key in entries ? entries[key] : null) });
 
@@ -33,5 +33,25 @@ describe('readProfileSave', () => {
     it('treats an empty profile save as missing for profile 1, and keeps it for the others', () => {
         expect(readProfileSave(storageWith({ heroSkills_v23_p1: '', heroSkills_v23: 'legacy' }), 1)).toBe('legacy');
         expect(readProfileSave(storageWith({ heroSkills_v23_p2: '' }), 2)).toBe('');
+    });
+});
+
+describe('readObject', () => {
+    const fallback = { 1: 'Player 1' };
+
+    it('returns the stored object', () => {
+        expect(readObject(storageWith({ k: '{"1":"Robo"}' }), 'k', fallback)).toEqual({ 1: 'Robo' });
+    });
+
+    it.each([
+        ['missing', {}],
+        ['not JSON', { k: '{oops' }],
+        ['JSON but not an object', { k: '"text"' }],
+        ['null', { k: 'null' }],
+        ['an array', { k: '[1,2]' }],
+    ])('returns a copy of the fallback when the entry is %s', (_, entries) => {
+        const result = readObject(storageWith(entries), 'k', fallback);
+        expect(result).toEqual(fallback);
+        expect(result).not.toBe(fallback);
     });
 });
