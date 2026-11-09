@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import App from './App';
 import { WRITING_DIFFICULTY_POOLS } from './constants/gameData';
-import { playWith, pressCard, save, skill, typeInto, useGameClock, wait } from './test/game';
+import { nextRandomValues, playWith, pressCard, save, skill, typeInto, useGameClock, wait } from './test/game';
 
 const writing = () => skill('writing');
 const allWords = Object.values(WRITING_DIFFICULTY_POOLS).flat();
@@ -61,7 +61,7 @@ describe('writing battle', () => {
         playWith((s) => {
             Object.assign(s.skills.writing, { difficulty: 4, mobHealth: 1620, mobMaxHealth: 1620 });
         });
-        vi.spyOn(Math, 'random').mockReturnValueOnce(3.5 / WRITING_DIFFICULTY_POOLS[4].length);
+        nextRandomValues(3.5 / WRITING_DIFFICULTY_POOLS[4].length);
         startWritingBattle();
         expect(expectedWord()).toBe('IRON GOLEM');
         expect(wordInput().maxLength).toBe(9);

@@ -21,6 +21,6 @@ Option 1 would change the signature of about twenty functions and components spr
 ## Consequences
 
 - The game behaves exactly as before: the default source calls `Math.random` at the moment of the draw.
-- Tests can make a whole game deterministic with one call, without stubbing a global.
+- Tests can make a whole game deterministic with one call, without stubbing a global. Since 028, every test that mounts the App does, and coverage is identical from one run to the next.
 - The source is a module-level variable: a test that sets it must reset it (done in the shared test setup).
 - When phase 3 splits `App` and `SkillCard`, pure functions can take the generator as a parameter where it makes their tests simpler; this module stays the default.
