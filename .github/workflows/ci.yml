@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -36,6 +38,10 @@ jobs:
 
       - name: Tests and coverage gates
         run: npm run test:coverage
+
+      - name: Coverage of changed lines (100 % added, 80 % modified)
+        if: github.event_name == 'pull_request'
+        run: npm run coverage:diff -- origin/${{ github.base_ref }}
 
       - name: Coverage summary
         if: always()

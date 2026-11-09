@@ -19,6 +19,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "coverage:diff": "node scripts/diff-coverage.mjs",
     "preview": "vite preview",
     "electron:dev": "npm start",
     "electron:build": "npm run build && electron-builder"

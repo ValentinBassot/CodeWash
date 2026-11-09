@@ -32,3 +32,4 @@ Every change to the project has its own short note in this folder, written in th
 | 021 | 2026-11-09 | [Stable and faster test runs](021-stabilize-test-runs.md) |
 | 022 | 2026-11-09 | [Characterization tests of navigation, drawers and difficulty](022-characterize-navigation.md) |
 | 023 | 2026-11-09 | [Remove an unreachable branch in PixelHeart](023-remove-unreachable-heart-color.md) |
+| 024 | 2026-11-09 | [Coverage gate on changed lines](024-gate-changed-lines-coverage.md) |
