@@ -9,6 +9,7 @@ export default defineConfig({
         environment: 'jsdom',
         setupFiles: ['./src/test/setup.js'],
         testTimeout: 20000,
+        maxWorkers: 4,
         coverage: {
             provider: 'v8',
             include: ['src/**/*.{js,jsx}', 'scripts/**/*.mjs'],

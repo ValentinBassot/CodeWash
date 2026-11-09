@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import App from './App';
 import { BASE_ASSETS } from './constants/gameData';
 import { playWith, pressCard, save, skill, useGameClock, wait } from './test/game';
@@ -10,17 +10,17 @@ const startPatterns = () => pressCard('Solve!');
 const axolotl = (color) => screen.getByText(color, { selector: 'span' }).parentElement;
 const shownAxolotls = () => COLORS.filter((c) => screen.queryByText(c, { selector: 'span' }));
 
-const STEP = 50;
 const litAxolotl = () =>
     [...document.querySelectorAll('.ring-yellow-400')].map((e) => e.textContent).find((t) => COLORS.includes(t)) ??
     null;
+const nextTimer = () => act(() => vi.advanceTimersToNextTimer());
 
 const watchSequence = () => {
-    for (let t = 0; t < 5000 && !screen.queryByText('Watch!'); t += STEP) wait(STEP);
+    for (let n = 0; n < 500 && !screen.queryByText('Watch!'); n++) nextTimer();
     const seen = [];
     let previous = null;
-    for (let t = 0; t < 30000 && !screen.queryByText('Your turn!'); t += STEP) {
-        wait(STEP);
+    for (let n = 0; n < 2000 && !screen.queryByText('Your turn!'); n++) {
+        nextTimer();
         const color = litAxolotl();
         if (color && color !== previous) seen.push(color);
         previous = color;

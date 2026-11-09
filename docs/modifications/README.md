@@ -29,3 +29,4 @@ Every change to the project has its own short note in this folder, written in th
 | 018 | 2026-11-08 | [Characterization tests of the memory game](018-characterize-memory.md) |
 | 019 | 2026-11-08 | [Characterization tests of the patterns game](019-characterize-patterns.md) |
 | 020 | 2026-11-08 | [Characterization tests of profiles, themes, parent mode and reset](020-characterize-app-flows.md) |
+| 021 | 2026-11-09 | [Stable and faster test runs](021-stabilize-test-runs.md) |
