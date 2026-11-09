@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { HOSTILE_MOBS } from '../constants/gameData';
 import { playSuccessfulHit } from '../utils/soundManager';
+import { random } from '../domain/random';
 
 const PHANTOM_COOLDOWN_KEY = 'phantomEvent_lastSpawn_v1';
 const MIN_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
@@ -26,10 +27,10 @@ const PhantomEvent = ({ battlingSkillId, onAwardLevel, onPhantomCaught }) => {
         let delay;
         if (timeSinceLastSpawn >= MIN_COOLDOWN_MS) {
             // Cooldown has passed, spawn after a random delay (0 to 5 minutes)
-            delay = Math.random() * (MAX_COOLDOWN_MS - MIN_COOLDOWN_MS);
+            delay = random() * (MAX_COOLDOWN_MS - MIN_COOLDOWN_MS);
         } else {
             // Wait for minimum cooldown plus some random extra time
-            delay = MIN_COOLDOWN_MS - timeSinceLastSpawn + Math.random() * (MAX_COOLDOWN_MS - MIN_COOLDOWN_MS);
+            delay = MIN_COOLDOWN_MS - timeSinceLastSpawn + random() * (MAX_COOLDOWN_MS - MIN_COOLDOWN_MS);
         }
 
         if (timeoutRef.current) {
@@ -46,7 +47,7 @@ const PhantomEvent = ({ battlingSkillId, onAwardLevel, onPhantomCaught }) => {
     // Spawn the phantom
     const spawnPhantom = useCallback(() => {
         // Randomly choose direction
-        const startFromLeft = Math.random() > 0.5;
+        const startFromLeft = random() > 0.5;
         setFromLeft(startFromLeft);
         setClicked(false);
         setIsActive(true);

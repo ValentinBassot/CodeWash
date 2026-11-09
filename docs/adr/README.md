@@ -1,0 +1,7 @@
+# Architecture Decision Records
+
+One file per architecture decision: the context, the decision, and its consequences. A decision is never edited after it is accepted: a new ADR replaces it and the old one is marked "Replaced by".
+
+| # | Decision | Status |
+|---|---|---|
+| 0001 | [Randomness goes through one replaceable source](0001-replaceable-random-source.md) | Accepted |

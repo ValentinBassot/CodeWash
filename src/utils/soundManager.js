@@ -1,3 +1,5 @@
+import { random } from '../domain/random';
+
 /**
  * Sound Manager Utility
  * Centralized sound management for the game including BGM shuffle, UI sounds, and mob sounds.
@@ -106,7 +108,7 @@ class BGMManager {
             return this.currentTrackIndex >= 0 ? this.currentTrackIndex : 0;
         }
 
-        const randomIndex = Math.floor(Math.random() * availableIndices.length);
+        const randomIndex = Math.floor(random() * availableIndices.length);
         return availableIndices[randomIndex];
     }
 

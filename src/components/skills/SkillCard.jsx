@@ -18,6 +18,7 @@ import {
 import { playClick, getSfxVolume } from '../../utils/soundManager';
 import { calculateXPToLevel } from '../../utils/gameUtils';
 import { AURA_ADJECTIVES } from '../../utils/mobDisplayUtils';
+import { random } from '../../domain/random';
 
 const PRESTIGE_LEVEL_THRESHOLD = 20;
 
@@ -303,10 +304,10 @@ const SkillCard = ({
             // Only regenerate cards when entering battle if no session started yet
             memorySessionStartedRef.current = true;
             const allMobKeys = Object.keys(FRIENDLY_MOBS);
-            const shuffledMobs = [...allMobKeys].sort(() => Math.random() - 0.5);
+            const shuffledMobs = [...allMobKeys].sort(() => random() - 0.5);
             const selectedMobs = shuffledMobs.slice(0, memoryPairs);
             // Create pairs from the selected mobs
-            let deck = [...selectedMobs, ...selectedMobs].sort(() => Math.random() - 0.5);
+            let deck = [...selectedMobs, ...selectedMobs].sort(() => random() - 0.5);
             setMemoryCards(deck.map((mobKey, i) => ({ id: i, color: mobKey, img: FRIENDLY_MOBS[mobKey] })));
             setFlippedIndices([]);
             setMatchedPairs([]);
@@ -397,7 +398,7 @@ const SkillCard = ({
     );
 
     const startSimonGame = useCallback(() => {
-        const firstColor = axolotlColors[Math.floor(Math.random() * axolotlColors.length)];
+        const firstColor = axolotlColors[Math.floor(random() * axolotlColors.length)];
         const newSequence = [firstColor];
         setSimonSequence(newSequence);
         setPlayerIndex(0);
@@ -434,11 +435,11 @@ const SkillCard = ({
                     // Generate completely new sequence of same length + 1
                     newSequence = [];
                     for (let i = 0; i < simonSequence.length + 1; i++) {
-                        newSequence.push(axolotlColors[Math.floor(Math.random() * axolotlColors.length)]);
+                        newSequence.push(axolotlColors[Math.floor(random() * axolotlColors.length)]);
                     }
                 } else {
                     // Normal mode: Add new random axolotl to sequence
-                    const nextColor = axolotlColors[Math.floor(Math.random() * axolotlColors.length)];
+                    const nextColor = axolotlColors[Math.floor(random() * axolotlColors.length)];
                     newSequence = [...simonSequence, nextColor];
                 }
 

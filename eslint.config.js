@@ -23,6 +23,16 @@ export default defineConfig([
         },
     },
     {
+        files: ['src/**/*.{js,jsx}'],
+        ignores: ['src/domain/random.js', '**/*.test.*', 'src/test/**'],
+        rules: {
+            'no-restricted-properties': [
+                'error',
+                { object: 'Math', property: 'random', message: 'Use random() from src/domain/random.js.' },
+            ],
+        },
+    },
+    {
         files: ['scripts/**/*.mjs'],
         extends: [js.configs.recommended],
         languageOptions: { ecmaVersion: 'latest', globals: globals.node },

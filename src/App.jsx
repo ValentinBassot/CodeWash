@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Menu, Sparkles, Gift, Maximize, Minimize, Settings, Bug } from 'lucide-react';
+import { random } from './domain/random';
 
 // Modules
 import GlobalStyles from './components/ui/GlobalStyles';
@@ -589,7 +590,7 @@ const App = () => {
             const id = ++damageIdRef.current;
             setDamageNumbers((prev) => [
                 ...prev,
-                { id, skillId, val: actualDamage, x: Math.random() * 100 - 50, y: Math.random() * 50 - 25 },
+                { id, skillId, val: actualDamage, x: random() * 100 - 50, y: random() * 50 - 25 },
             ]);
             setTimeout(() => setDamageNumbers((prev) => prev.filter((n) => n.id !== id)), 800);
 

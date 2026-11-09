@@ -35,3 +35,4 @@ Every change to the project has its own short note in this folder, written in th
 | 024 | 2026-11-09 | [Coverage gate on changed lines](024-gate-changed-lines-coverage.md) |
 | 025 | 2026-11-09 | [Save keys and legacy fallback in one place](025-centralize-save-keys.md) |
 | 026 | 2026-11-09 | [A corrupted profile entry no longer crashes the game](026-fix-corrupted-profile-entries.md) |
+| 027 | 2026-11-09 | [Randomness through one replaceable source](027-replaceable-random-source.md) |
