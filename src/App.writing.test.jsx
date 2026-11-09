@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import App from './App';
 import { WRITING_DIFFICULTY_POOLS } from './constants/gameData';
-import { pressCard, save, skill, typeInto, useGameClock, wait } from './test/game';
+import { playWith, pressCard, save, skill, typeInto, useGameClock, wait } from './test/game';
 
 const writing = () => skill('writing');
 const allWords = Object.values(WRITING_DIFFICULTY_POOLS).flat();
@@ -55,6 +55,19 @@ describe('writing battle', () => {
         for (let hit = 0; hit < 5; hit++) spellRight();
         expect(writing()).toMatchObject({ level: 2, xp: 0, mobHealth: 60 });
         expect(save().stats.totalMobsDefeated).toBe(1);
+    });
+
+    it('a two-word item leaves a gap between the words and is spelled without the space', () => {
+        playWith((s) => {
+            Object.assign(s.skills.writing, { difficulty: 4, mobHealth: 1620, mobMaxHealth: 1620 });
+        });
+        vi.spyOn(Math, 'random').mockReturnValueOnce(3.5 / WRITING_DIFFICULTY_POOLS[4].length);
+        startWritingBattle();
+        expect(expectedWord()).toBe('IRON GOLEM');
+        expect(wordInput().maxLength).toBe(9);
+
+        typeInto(wordInput(), 'IRONGOLEM');
+        expect(writing()).toMatchObject({ mobHealth: 1620 - 324, mobMaxHealth: 1620 });
     });
 
     it('KNOWN DEBT D23: a wrong word never costs a heart, ten of them do not kill the player', () => {
