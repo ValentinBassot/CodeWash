@@ -24,12 +24,27 @@ export default defineConfig([
     },
     {
         files: ['src/**/*.{js,jsx}'],
-        ignores: ['src/domain/random.js', 'src/domain/clock.js', '**/*.test.*', 'src/test/**'],
+        ignores: [
+            'src/domain/random.js',
+            'src/domain/clock.js',
+            'src/io/speechRecognition.js',
+            '**/*.test.*',
+            'src/test/**',
+        ],
         rules: {
             'no-restricted-properties': [
                 'error',
                 { object: 'Math', property: 'random', message: 'Use random() from src/domain/random.js.' },
                 { object: 'Date', property: 'now', message: 'Use now() from src/domain/clock.js.' },
+                {
+                    object: 'window',
+                    property: 'webkitSpeechRecognition',
+                    message: 'Use src/io/speechRecognition.js.',
+                },
+            ],
+            'no-restricted-globals': [
+                'error',
+                { name: 'webkitSpeechRecognition', message: 'Use src/io/speechRecognition.js.' },
             ],
             'no-restricted-syntax': [
                 'error',

@@ -3,6 +3,7 @@ import { Menu, Sparkles, Gift, Maximize, Minimize, Settings, Bug } from 'lucide-
 import { random } from './domain/random';
 import { todayKey } from './domain/clock';
 import { judgeSpokenWord, normalizeSpeech } from './domain/reading';
+import { createSpeechRecognition, isSpeechRecognitionAvailable } from './io/speechRecognition';
 
 // Modules
 import GlobalStyles from './components/ui/GlobalStyles';
@@ -961,7 +962,7 @@ const App = () => {
         setChallengeData(generateChallenge(skill.challengeType, challengeDiff));
         playClick();
         startBGM(); // Start BGM on first battle (user interaction)
-        if (skill.challengeType === 'reading' && window.webkitSpeechRecognition) startVoiceListener(id);
+        if (skill.challengeType === 'reading' && isSpeechRecognitionAvailable()) startVoiceListener(id);
     };
 
     const endBattle = () => {
@@ -1046,7 +1047,7 @@ const App = () => {
     };
 
     const startVoiceListener = (targetId) => {
-        if (!window.webkitSpeechRecognition) {
+        if (!isSpeechRecognitionAvailable()) {
             console.warn('[Speech Recognition] Web Speech API not available');
             return;
         }
@@ -1058,7 +1059,7 @@ const App = () => {
         }
 
         console.log('[Speech Recognition] Initializing for skill:', targetId);
-        recognitionRef.current = new window.webkitSpeechRecognition();
+        recognitionRef.current = createSpeechRecognition();
         recognitionRef.current.lang = 'en-US';
         recognitionRef.current.continuous = true;
 
@@ -1133,7 +1134,7 @@ const App = () => {
     const toggleMicListener = (targetId) => {
         console.log('[Mic Toggle] isListening:', isListening);
 
-        if (!window.webkitSpeechRecognition) {
+        if (!isSpeechRecognitionAvailable()) {
             console.warn('[Mic Toggle] Web Speech API not available');
             setSpokenText('Mic not available');
             return;
