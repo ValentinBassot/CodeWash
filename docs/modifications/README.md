@@ -37,3 +37,4 @@ Every change to the project has its own short note in this folder, written in th
 | 026 | 2026-11-09 | [A corrupted profile entry no longer crashes the game](026-fix-corrupted-profile-entries.md) |
 | 027 | 2026-11-09 | [Randomness through one replaceable source](027-replaceable-random-source.md) |
 | 028 | 2026-11-09 | [Deterministic game tests](028-deterministic-game-tests.md) |
+| 029 | 2026-11-10 | [Characterization tests of the phantom fly-by](029-characterize-phantom-event.md) |
