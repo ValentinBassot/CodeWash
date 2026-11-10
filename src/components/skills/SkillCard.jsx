@@ -13,32 +13,21 @@ import {
     MINIBOSS_MOBS,
     DIFFICULTY_IMAGES,
     DIFFICULTY_CONTENT,
-    HOMOPHONES,
 } from '../../constants/gameData';
-import { playClick, getSfxVolume } from '../../utils/soundManager';
+import { playAxolotlNote, playClick, playMatch, playMismatch } from '../../utils/soundManager';
+import { judgeSpokenWord } from '../../domain/reading';
 import { calculateXPToLevel } from '../../utils/gameUtils';
 import { AURA_ADJECTIVES } from '../../utils/mobDisplayUtils';
+import { random } from '../../domain/random';
 
 const PRESTIGE_LEVEL_THRESHOLD = 20;
 
 // Voice recognition constants
-const MIN_SPOKEN_TEXT_LENGTH = 2;
 // Tempo constants for pattern recognition
 const MAX_TEMPO_DELAY = 800; // Slowest tempo (difficulty 1, round 1)
 const MIN_TEMPO_DELAY = 200; // Fastest tempo (difficulty 7, always)
 
 // Map axolotl colors to specific note files for consistent sound feedback
-const AXOLOTL_NOTE_MAP = {
-    Pink: 'c4',
-    Cyan: 'd4',
-    Gold: 'e4',
-    Brown: 'f4',
-    Blue: 'g4',
-    Red: 'a4',
-    Green: 'b4',
-    Black: 'g5',
-};
-
 // Helper: clamp a value between min and max
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
@@ -126,22 +115,6 @@ const SkillCard = ({
 
     // Ref to track if patterns game session was initialized for the current battle
     const simonSessionStartedRef = useRef(false);
-
-    // Helper function to play axolotl-specific note with fallback to click
-    const playAxolotlNote = useCallback((color) => {
-        const noteName = AXOLOTL_NOTE_MAP[color];
-        if (noteName) {
-            const audio = new Audio(`assets/sounds/axolotl/${noteName}.wav`);
-            audio.volume = getSfxVolume();
-            audio.play().catch(() => {
-                // Fallback to click sound if note file fails to load
-                playClick();
-            });
-        } else {
-            // Fallback to click sound if no mapping exists
-            playClick();
-        }
-    }, []);
 
     // Handler for when parental verification succeeds for Cleaning skill
     const handleParentalVerified = useCallback(() => {
@@ -283,12 +256,6 @@ const SkillCard = ({
     const buttonStyle = getButtonStyle();
 
     // Helper function to play mismatch sound with proper volume
-    const playMismatch = () => {
-        const audio = new Audio(BASE_ASSETS.audio.mismatch);
-        audio.volume = getSfxVolume();
-        audio.play().catch(() => {});
-    };
-
     useEffect(() => {
         setMathInput('');
     }, [challenge]);
@@ -303,10 +270,10 @@ const SkillCard = ({
             // Only regenerate cards when entering battle if no session started yet
             memorySessionStartedRef.current = true;
             const allMobKeys = Object.keys(FRIENDLY_MOBS);
-            const shuffledMobs = [...allMobKeys].sort(() => Math.random() - 0.5);
+            const shuffledMobs = [...allMobKeys].sort(() => random() - 0.5);
             const selectedMobs = shuffledMobs.slice(0, memoryPairs);
             // Create pairs from the selected mobs
-            let deck = [...selectedMobs, ...selectedMobs].sort(() => Math.random() - 0.5);
+            let deck = [...selectedMobs, ...selectedMobs].sort(() => random() - 0.5);
             setMemoryCards(deck.map((mobKey, i) => ({ id: i, color: mobKey, img: FRIENDLY_MOBS[mobKey] })));
             setFlippedIndices([]);
             setMatchedPairs([]);
@@ -343,11 +310,7 @@ const SkillCard = ({
             // Check if spoken text changed
             if (spokenText !== prevSpokenTextRef.current) {
                 if (challenge?.answer) {
-                    const homophones = HOMOPHONES[challenge.answer];
-                    const isCorrect =
-                        spokenText === challenge.answer || (homophones && homophones.includes(spokenText));
-                    // Assume wrong if text is substantial and doesn't match (including homophones)
-                    if (!isCorrect && spokenText.length >= MIN_SPOKEN_TEXT_LENGTH) {
+                    if (judgeSpokenWord(spokenText, challenge.answer) === 'wrong') {
                         // Trigger wrong animation
                         setIsReadingWrong(true);
                         setTimeout(() => setIsReadingWrong(false), 500);
@@ -393,11 +356,11 @@ const SkillCard = ({
             };
             setTimeout(playNext, 500);
         },
-        [completedRounds, difficulty, playAxolotlNote],
+        [completedRounds, difficulty],
     );
 
     const startSimonGame = useCallback(() => {
-        const firstColor = axolotlColors[Math.floor(Math.random() * axolotlColors.length)];
+        const firstColor = axolotlColors[Math.floor(random() * axolotlColors.length)];
         const newSequence = [firstColor];
         setSimonSequence(newSequence);
         setPlayerIndex(0);
@@ -415,9 +378,7 @@ const SkillCard = ({
             // Correct click
             if (playerIndex === simonSequence.length - 1) {
                 // Completed the sequence
-                const matchAudio = new Audio(BASE_ASSETS.audio.match);
-                matchAudio.volume = getSfxVolume();
-                matchAudio.play().catch(() => {});
+                playMatch();
                 const newRounds = completedRounds + 1;
                 setCompletedRounds(newRounds);
 
@@ -434,11 +395,11 @@ const SkillCard = ({
                     // Generate completely new sequence of same length + 1
                     newSequence = [];
                     for (let i = 0; i < simonSequence.length + 1; i++) {
-                        newSequence.push(axolotlColors[Math.floor(Math.random() * axolotlColors.length)]);
+                        newSequence.push(axolotlColors[Math.floor(random() * axolotlColors.length)]);
                     }
                 } else {
                     // Normal mode: Add new random axolotl to sequence
-                    const nextColor = axolotlColors[Math.floor(Math.random() * axolotlColors.length)];
+                    const nextColor = axolotlColors[Math.floor(random() * axolotlColors.length)];
                     newSequence = [...simonSequence, nextColor];
                 }
 
@@ -451,9 +412,7 @@ const SkillCard = ({
             }
         } else {
             // Wrong click - game over
-            const mismatchAudio = new Audio(BASE_ASSETS.audio.mismatch);
-            mismatchAudio.volume = getSfxVolume();
-            mismatchAudio.play().catch(() => {});
+            playMismatch();
             setSimonGameActive(false);
             // No damage on failure since damage was already applied during successful rounds
         }
@@ -487,9 +446,7 @@ const SkillCard = ({
             setIsProcessingMatch(true);
             setTimeout(() => {
                 if (memoryCards[newFlipped[0]].color === memoryCards[newFlipped[1]].color) {
-                    const matchAudio = new Audio(BASE_ASSETS.audio.match);
-                    matchAudio.volume = getSfxVolume();
-                    matchAudio.play().catch(() => {});
+                    playMatch();
                     const newMatched = [...matchedPairs, memoryCards[newFlipped[0]].color];
                     setMatchedPairs(newMatched);
                     setFlippedIndices([]);
@@ -497,9 +454,7 @@ const SkillCard = ({
                     // Win when all pairs are matched (use memoryPairs from difficulty config)
                     if (newMatched.length === memoryPairs) setTimeout(() => onMathSubmit('WIN'), 500);
                 } else {
-                    const mismatchAudio = new Audio(BASE_ASSETS.audio.mismatch);
-                    mismatchAudio.volume = getSfxVolume();
-                    mismatchAudio.play().catch(() => {});
+                    playMismatch();
                     setMismatchShake(true);
                     setTimeout(() => {
                         setMismatchShake(false);

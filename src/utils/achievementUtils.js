@@ -1,4 +1,5 @@
 import { ACHIEVEMENTS } from '../constants/achievements';
+import { todayKey } from '../domain/clock';
 
 /**
  * Achievement Utilities
@@ -187,7 +188,7 @@ export const addUniqueToArray = (arr, value) => {
  * @returns {array} - Updated login dates
  */
 export const recordLoginDate = (loginDates) => {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const today = todayKey();
     if (!loginDates.includes(today)) {
         return [...loginDates, today];
     }

@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import App from '../App';
+import { createSeededRandom, setRandomSource } from '../domain/random';
 
 export const save = () => JSON.parse(localStorage.getItem('heroSkills_v23_p1'));
 
@@ -27,7 +28,14 @@ export const typeInto = (input, value) => fireEvent.change(input, { target: { va
 
 export const wait = (ms) => act(() => vi.advanceTimersByTime(ms));
 
+export const nextRandomValues = (...values) => {
+    const after = createSeededRandom(1);
+    const queue = [...values];
+    setRandomSource(() => (queue.length > 0 ? queue.shift() : after()));
+};
+
 export const useGameClock = () => {
+    setRandomSource(createSeededRandom(1));
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-11-09T10:00:00Z'));
     vi.spyOn(console, 'warn').mockImplementation(() => {});

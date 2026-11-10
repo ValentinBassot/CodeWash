@@ -1,3 +1,5 @@
+import { random } from '../domain/random';
+
 // Mob display utilities for aura generation
 
 // Available aura types
@@ -20,7 +22,7 @@ export const AURA_ADJECTIVES = {
  * @returns {string} Random aura type from AURA_TYPES
  */
 export const getRandomAura = () => {
-    return AURA_TYPES[Math.floor(Math.random() * AURA_TYPES.length)];
+    return AURA_TYPES[Math.floor(random() * AURA_TYPES.length)];
 };
 
 /**

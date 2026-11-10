@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Menu, Sparkles, Gift, Maximize, Minimize, Settings, Bug } from 'lucide-react';
+import { random } from './domain/random';
+import { todayKey } from './domain/clock';
+import { judgeSpokenWord, normalizeSpeech } from './domain/reading';
+import { createSpeechRecognition, isSpeechRecognitionAvailable } from './io/speechRecognition';
 
 // Modules
 import GlobalStyles from './components/ui/GlobalStyles';
@@ -42,7 +46,6 @@ import {
     BASE_ASSETS,
     THEME_CONFIG,
     SKILL_DATA,
-    HOMOPHONES,
     DIFFICULTY_CONTENT,
     HOSTILE_MOBS,
     BOSS_MOBS,
@@ -77,7 +80,6 @@ const PARENT_PRIVILEGE_DIFFICULTY = 7;
 const PARENT_PRIVILEGE_BADGES = [1, 2, 3, 4, 5, 6, 7, 8];
 
 // Voice recognition constants
-const MIN_SPOKEN_TEXT_LENGTH = 2;
 const MIC_OFF_TEXT = 'Mic Off';
 
 // Boss healing animation duration (ms)
@@ -298,6 +300,7 @@ const App = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [bossHealing, setBossHealing] = useState(null); // skillId of boss being healed
     const recognitionRef = useRef(null);
+    const battlingSkillIdRef = useRef(null);
     const challengeDataRef = useRef(null);
     const damageIdRef = useRef(0); // Counter for generating unique damage number IDs
     const loginTrackedRef = useRef(false); // Track if we've already recorded today's login
@@ -589,7 +592,7 @@ const App = () => {
             const id = ++damageIdRef.current;
             setDamageNumbers((prev) => [
                 ...prev,
-                { id, skillId, val: actualDamage, x: Math.random() * 100 - 50, y: Math.random() * 50 - 25 },
+                { id, skillId, val: actualDamage, x: random() * 100 - 50, y: random() * 50 - 25 },
             ]);
             setTimeout(() => setDamageNumbers((prev) => prev.filter((n) => n.id !== id)), 800);
 
@@ -943,6 +946,10 @@ const App = () => {
         }
     };
 
+    useEffect(() => {
+        battlingSkillIdRef.current = battlingSkillId;
+    }, [battlingSkillId]);
+
     const startBattle = (id) => {
         const skill = SKILL_DATA.find((s) => s.id === id);
         setBattlingSkillId(id);
@@ -960,7 +967,7 @@ const App = () => {
         setChallengeData(generateChallenge(skill.challengeType, challengeDiff));
         playClick();
         startBGM(); // Start BGM on first battle (user interaction)
-        if (skill.challengeType === 'reading' && window.webkitSpeechRecognition) startVoiceListener(id);
+        if (skill.challengeType === 'reading' && isSpeechRecognitionAvailable()) startVoiceListener(id);
     };
 
     const endBattle = () => {
@@ -1045,7 +1052,7 @@ const App = () => {
     };
 
     const startVoiceListener = (targetId) => {
-        if (!window.webkitSpeechRecognition) {
+        if (!isSpeechRecognitionAvailable()) {
             console.warn('[Speech Recognition] Web Speech API not available');
             return;
         }
@@ -1057,7 +1064,7 @@ const App = () => {
         }
 
         console.log('[Speech Recognition] Initializing for skill:', targetId);
-        recognitionRef.current = new window.webkitSpeechRecognition();
+        recognitionRef.current = createSpeechRecognition();
         recognitionRef.current.lang = 'en-US';
         recognitionRef.current.continuous = true;
 
@@ -1067,19 +1074,16 @@ const App = () => {
             setSpokenText('Listening...');
         };
 
+        const recognition = recognitionRef.current;
         recognitionRef.current.onend = () => {
             console.log('[Speech Recognition] Ended');
             setIsListening(false);
-            // Auto-restart if still in Reading challenge
-            // Note: battlingSkillId is intentionally checked from closure - if battle has ended
-            // by the time this timeout fires, we don't want to restart (which is the desired behavior)
-            if (battlingSkillId === 'reading' || targetId === 'reading') {
-                // Small delay before restarting to avoid rapid restarts
+            if (battlingSkillIdRef.current === 'reading' || targetId === 'reading') {
                 setTimeout(() => {
-                    // Double-check that we're still in reading challenge
-                    if (battlingSkillId === 'reading') {
+                    if (recognitionRef.current !== recognition) return;
+                    recognitionRef.current = null;
+                    if (battlingSkillIdRef.current === 'reading') {
                         console.log('[Speech Recognition] Auto-restarting');
-                        recognitionRef.current = null; // Clear ref to allow restart
                         startVoiceListener(targetId);
                     }
                 }, 100);
@@ -1102,18 +1106,17 @@ const App = () => {
         };
 
         recognitionRef.current.onresult = (e) => {
-            const t = e.results[e.results.length - 1][0].transcript
-                .toUpperCase()
-                .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '');
+            const t = normalizeSpeech(e.results[e.results.length - 1][0].transcript);
             console.log('[Speech Recognition] Recognized text:', t);
             setSpokenText(t);
             // Use the ref to get the CURRENT challenge data
             const currentChallenge = challengeDataRef.current;
             if (currentChallenge && currentChallenge.type === 'reading') {
-                if (t === currentChallenge.answer || HOMOPHONES[currentChallenge.answer]?.includes(t)) {
+                const verdict = judgeSpokenWord(t, currentChallenge.answer);
+                if (verdict === 'correct') {
                     console.log('[Speech Recognition] Correct answer!');
                     handleSuccessHit(targetId || battlingSkillId);
-                } else if (t && t.length >= MIN_SPOKEN_TEXT_LENGTH) {
+                } else if (verdict === 'wrong') {
                     // Wrong answer - trigger error feedback
                     console.log('[Speech Recognition] Wrong answer');
                     handleSuccessHit(targetId || battlingSkillId, 'WRONG');
@@ -1133,7 +1136,7 @@ const App = () => {
     const toggleMicListener = (targetId) => {
         console.log('[Mic Toggle] isListening:', isListening);
 
-        if (!window.webkitSpeechRecognition) {
+        if (!isSpeechRecognitionAvailable()) {
             console.warn('[Mic Toggle] Web Speech API not available');
             setSpokenText('Mic not available');
             return;
@@ -1166,7 +1169,7 @@ const App = () => {
         if (loginTrackedRef.current) return; // Skip if already tracked
         loginTrackedRef.current = true;
 
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        const today = todayKey();
         const currentDates = stats.loginDates || [];
         // Only set if today's date is not already recorded
         if (!currentDates.includes(today)) {

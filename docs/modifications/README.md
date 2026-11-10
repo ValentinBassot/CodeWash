@@ -35,3 +35,13 @@ Every change to the project has its own short note in this folder, written in th
 | 024 | 2026-11-09 | [Coverage gate on changed lines](024-gate-changed-lines-coverage.md) |
 | 025 | 2026-11-09 | [Save keys and legacy fallback in one place](025-centralize-save-keys.md) |
 | 026 | 2026-11-09 | [A corrupted profile entry no longer crashes the game](026-fix-corrupted-profile-entries.md) |
+| 027 | 2026-11-09 | [Randomness through one replaceable source](027-replaceable-random-source.md) |
+| 028 | 2026-11-09 | [Deterministic game tests](028-deterministic-game-tests.md) |
+| 029 | 2026-11-10 | [Characterization tests of the phantom fly-by](029-characterize-phantom-event.md) |
+| 030 | 2026-11-10 | [Phantom spawn key in the save keys](030-phantom-key-in-save-keys.md) |
+| 031 | 2026-11-10 | [Time through one replaceable clock](031-replaceable-clock.md) |
+| 032 | 2026-11-10 | [Login days are counted in local time](032-local-login-day.md) |
+| 033 | 2026-11-10 | [Every sound through the sound manager](033-one-sound-manager.md) |
+| 034 | 2026-11-10 | [One rule to judge a spoken word](034-one-reading-rule.md) |
+| 035 | 2026-11-10 | [Speech recognition behind src/io](035-speech-recognition-module.md) |
+| 036 | 2026-11-10 | [The microphone restarts when the browser ends the session](036-microphone-restarts.md) |

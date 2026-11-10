@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { HOSTILE_MOBS } from '../constants/gameData';
 import { playSuccessfulHit } from '../utils/soundManager';
+import { random } from '../domain/random';
+import { now } from '../domain/clock';
+import { SAVE_KEYS } from '../persistence/profileStorage';
 
-const PHANTOM_COOLDOWN_KEY = 'phantomEvent_lastSpawn_v1';
 const MIN_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
 const FLIGHT_DURATION_MS = 8000; // 8 seconds to cross the screen (slow enough for a child to click)
@@ -18,18 +20,18 @@ const PhantomEvent = ({ battlingSkillId, onAwardLevel, onPhantomCaught }) => {
 
     // Schedule the next phantom spawn
     const scheduleNextSpawn = useCallback(() => {
-        const lastSpawn = parseInt(localStorage.getItem(PHANTOM_COOLDOWN_KEY) || '0', 10);
-        const now = Date.now();
-        const timeSinceLastSpawn = now - lastSpawn;
+        const lastSpawn = parseInt(localStorage.getItem(SAVE_KEYS.phantomLastSpawn) || '0', 10);
+        const currentTime = now();
+        const timeSinceLastSpawn = currentTime - lastSpawn;
 
         // Calculate how long until we can spawn again
         let delay;
         if (timeSinceLastSpawn >= MIN_COOLDOWN_MS) {
             // Cooldown has passed, spawn after a random delay (0 to 5 minutes)
-            delay = Math.random() * (MAX_COOLDOWN_MS - MIN_COOLDOWN_MS);
+            delay = random() * (MAX_COOLDOWN_MS - MIN_COOLDOWN_MS);
         } else {
             // Wait for minimum cooldown plus some random extra time
-            delay = MIN_COOLDOWN_MS - timeSinceLastSpawn + Math.random() * (MAX_COOLDOWN_MS - MIN_COOLDOWN_MS);
+            delay = MIN_COOLDOWN_MS - timeSinceLastSpawn + random() * (MAX_COOLDOWN_MS - MIN_COOLDOWN_MS);
         }
 
         if (timeoutRef.current) {
@@ -46,13 +48,13 @@ const PhantomEvent = ({ battlingSkillId, onAwardLevel, onPhantomCaught }) => {
     // Spawn the phantom
     const spawnPhantom = useCallback(() => {
         // Randomly choose direction
-        const startFromLeft = Math.random() > 0.5;
+        const startFromLeft = random() > 0.5;
         setFromLeft(startFromLeft);
         setClicked(false);
         setIsActive(true);
 
         // Record spawn time
-        localStorage.setItem(PHANTOM_COOLDOWN_KEY, Date.now().toString());
+        localStorage.setItem(SAVE_KEYS.phantomLastSpawn, now().toString());
 
         // Set timeout for when phantom reaches the other side
         if (flightTimeoutRef.current) {

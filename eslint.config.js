@@ -23,6 +23,55 @@ export default defineConfig([
         },
     },
     {
+        files: ['src/**/*.{js,jsx}'],
+        ignores: [
+            'src/domain/random.js',
+            'src/domain/clock.js',
+            'src/io/speechRecognition.js',
+            '**/*.test.*',
+            'src/test/**',
+        ],
+        rules: {
+            'no-restricted-properties': [
+                'error',
+                { object: 'Math', property: 'random', message: 'Use random() from src/domain/random.js.' },
+                { object: 'Date', property: 'now', message: 'Use now() from src/domain/clock.js.' },
+                {
+                    object: 'window',
+                    property: 'webkitSpeechRecognition',
+                    message: 'Use src/io/speechRecognition.js.',
+                },
+            ],
+            'no-restricted-globals': [
+                'error',
+                { name: 'webkitSpeechRecognition', message: 'Use src/io/speechRecognition.js.' },
+            ],
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector: "NewExpression[callee.name='Date'][arguments.length=0]",
+                    message: 'Use now() or todayKey() from src/domain/clock.js.',
+                },
+                {
+                    selector: "NewExpression[callee.name='Audio']",
+                    message: 'Play sounds through src/utils/soundManager.js.',
+                },
+            ],
+        },
+    },
+    {
+        files: ['src/utils/soundManager.js'],
+        rules: {
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector: "NewExpression[callee.name='Date'][arguments.length=0]",
+                    message: 'Use now() or todayKey() from src/domain/clock.js.',
+                },
+            ],
+        },
+    },
+    {
         files: ['scripts/**/*.mjs'],
         extends: [js.configs.recommended],
         languageOptions: { ecmaVersion: 'latest', globals: globals.node },

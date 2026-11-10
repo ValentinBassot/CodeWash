@@ -143,17 +143,18 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 |---|---|---|---|---|---|---|---|---|---|
 | D14 | `JSON.parse` without `try/catch` in state initializers: a corrupted save crashes the game at startup | `App.jsx:51,52,971,977` | fragile parser | 4 | 3 | 12 | S | P1 | Done (026) |
 | D15 | Persistence scattered, legacy migrations duplicated | `App.jsx:50-285,966`, `PhantomEvent.jsx:21,55` | duplication | 4 | 4 | 16 | M | P1 | In progress (025) |
-| D16 | `Math.random` called directly (34 times): untestable | `gameUtils.js`, `SkillCard.jsx`, `PhantomEvent.jsx`, others | global | 4 | 4 | 16 | M | P1 | Identified |
-| D17 | Clock and timers not injectable (28 timers) | `PhantomEvent.jsx:21,55`, timers across `src/` | global | 3 | 3 | 9 | M | P2 | Identified |
-| D18 | Audio mixed with game logic (11 `new Audio`) | `soundManager.js`, `SkillCard.jsx` | I/O in domain | 4 | 4 | 16 | M | P1 | Identified |
-| D19 | Speech recognition hard-wired in `App` | `App.jsx:913,1000,1012,1086` | I/O in domain | 4 | 3 | 12 | M | P1 | Identified |
+| D16 | `Math.random` called directly (34 times): untestable | `gameUtils.js`, `SkillCard.jsx`, `PhantomEvent.jsx`, others | global | 4 | 4 | 16 | M | P1 | Done (027) |
+| D17 | Clock and timers not injectable (28 timers) | `PhantomEvent.jsx:21,55`, timers across `src/` | global | 3 | 3 | 9 | M | P2 | Done (031) |
+| D18 | Audio mixed with game logic (11 `new Audio`) | `soundManager.js`, `SkillCard.jsx` | I/O in domain | 4 | 4 | 16 | M | P1 | Done (033) |
+| D19 | Speech recognition hard-wired in `App` | `App.jsx:913,1000,1012,1086` | I/O in domain | 4 | 3 | 12 | M | P1 | Done (035) |
 | D20 | Subtraction can ask `0 - 1` | `gameUtils.js:254` (`generateMathProblem`, case `-`) | bug | 3 | 4 | 12 | S | P2 | Pinned (007) |
 | D21 | Out-of-range difficulty or level accepted silently | `gameUtils.js` (`getEncounterType`, `getDifficultyMultiplier`, `getWordForDifficulty`, `generateMathProblem`, `getReadingWord`) | fragile parser | 2 | 2 | 4 | S | P3 | Identified |
-| D22 | Login day computed in UTC, not local time | `App.jsx:1117`, `achievementUtils.js:190` | bug | 2 | 3 | 6 | S | P3 | Pinned (008) |
+| D22 | Login day computed in UTC, not local time | `App.jsx:1117`, `achievementUtils.js:190` | bug | 2 | 3 | 6 | S | P3 | Done (032) |
 | D23 | Wrong answer has no penalty in the writing game | `SkillCard.jsx` (writing input `onChange`) | bug | 2 | 5 | 10 | S | P3 | Pinned (015) |
 | D24 | Progressive damage of the axolotl game ignored | `SkillCard.jsx:348`, `App.jsx:1421` | bug | 2 | 5 | 10 | S | P3 | Pinned (019) |
 | D25 | "Jack of All Trades" reaches its top tier with no skill | `achievements.js:105` | bug | 2 | 2 | 4 | S | P3 | Pinned (008) |
 | D44 | Old saves without mob health get a difficulty-1 mob whatever their difficulty: the backfill never runs because defaults are merged first | `App.jsx` (`loadSkills`, mob health backfill) | bug | 3 | 2 | 6 | S | P3 | Pinned (010) |
+| D46 | The rule that judges a spoken word (exact, homophone, or noise under 2 letters) is copied in `App` and `SkillCard`, with `MIN_SPOKEN_TEXT_LENGTH` defined twice | `App.jsx` (`onresult` of `startVoiceListener`), `SkillCard.jsx` (wrong-reading effect) | duplication | 3 | 3 | 9 | S | P2 | Done (034) |
 
 ### Phase 3: hot spots
 
@@ -163,14 +164,15 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D27 | `SkillCard`: 611-line function, complexity 107, every mini-game inside | `SkillCard.jsx:65` | complexity | 5 | 4 | 20 | XL | P1 | Identified |
 | D28 | Errors swallowed (`console.warn`, empty `.play().catch`) | `App.jsx:168,180,197,237`, `soundManager.js:127,136,185,255,269,283` | silent error | 3 | 3 | 9 | S | P2 | Pinned (010) |
 | D29 | 1217 lines of CSS inside a component | `GlobalStyles.jsx:3` | large file | 3 | 3 | 9 | M | P3 | Identified |
+| D47 | Tests that mount the whole App take 4 to 8 s each; under parallel coverage the slowest exceed 20 s, so the timeout was raised to 30 s | `src/App.*.test.jsx`, `vite.config.js` (`testTimeout`) | slow tests | 3 | 3 | 9 | M | P2 | Identified |
 
 ### Phase 4: features and their debt
 
 | ID | Item | Location | Smell | I | L | Risk | Effort | Prio | Status |
 |---|---|---|---|---|---|---|---|---|---|
 | D30 | UI and mob sounds sit in nested folders: none of them plays | `public/assets/sounds/ui/ui/`, `sounds/mob/mob/`, `soundManager.js` | bug | 4 | 5 | 20 | S | P1 | Pinned (011) |
-| D31 | Microphone never restarts after a session ends, its button does nothing | `App.jsx:999-1090` | I/O in domain | 4 | 4 | 16 | S | P1 | Pinned (016) |
-| D32 | Memory and patterns sounds point to 10 missing files | `gameData.jsx:4`, `SkillCard.jsx:228,338,374,409,417` | bug | 3 | 5 | 15 | S | P2 | Pinned (012) |
+| D31 | Microphone never restarts after a session ends, its button does nothing | `App.jsx:999-1090` | I/O in domain | 4 | 4 | 16 | S | P1 | Done (036) |
+| D32 | Memory, patterns and wrong-answer sounds point to 10 missing files (the mismatch sound also plays on every wrong math and writing answer) | `gameData.jsx:4`, `SkillCard.jsx:228,338,374,409,417` | bug | 3 | 5 | 15 | S | P2 | Pinned (012) |
 | D33 | Themes: missing assets, inconsistent configuration | `gameData.jsx:175-214` | hardcoded values | 4 | 5 | 20 | M | P1 | Pinned (012) |
 | D34 | Music and sounds not tied to the theme | `soundManager.js:7-13` | hardcoded values | 3 | 5 | 15 | M | P2 | Identified |
 | D35 | Minecraft branding hard-coded | `gameData.jsx:411-416`, `achievements.js`, UI texts | hardcoded values | 3 | 5 | 15 | M | P2 | Identified |
@@ -190,7 +192,7 @@ Impact (rows) × likelihood (columns). Top-right is treated first.
 |---|---|---|---|---|---|
 | **5** | | | | D26, D27 | D01 |
 | **4** | | | D07, D14, D19 | D05, D15, D16, D18, D31, D38 | D30, D33 |
-| **3** | | D44 | D03, D09, D17, D28, D29, D40, D41 | D20, D45 | D02, D04, D06, D32, D34, D35, D36, D37, D39 |
+| **3** | | D44 | D03, D09, D17, D28, D29, D40, D41, D46, D47 | D20, D45 | D02, D04, D06, D32, D34, D35, D36, D37, D39 |
 | **2** | | D10, D11, D21, D25 | D22, D43 | D08 | D12, D13, D23, D24, D42 |
 | **1** | | | | | |
 

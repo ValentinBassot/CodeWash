@@ -181,3 +181,67 @@ describe('background music', () => {
         expect(bgm.getRandomTrack()).toBe(0);
     });
 });
+
+describe('one place creates audio', () => {
+    it('setAudioFactory replaces how audio is created, resetAudioFactory restores it', () => {
+        const made = [];
+        sound.setAudioFactory((src) => {
+            const audio = new FakeAudio(src);
+            made.push(audio);
+            return audio;
+        });
+        sound.playClick();
+        expect(made.map((a) => a.src)).toEqual(['assets/sounds/ui/click.wav']);
+        sound.resetAudioFactory();
+        sound.playClick();
+        expect(made).toHaveLength(1);
+        expect(FakeAudio.created).toHaveLength(2);
+    });
+
+    it('playSfx plays a file once at the effects volume', () => {
+        sound.setSfxVolume(0.3);
+        sound.playSfx('assets/x.wav');
+        expect(FakeAudio.created[0]).toMatchObject({ src: 'assets/x.wav', volume: 0.3, plays: 1 });
+    });
+
+    it('playSfx calls onError when the file cannot be played', async () => {
+        const onError = vi.fn();
+        vi.spyOn(FakeAudio.prototype, 'play').mockImplementationOnce(() => Promise.reject(new Error('missing')));
+        sound.playSfx('assets/missing.wav', onError);
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(onError).toHaveBeenCalledOnce();
+    });
+
+    it('match and mismatch play the memory sounds of BASE_ASSETS', () => {
+        sound.playMatch();
+        sound.playMismatch();
+        expect(FakeAudio.created.map((a) => a.src)).toEqual([
+            'assets/sounds/match_success.wav',
+            'assets/sounds/mismatch.wav',
+        ]);
+    });
+
+    it('each axolotl plays its note, an unknown one plays the click', () => {
+        sound.playAxolotlNote('Pink');
+        sound.playAxolotlNote('Black');
+        sound.playAxolotlNote('Purple');
+        expect(FakeAudio.created.map((a) => a.src)).toEqual([
+            'assets/sounds/axolotl/c4.wav',
+            'assets/sounds/axolotl/g5.wav',
+            'assets/sounds/ui/click.wav',
+        ]);
+        expect(onDisk('assets/sounds/axolotl/c4.wav')).toBe(true);
+    });
+
+    it('an axolotl note that fails to play falls back to the click', async () => {
+        vi.spyOn(FakeAudio.prototype, 'play').mockImplementationOnce(() => Promise.reject(new Error('missing')));
+        sound.playAxolotlNote('Cyan');
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(FakeAudio.created.map((a) => a.src)).toEqual([
+            'assets/sounds/axolotl/d4.wav',
+            'assets/sounds/ui/click.wav',
+        ]);
+    });
+});

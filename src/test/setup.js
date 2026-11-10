@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import { resetRandomSource } from '../domain/random';
 
 beforeEach(() => {
     if (typeof window === 'undefined') return;
@@ -10,5 +11,6 @@ beforeEach(() => {
 
 afterEach(() => {
     cleanup();
+    resetRandomSource();
     if (typeof localStorage !== 'undefined') localStorage.clear();
 });
