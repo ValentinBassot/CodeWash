@@ -12,6 +12,7 @@ describe('SAVE_KEYS', () => {
         expect(SAVE_KEYS.profileSave(2)).toBe('heroSkills_v23_p2');
         expect(SAVE_KEYS.borderEffect(3)).toBe('borderEffect_p3');
         expect(SAVE_KEYS.borderColor(1)).toBe('borderColor_p1');
+        expect(SAVE_KEYS.phantomLastSpawn).toBe('phantomEvent_lastSpawn_v1');
     });
 });
 

@@ -6,6 +6,7 @@ export const SAVE_KEYS = {
     profileSave: (profileId) => `heroSkills_v23_p${profileId}`,
     borderEffect: (profileId) => `borderEffect_p${profileId}`,
     borderColor: (profileId) => `borderColor_p${profileId}`,
+    phantomLastSpawn: 'phantomEvent_lastSpawn_v1',
 };
 
 export const readProfileSave = (storage, profileId) => {
