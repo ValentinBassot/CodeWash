@@ -775,6 +775,7 @@ const SkillCard = ({
                                                         } else if (val.length === answerNoSpaces.length) {
                                                             setIsWrong(true);
                                                             playMismatch();
+                                                            onMathSubmit('WRONG');
                                                             setTimeout(() => {
                                                                 setIsWrong(false);
                                                                 setMathInput('');
