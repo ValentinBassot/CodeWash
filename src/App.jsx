@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Menu, Sparkles, Gift, Maximize, Minimize, Settings, Bug } from 'lucide-react';
 import { random } from './domain/random';
 import { todayKey } from './domain/clock';
+import { judgeSpokenWord, normalizeSpeech } from './domain/reading';
 
 // Modules
 import GlobalStyles from './components/ui/GlobalStyles';
@@ -44,7 +45,6 @@ import {
     BASE_ASSETS,
     THEME_CONFIG,
     SKILL_DATA,
-    HOMOPHONES,
     DIFFICULTY_CONTENT,
     HOSTILE_MOBS,
     BOSS_MOBS,
@@ -79,7 +79,6 @@ const PARENT_PRIVILEGE_DIFFICULTY = 7;
 const PARENT_PRIVILEGE_BADGES = [1, 2, 3, 4, 5, 6, 7, 8];
 
 // Voice recognition constants
-const MIN_SPOKEN_TEXT_LENGTH = 2;
 const MIC_OFF_TEXT = 'Mic Off';
 
 // Boss healing animation duration (ms)
@@ -1104,18 +1103,17 @@ const App = () => {
         };
 
         recognitionRef.current.onresult = (e) => {
-            const t = e.results[e.results.length - 1][0].transcript
-                .toUpperCase()
-                .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '');
+            const t = normalizeSpeech(e.results[e.results.length - 1][0].transcript);
             console.log('[Speech Recognition] Recognized text:', t);
             setSpokenText(t);
             // Use the ref to get the CURRENT challenge data
             const currentChallenge = challengeDataRef.current;
             if (currentChallenge && currentChallenge.type === 'reading') {
-                if (t === currentChallenge.answer || HOMOPHONES[currentChallenge.answer]?.includes(t)) {
+                const verdict = judgeSpokenWord(t, currentChallenge.answer);
+                if (verdict === 'correct') {
                     console.log('[Speech Recognition] Correct answer!');
                     handleSuccessHit(targetId || battlingSkillId);
-                } else if (t && t.length >= MIN_SPOKEN_TEXT_LENGTH) {
+                } else if (verdict === 'wrong') {
                     // Wrong answer - trigger error feedback
                     console.log('[Speech Recognition] Wrong answer');
                     handleSuccessHit(targetId || battlingSkillId, 'WRONG');

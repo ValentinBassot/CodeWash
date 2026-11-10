@@ -42,3 +42,4 @@ Every change to the project has its own short note in this folder, written in th
 | 031 | 2026-11-10 | [Time through one replaceable clock](031-replaceable-clock.md) |
 | 032 | 2026-11-10 | [Login days are counted in local time](032-local-login-day.md) |
 | 033 | 2026-11-10 | [Every sound through the sound manager](033-one-sound-manager.md) |
+| 034 | 2026-11-10 | [One rule to judge a spoken word](034-one-reading-rule.md) |

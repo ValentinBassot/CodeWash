@@ -13,9 +13,9 @@ import {
     MINIBOSS_MOBS,
     DIFFICULTY_IMAGES,
     DIFFICULTY_CONTENT,
-    HOMOPHONES,
 } from '../../constants/gameData';
 import { playAxolotlNote, playClick, playMatch, playMismatch } from '../../utils/soundManager';
+import { judgeSpokenWord } from '../../domain/reading';
 import { calculateXPToLevel } from '../../utils/gameUtils';
 import { AURA_ADJECTIVES } from '../../utils/mobDisplayUtils';
 import { random } from '../../domain/random';
@@ -23,7 +23,6 @@ import { random } from '../../domain/random';
 const PRESTIGE_LEVEL_THRESHOLD = 20;
 
 // Voice recognition constants
-const MIN_SPOKEN_TEXT_LENGTH = 2;
 // Tempo constants for pattern recognition
 const MAX_TEMPO_DELAY = 800; // Slowest tempo (difficulty 1, round 1)
 const MIN_TEMPO_DELAY = 200; // Fastest tempo (difficulty 7, always)
@@ -311,11 +310,7 @@ const SkillCard = ({
             // Check if spoken text changed
             if (spokenText !== prevSpokenTextRef.current) {
                 if (challenge?.answer) {
-                    const homophones = HOMOPHONES[challenge.answer];
-                    const isCorrect =
-                        spokenText === challenge.answer || (homophones && homophones.includes(spokenText));
-                    // Assume wrong if text is substantial and doesn't match (including homophones)
-                    if (!isCorrect && spokenText.length >= MIN_SPOKEN_TEXT_LENGTH) {
+                    if (judgeSpokenWord(spokenText, challenge.answer) === 'wrong') {
                         // Trigger wrong animation
                         setIsReadingWrong(true);
                         setTimeout(() => setIsReadingWrong(false), 500);
