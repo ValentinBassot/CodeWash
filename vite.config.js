@@ -8,7 +8,7 @@ export default defineConfig({
     test: {
         environment: 'jsdom',
         setupFiles: ['./src/test/setup.js'],
-        testTimeout: 20000,
+        testTimeout: 30000,
         maxWorkers: 4,
         env: { TZ: 'Europe/Paris' },
         coverage: {

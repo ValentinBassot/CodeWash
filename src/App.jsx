@@ -300,6 +300,7 @@ const App = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [bossHealing, setBossHealing] = useState(null); // skillId of boss being healed
     const recognitionRef = useRef(null);
+    const battlingSkillIdRef = useRef(null);
     const challengeDataRef = useRef(null);
     const damageIdRef = useRef(0); // Counter for generating unique damage number IDs
     const loginTrackedRef = useRef(false); // Track if we've already recorded today's login
@@ -945,6 +946,10 @@ const App = () => {
         }
     };
 
+    useEffect(() => {
+        battlingSkillIdRef.current = battlingSkillId;
+    }, [battlingSkillId]);
+
     const startBattle = (id) => {
         const skill = SKILL_DATA.find((s) => s.id === id);
         setBattlingSkillId(id);
@@ -1069,19 +1074,16 @@ const App = () => {
             setSpokenText('Listening...');
         };
 
+        const recognition = recognitionRef.current;
         recognitionRef.current.onend = () => {
             console.log('[Speech Recognition] Ended');
             setIsListening(false);
-            // Auto-restart if still in Reading challenge
-            // Note: battlingSkillId is intentionally checked from closure - if battle has ended
-            // by the time this timeout fires, we don't want to restart (which is the desired behavior)
-            if (battlingSkillId === 'reading' || targetId === 'reading') {
-                // Small delay before restarting to avoid rapid restarts
+            if (battlingSkillIdRef.current === 'reading' || targetId === 'reading') {
                 setTimeout(() => {
-                    // Double-check that we're still in reading challenge
-                    if (battlingSkillId === 'reading') {
+                    if (recognitionRef.current !== recognition) return;
+                    recognitionRef.current = null;
+                    if (battlingSkillIdRef.current === 'reading') {
                         console.log('[Speech Recognition] Auto-restarting');
-                        recognitionRef.current = null; // Clear ref to allow restart
                         startVoiceListener(targetId);
                     }
                 }, 100);

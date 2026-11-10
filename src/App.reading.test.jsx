@@ -111,18 +111,38 @@ describe('reading battle with speech recognition', () => {
         fireEvent.click(micButton());
         expect(recognition().stops).toBe(1);
         expect(screen.getAllByText('Mic Off').length).toBeGreaterThan(0);
+        wait(500);
+        expect(FakeRecognition.instances).toHaveLength(1);
     });
 
-    it('KNOWN DEBT D31: once the browser ends the session, listening never restarts and the button does nothing', () => {
+    it('when the browser ends the session during the battle, listening starts again', () => {
         render(<App />);
         startReadingBattle();
         recognition().endOnItsOwn();
         wait(500);
-        expect(FakeRecognition.instances).toHaveLength(1);
-        expect(recognition().starts).toBe(1);
 
+        expect(FakeRecognition.instances).toHaveLength(2);
+        expect(recognition().starts).toBe(1);
+        expect(screen.getByText('Listening...')).toBeTruthy();
+    });
+
+    it('after a restart, the word read aloud still counts', () => {
+        render(<App />);
+        startReadingBattle();
+        recognition().endOnItsOwn();
+        wait(500);
+        recognition().hear(shownWord());
+
+        expect(reading().mobHealth).toBe(48);
+    });
+
+    it('the microphone button starts listening again after it was stopped', () => {
+        render(<App />);
+        startReadingBattle();
         fireEvent.click(micButton());
-        expect(FakeRecognition.instances).toHaveLength(1);
+        fireEvent.click(micButton());
+
+        expect(FakeRecognition.instances).toHaveLength(2);
         expect(recognition().starts).toBe(1);
     });
 });
