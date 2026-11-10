@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Menu, Sparkles, Gift, Maximize, Minimize, Settings, Bug } from 'lucide-react';
 import { random } from './domain/random';
+import { todayKey } from './domain/clock';
 
 // Modules
 import GlobalStyles from './components/ui/GlobalStyles';
@@ -1167,7 +1168,7 @@ const App = () => {
         if (loginTrackedRef.current) return; // Skip if already tracked
         loginTrackedRef.current = true;
 
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        const today = todayKey();
         const currentDates = stats.loginDates || [];
         // Only set if today's date is not already recorded
         if (!currentDates.includes(today)) {

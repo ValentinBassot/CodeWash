@@ -24,11 +24,19 @@ export default defineConfig([
     },
     {
         files: ['src/**/*.{js,jsx}'],
-        ignores: ['src/domain/random.js', '**/*.test.*', 'src/test/**'],
+        ignores: ['src/domain/random.js', 'src/domain/clock.js', '**/*.test.*', 'src/test/**'],
         rules: {
             'no-restricted-properties': [
                 'error',
                 { object: 'Math', property: 'random', message: 'Use random() from src/domain/random.js.' },
+                { object: 'Date', property: 'now', message: 'Use now() from src/domain/clock.js.' },
+            ],
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector: "NewExpression[callee.name='Date'][arguments.length=0]",
+                    message: 'Use now() or todayKey() from src/domain/clock.js.',
+                },
             ],
         },
     },
