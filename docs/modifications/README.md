@@ -45,3 +45,4 @@ Every change to the project has its own short note in this folder, written in th
 | 034 | 2026-11-10 | [One rule to judge a spoken word](034-one-reading-rule.md) |
 | 035 | 2026-11-10 | [Speech recognition behind src/io](035-speech-recognition-module.md) |
 | 036 | 2026-11-10 | [The microphone restarts when the browser ends the session](036-microphone-restarts.md) |
+| 037 | 2026-11-10 | [Subtractions never have a negative answer](037-no-negative-subtraction.md) |
