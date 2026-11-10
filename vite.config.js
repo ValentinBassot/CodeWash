@@ -10,6 +10,7 @@ export default defineConfig({
         setupFiles: ['./src/test/setup.js'],
         testTimeout: 20000,
         maxWorkers: 4,
+        env: { TZ: 'Europe/Paris' },
         coverage: {
             provider: 'v8',
             include: ['src/**/*.{js,jsx}', 'scripts/**/*.mjs'],

@@ -27,8 +27,13 @@ describe('todayKey', () => {
         expect(todayKey()).toBe('2026-11-12');
     });
 
-    it('KNOWN DEBT D22: uses the UTC day, so 23:30 UTC on the 12th is still the 12th everywhere', () => {
+    it('uses the local day: 23:30 UTC on the 12th is already the 13th in Paris', () => {
         setClock(() => Date.parse('2026-11-12T23:30:00Z'));
-        expect(todayKey()).toBe('2026-11-12');
+        expect(todayKey()).toBe('2026-11-13');
+    });
+
+    it('pads month and day with zeros', () => {
+        setClock(() => Date.parse('2026-03-05T12:00:00Z'));
+        expect(todayKey()).toBe('2026-03-05');
     });
 });

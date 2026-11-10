@@ -14,6 +14,6 @@ Same approach as [0001](0001-replaceable-random-source.md): `src/domain/clock.js
 
 ## Consequences
 
-- The game behaves as before; `todayKey()` still returns the UTC day, which is D22 and is fixed in its own commit.
+- The game behaves as before; `todayKey()` returned the UTC day (D22) until 032, which made it the local day.
 - The "today" rule exists once instead of twice.
 - A test can set the time without faking timers, or fake timers and the clock follows, because the default clock reads `Date.now()` at call time.

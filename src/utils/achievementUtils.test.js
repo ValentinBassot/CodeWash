@@ -189,10 +189,10 @@ describe('helpers', () => {
         expect(recordLoginDate(days)).toBe(days);
     });
 
-    it('KNOWN DEBT D22: records the UTC day, so 00:30 in Paris still counts as the day before', () => {
+    it('records the local day: 00:30 in Paris is already the next day', () => {
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2026-11-09T23:30:00Z'));
-        expect(recordLoginDate([])).toEqual(['2026-11-09']);
+        expect(recordLoginDate([])).toEqual(['2026-11-10']);
     });
 
     it('lists achievements, all or by category', () => {

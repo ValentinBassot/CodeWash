@@ -12,4 +12,9 @@ export const resetClock = () => {
     clock = defaultClock;
 };
 
-export const todayKey = () => new Date(now()).toISOString().split('T')[0];
+const twoDigits = (n) => String(n).padStart(2, '0');
+
+export const todayKey = () => {
+    const date = new Date(now());
+    return `${date.getFullYear()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())}`;
+};

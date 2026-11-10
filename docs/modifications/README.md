@@ -40,3 +40,4 @@ Every change to the project has its own short note in this folder, written in th
 | 029 | 2026-11-10 | [Characterization tests of the phantom fly-by](029-characterize-phantom-event.md) |
 | 030 | 2026-11-10 | [Phantom spawn key in the save keys](030-phantom-key-in-save-keys.md) |
 | 031 | 2026-11-10 | [Time through one replaceable clock](031-replaceable-clock.md) |
+| 032 | 2026-11-10 | [Login days are counted in local time](032-local-login-day.md) |
