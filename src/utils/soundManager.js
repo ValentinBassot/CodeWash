@@ -1,4 +1,16 @@
 import { random } from '../domain/random';
+import { BASE_ASSETS } from '../constants/gameData';
+
+const defaultAudioFactory = (src) => new Audio(src);
+let createAudio = defaultAudioFactory;
+
+export const setAudioFactory = (factory) => {
+    createAudio = factory;
+};
+
+export const resetAudioFactory = () => {
+    createAudio = defaultAudioFactory;
+};
 
 /**
  * Sound Manager Utility
@@ -115,7 +127,7 @@ class BGMManager {
     play() {
         if (!this.audio) {
             this.currentTrackIndex = this.getRandomTrack();
-            this.audio = new Audio(this.tracks[this.currentTrackIndex]);
+            this.audio = createAudio(this.tracks[this.currentTrackIndex]);
             this.audio.volume = this.volume;
 
             // When a track ends, play a new random track
@@ -172,6 +184,12 @@ export const setSfxVolume = (vol) => {
 
 export const getSfxVolume = () => sfxVolume;
 
+export const playSfx = (path, onError) => {
+    const audio = createAudio(path);
+    audio.volume = sfxVolume;
+    audio.play().catch(() => onError?.());
+};
+
 /**
  * Play a UI sound
  * @param {string} soundName - Name of the UI sound (click, death, fail, levelup, etc.)
@@ -180,9 +198,7 @@ export const playUISound = (soundName) => {
     const path = UI_SOUNDS[soundName];
     if (!path) return;
 
-    const audio = new Audio(path);
-    audio.volume = sfxVolume;
-    audio.play().catch(() => {});
+    playSfx(path);
 };
 
 /**
@@ -250,9 +266,7 @@ export const playMobHurt = (mobName) => {
     if (!folder) return;
 
     // Use standardized naming (all files renamed to hurt.wav)
-    const audio = new Audio(`assets/sounds/mob/${folder}/hurt.wav`);
-    audio.volume = sfxVolume;
-    audio.play().catch(() => {});
+    playSfx(`assets/sounds/mob/${folder}/hurt.wav`);
 };
 
 /**
@@ -264,9 +278,7 @@ export const playMobDeath = (mobName) => {
     if (!folder) return;
 
     // Use standardized naming (all files renamed to death.wav)
-    const audio = new Audio(`assets/sounds/mob/${folder}/death.wav`);
-    audio.volume = sfxVolume;
-    audio.play().catch(() => {});
+    playSfx(`assets/sounds/mob/${folder}/death.wav`);
 };
 
 /**
@@ -278,9 +290,28 @@ export const playMobSay = (mobName) => {
     if (!folder) return;
 
     // Use standardized naming (all files renamed to say.wav)
-    const audio = new Audio(`assets/sounds/mob/${folder}/say.wav`);
-    audio.volume = sfxVolume;
-    audio.play().catch(() => {});
+    playSfx(`assets/sounds/mob/${folder}/say.wav`);
+};
+
+export const playMatch = () => playSfx(BASE_ASSETS.audio.match);
+
+export const playMismatch = () => playSfx(BASE_ASSETS.audio.mismatch);
+
+const AXOLOTL_NOTES = {
+    Pink: 'c4',
+    Cyan: 'd4',
+    Gold: 'e4',
+    Brown: 'f4',
+    Blue: 'g4',
+    Red: 'a4',
+    Green: 'b4',
+    Black: 'g5',
+};
+
+export const playAxolotlNote = (color) => {
+    const note = AXOLOTL_NOTES[color];
+    if (note) playSfx(`assets/sounds/axolotl/${note}.wav`, playClick);
+    else playClick();
 };
 
 // Export UI sound names for reference
