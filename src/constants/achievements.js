@@ -81,6 +81,13 @@ export const SKILL_MASTERY_TIERS = [
 // ALL ACHIEVEMENTS
 // ============================================
 
+const skillLevels = (skills) => Object.values(skills).map((s) => s.level || 0);
+
+const lowestSkillLevel = (skills) => {
+    const levels = skillLevels(skills);
+    return levels.length === 0 ? 0 : Math.min(...levels);
+};
+
 export const ACHIEVEMENTS = {
     // Tiered Achievements
     phantom_hunter: {
@@ -115,13 +122,10 @@ export const ACHIEVEMENTS = {
         category: 'progression',
         isTiered: true,
         tiers: SKILL_MASTERY_TIERS,
-        getProgress: (stats, skills) => {
-            const levels = Object.values(skills).map((s) => s.level || 0);
-            return Math.min(...levels); // Minimum level across all skills
-        },
+        getProgress: (stats, skills) => lowestSkillLevel(skills),
         getProgressText: (stats, skills) => {
-            const levels = Object.values(skills).map((s) => s.level || 0);
-            const minLevel = Math.min(...levels);
+            const levels = skillLevels(skills);
+            const minLevel = lowestSkillLevel(skills);
             const count = levels.filter((l) => l >= minLevel).length;
             return `${count}/6 skills at level ${minLevel}+`;
         },
