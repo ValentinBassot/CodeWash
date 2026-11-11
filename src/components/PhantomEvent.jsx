@@ -3,7 +3,7 @@ import { HOSTILE_MOBS } from '../constants/gameData';
 import { playSuccessfulHit } from '../utils/soundManager';
 import { random } from '../domain/random';
 import { now } from '../domain/clock';
-import { SAVE_KEYS } from '../persistence/profileStorage';
+import { browserStorage, readPhantomLastSpawn, writePhantomLastSpawn } from '../persistence/profileStorage';
 
 const MIN_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
@@ -20,7 +20,7 @@ const PhantomEvent = ({ battlingSkillId, onAwardLevel, onPhantomCaught }) => {
 
     // Schedule the next phantom spawn
     const scheduleNextSpawn = useCallback(() => {
-        const lastSpawn = parseInt(localStorage.getItem(SAVE_KEYS.phantomLastSpawn) || '0', 10);
+        const lastSpawn = readPhantomLastSpawn(browserStorage);
         const currentTime = now();
         const timeSinceLastSpawn = currentTime - lastSpawn;
 
@@ -54,7 +54,7 @@ const PhantomEvent = ({ battlingSkillId, onAwardLevel, onPhantomCaught }) => {
         setIsActive(true);
 
         // Record spawn time
-        localStorage.setItem(SAVE_KEYS.phantomLastSpawn, now().toString());
+        writePhantomLastSpawn(browserStorage, now());
 
         // Set timeout for when phantom reaches the other side
         if (flightTimeoutRef.current) {

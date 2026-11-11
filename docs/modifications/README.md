@@ -50,3 +50,9 @@ Every change to the project has its own short note in this folder, written in th
 | 039 | 2026-11-11 | [Remove the progressive damage the patterns game never applied](039-remove-ignored-progressive-damage.md) |
 | 040 | 2026-11-11 | ["Jack of All Trades" without any skill has no tier](040-jack-of-all-trades-without-skills.md) |
 | 041 | 2026-11-11 | [Old saves get a mob matching their difficulty](041-old-save-mob-health.md) |
+| 042 | 2026-11-11 | [Skills are built from a save outside App](042-build-skills-outside-app.md) |
+| 043 | 2026-11-11 | [The save is parsed once per profile load](043-parse-save-once.md) |
+| 044 | 2026-11-11 | [Switching profile keeps each profile's stats and border](044-profile-switch-keeps-each-profile.md) |
+| 045 | 2026-11-11 | [Saved levels and difficulties are brought back in range](045-validate-saved-level-and-difficulty.md) |
+| 046 | 2026-11-11 | [An invalid saved current profile opens profile 1](046-invalid-current-profile.md) |
+| 047 | 2026-11-11 | [Every read and write of the save goes through the persistence module](047-storage-behind-persistence.md) |

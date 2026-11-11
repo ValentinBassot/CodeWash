@@ -41,10 +41,12 @@ export default defineConfig([
                     property: 'webkitSpeechRecognition',
                     message: 'Use src/io/speechRecognition.js.',
                 },
+                { object: 'window', property: 'localStorage', message: 'Use src/persistence/profileStorage.js.' },
             ],
             'no-restricted-globals': [
                 'error',
                 { name: 'webkitSpeechRecognition', message: 'Use src/io/speechRecognition.js.' },
+                { name: 'localStorage', message: 'Use src/persistence/profileStorage.js.' },
             ],
             'no-restricted-syntax': [
                 'error',

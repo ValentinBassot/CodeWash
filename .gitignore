@@ -14,6 +14,7 @@ coverage/
 Thumbs.db
 *.log
 
+CodeWash.pdf
 # Local configuration (copy .env.example to .env)
 .env
 .env.local

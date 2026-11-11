@@ -10,12 +10,18 @@ import GlobalStyles from './components/ui/GlobalStyles';
 import SafeImage from './components/ui/SafeImage';
 import PixelHeart from './components/ui/PixelHeart';
 import {
-    DEFAULT_PARENT_STATUS,
-    DEFAULT_PROFILE_NAMES,
-    SAVE_KEYS,
-    readObject,
+    browserStorage,
+    readBorder,
+    readCurrentProfile,
+    readParentStatus,
+    readProfileNames,
     readProfileSave,
+    resetProfile,
+    writeBorder,
+    writeProfileSave,
+    writeProfiles,
 } from './persistence/profileStorage';
+import { buildSkills, parseProfileSave, summarizeSkills } from './persistence/profileSave';
 import ResetModal from './components/modals/ResetModal';
 import BugReportModal from './components/modals/BugReportModal';
 import SettingsDrawer from './components/drawers/SettingsDrawer';
@@ -86,199 +92,52 @@ const MIC_OFF_TEXT = 'Mic Off';
 const BOSS_HEALING_ANIMATION_DURATION = 600;
 
 const App = () => {
-    const [currentProfile, setCurrentProfile] = useState(() =>
-        localStorage.getItem(SAVE_KEYS.currentProfile) ? parseInt(localStorage.getItem(SAVE_KEYS.currentProfile)) : 1,
-    );
-    const [profileNames, setProfileNames] = useState(() =>
-        readObject(localStorage, SAVE_KEYS.profileNames, DEFAULT_PROFILE_NAMES),
-    );
-    const [parentStatus, setParentStatus] = useState(() =>
-        readObject(localStorage, SAVE_KEYS.parentStatus, DEFAULT_PARENT_STATUS),
-    );
+    const [currentProfile, setCurrentProfile] = useState(() => readCurrentProfile(browserStorage));
+    const [profileNames, setProfileNames] = useState(() => readProfileNames(browserStorage));
+    const [parentStatus, setParentStatus] = useState(() => readParentStatus(browserStorage));
     const [playerHealth, setPlayerHealth] = useState(10);
 
-    const loadSkills = (profileId) => {
-        const initial = {};
-        // Initialize each skill with level, xp, currentMob, difficulty (1-7), earnedBadges array,
-        // mobHealth for HP-based combat, and death/recovery state
-        SKILL_DATA.forEach((skill) => {
-            const initialDifficulty = 1;
-            initial[skill.id] = {
-                level: 1,
-                xp: 0,
-                currentMob: getRandomMob(null),
-                difficulty: initialDifficulty, // Per-skill difficulty (1-7)
-                earnedBadges: [], // Array of earned badge tier numbers (1-7)
-                mobHealth: calculateMobHealth(initialDifficulty), // Mob's current HP
-                mobMaxHealth: calculateMobHealth(initialDifficulty), // Mob's max HP
-                lostLevel: false, // True if player died and lost a level
-                recoveryDifficulty: null, // Difficulty to suggest for recovery
-                memoryMob: skill.id === 'memory' ? getRandomFriendlyMob() : null, // Stable mob for Memory card display
-                patternMob: skill.id === 'patterns' ? getRandomMob(null) : null, // Stable hostile mob for Patterns card display
-                currentMiniboss: getRandomMiniboss(), // Stable miniboss for miniboss encounters
-                currentBoss: getRandomBoss(), // Stable boss for boss encounters
-                readingMob: skill.id === 'reading' ? getRandomMob(null) : null, // Stable mob for Reading card display
-                mathMob: skill.id === 'math' ? getRandomMob(null) : null, // Stable mob for Math card display
-                writingMob: skill.id === 'writing' ? getRandomMob(null) : null, // Stable mob for Writing card display
-                // Auras for each mob type
-                readingMobAura: skill.id === 'reading' ? getRandomAura() : null,
-                mathMobAura: skill.id === 'math' ? getRandomAura() : null,
-                writingMobAura: skill.id === 'writing' ? getRandomAura() : null,
-                patternMobAura: skill.id === 'patterns' ? getRandomAura() : null,
-                currentMinibossAura: getRandomAura(), // Aura for miniboss encounters
-                currentBossAura: getRandomAura(), // Aura for boss encounters
-            };
-        });
-        const saved = readProfileSave(localStorage, profileId);
+    const loadProfile = (profileId) => {
         try {
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                const data = parsed.skills || parsed;
-                Object.keys(data).forEach((key) => {
-                    initial[key] = { ...initial[key], ...data[key] };
-                    // Ensure difficulty exists (backward compatibility)
-                    if (typeof initial[key].difficulty !== 'number') {
-                        initial[key].difficulty = 1;
-                    }
-                    // Ensure earnedBadges array exists (backward compatibility)
-                    if (!Array.isArray(initial[key].earnedBadges)) {
-                        initial[key].earnedBadges = [];
-                    }
-                    // Ensure mobHealth exists (backward compatibility)
-                    if (typeof data[key].mobHealth !== 'number') {
-                        const diff = initial[key].difficulty || 1;
-                        initial[key].mobHealth = calculateMobHealth(diff);
-                        initial[key].mobMaxHealth = calculateMobHealth(diff);
-                    }
-                    // Ensure death/recovery state exists
-                    if (typeof initial[key].lostLevel !== 'boolean') {
-                        initial[key].lostLevel = false;
-                    }
-                    if (initial[key].recoveryDifficulty === undefined) {
-                        initial[key].recoveryDifficulty = null;
-                    }
-                    // Ensure memoryMob exists for memory skill (backward compatibility)
-                    if (key === 'memory' && !initial[key].memoryMob) {
-                        initial[key].memoryMob = getRandomFriendlyMob();
-                    }
-                    // Ensure patternMob exists for patterns skill (backward compatibility)
-                    if (key === 'patterns' && !initial[key].patternMob) {
-                        initial[key].patternMob = getRandomMob(null);
-                    }
-                    // Ensure combat skill mobs exist (backward compatibility)
-                    if (key === 'reading' && !initial[key].readingMob) {
-                        initial[key].readingMob = getRandomMob(null);
-                    }
-                    if (key === 'math' && !initial[key].mathMob) {
-                        initial[key].mathMob = getRandomMob(null);
-                    }
-                    if (key === 'writing' && !initial[key].writingMob) {
-                        initial[key].writingMob = getRandomMob(null);
-                    }
-                    // Ensure auras exist for combat skill mobs (backward compatibility)
-                    if (key === 'reading' && !initial[key].readingMobAura) {
-                        initial[key].readingMobAura = getRandomAura();
-                    }
-                    if (key === 'math' && !initial[key].mathMobAura) {
-                        initial[key].mathMobAura = getRandomAura();
-                    }
-                    if (key === 'writing' && !initial[key].writingMobAura) {
-                        initial[key].writingMobAura = getRandomAura();
-                    }
-                    if (key === 'patterns' && !initial[key].patternMobAura) {
-                        initial[key].patternMobAura = getRandomAura();
-                    }
-                    // Ensure miniboss and boss mobs exist for combat skills (backward compatibility)
-                    // Only initialize for skills that use the encounter type system (not cleaning or memory)
-                    if (key !== 'cleaning' && key !== 'memory') {
-                        if (!initial[key].currentMiniboss) {
-                            initial[key].currentMiniboss = getRandomMiniboss();
-                        }
-                        if (!initial[key].currentBoss) {
-                            initial[key].currentBoss = getRandomBoss();
-                        }
-                        if (!initial[key].currentMinibossAura) {
-                            initial[key].currentMinibossAura = getRandomAura();
-                        }
-                        if (!initial[key].currentBossAura) {
-                            initial[key].currentBossAura = getRandomAura();
-                        }
-                    }
-                });
-                return initial;
-            }
+            const save = parseProfileSave(readProfileSave(browserStorage, profileId));
+            return {
+                skills: buildSkills(save.skills),
+                theme: save.theme,
+                stats: save.stats,
+                border: readBorder(browserStorage, profileId),
+            };
         } catch (e) {
             console.warn('Failed to parse saved skills:', e);
+            return {
+                skills: buildSkills({}),
+                theme: 'minecraft',
+                stats: getDefaultStats(),
+                border: readBorder(browserStorage, profileId),
+            };
         }
-        return initial;
-    };
-    const loadTheme = (profileId) => {
-        const saved = readProfileSave(localStorage, profileId);
-        try {
-            return JSON.parse(saved).theme || 'minecraft';
-        } catch (e) {
-            console.warn('Failed to parse theme:', e);
-        }
-        return 'minecraft';
-    };
-
-    const loadStats = (profileId) => {
-        const saved = readProfileSave(localStorage, profileId);
-        try {
-            const data = JSON.parse(saved);
-            if (data.stats) {
-                // Merge with default stats to ensure all fields exist
-                return { ...getDefaultStats(), ...data.stats };
-            }
-        } catch (e) {
-            console.warn('Failed to parse stats:', e);
-        }
-        return getDefaultStats();
     };
 
     const getProfileStats = (id, liveSkills = null) => {
-        const initial = {};
-        SKILL_DATA.forEach((skill) => {
-            initial[skill.id] = { level: 1 };
-        });
-
         // Use live skills if provided (for current profile with pending state changes)
         if (liveSkills) {
-            let totalLevel = 0;
-            let highestLevel = 0;
-            Object.values(liveSkills).forEach((s) => {
-                if (s && typeof s.level === 'number') {
-                    totalLevel += s.level;
-                    if (s.level > highestLevel) highestLevel = s.level;
-                }
-            });
-            return { totalLevel, highestLevel, skills: liveSkills, theme: activeTheme };
+            return { ...summarizeSkills(liveSkills), skills: liveSkills, theme: activeTheme };
         }
 
-        const saved = readProfileSave(localStorage, id);
+        const saved = readProfileSave(browserStorage, id);
         if (!saved) return null;
         try {
-            const data = JSON.parse(saved);
-            const skillsData = data.skills || data;
-            const theme = data.theme || 'minecraft';
-            let totalLevel = 0;
-            let highestLevel = 0;
-            Object.values(skillsData).forEach((s) => {
-                if (s && typeof s.level === 'number') {
-                    totalLevel += s.level;
-                    if (s.level > highestLevel) highestLevel = s.level;
-                }
-            });
-            return { totalLevel, highestLevel, skills: skillsData, theme };
+            const save = parseProfileSave(saved);
+            return { ...summarizeSkills(save.skills), skills: save.skills, theme: save.theme };
         } catch (e) {
             console.warn('Failed to parse profile stats:', e);
             return null;
         }
     };
 
-    const [skills, setSkills] = useState(() => loadSkills(currentProfile));
-    const [activeTheme, setActiveTheme] = useState(() => loadTheme(currentProfile));
-    const [stats, setStats] = useState(() => loadStats(currentProfile));
+    const [initialProfile] = useState(() => loadProfile(currentProfile));
+    const [skills, setSkills] = useState(initialProfile.skills);
+    const [activeTheme, setActiveTheme] = useState(initialProfile.theme);
+    const [stats, setStats] = useState(initialProfile.stats);
     const [achievementToast, setAchievementToast] = useState(null);
     const [battlingSkillId, setBattlingSkillId] = useState(null);
     const [battleDifficulty, setBattleDifficulty] = useState(null); // Track battle's starting difficulty for consistent challenge generation
@@ -309,27 +168,17 @@ const App = () => {
     const bgmManager = useRef(getBGMManager());
 
     // Cosmetics state
-    const [selectedBorder, setSelectedBorder] = useState(() => {
-        const saved = localStorage.getItem(SAVE_KEYS.borderEffect(currentProfile));
-        return saved || 'solid';
-    });
-    const [borderColor, setBorderColor] = useState(() => {
-        const saved = localStorage.getItem(SAVE_KEYS.borderColor(currentProfile));
-        return saved || '#FFD700';
-    });
+    const [selectedBorder, setSelectedBorder] = useState(initialProfile.border.effect);
+    const [borderColor, setBorderColor] = useState(initialProfile.border.color);
 
     useEffect(() => {
-        const dataToSave = { skills: skills, theme: activeTheme, stats: stats };
-        localStorage.setItem(SAVE_KEYS.profileSave(currentProfile), JSON.stringify(dataToSave));
-        localStorage.setItem(SAVE_KEYS.currentProfile, currentProfile);
-        localStorage.setItem(SAVE_KEYS.profileNames, JSON.stringify(profileNames));
-        localStorage.setItem(SAVE_KEYS.parentStatus, JSON.stringify(parentStatus));
+        writeProfileSave(browserStorage, currentProfile, { skills: skills, theme: activeTheme, stats: stats });
+        writeProfiles(browserStorage, { currentProfile, profileNames, parentStatus });
     }, [skills, currentProfile, activeTheme, profileNames, parentStatus, stats]);
 
     // Save cosmetics preferences
     useEffect(() => {
-        localStorage.setItem(SAVE_KEYS.borderEffect(currentProfile), selectedBorder);
-        localStorage.setItem(SAVE_KEYS.borderColor(currentProfile), borderColor);
+        writeBorder(browserStorage, currentProfile, { effect: selectedBorder, color: borderColor });
     }, [selectedBorder, borderColor, currentProfile]);
 
     // Calculate unlocked borders based on earned badges (memoized)
@@ -982,10 +831,12 @@ const App = () => {
     const handleSwitchProfile = (newId) => {
         if (newId === currentProfile) return;
         playClick();
-        const newSkills = loadSkills(newId);
-        const newTheme = loadTheme(newId);
-        setSkills(newSkills);
-        setActiveTheme(newTheme);
+        const next = loadProfile(newId);
+        setSkills(next.skills);
+        setActiveTheme(next.theme);
+        setStats(next.stats);
+        setSelectedBorder(next.border.effect);
+        setBorderColor(next.border.color);
         setCurrentProfile(newId);
     };
     const handleRenameProfile = (id, newName) => {
@@ -1019,20 +870,7 @@ const App = () => {
         }
     };
     const handleReset = () => {
-        // Remove skills data for current profile
-        localStorage.removeItem(SAVE_KEYS.profileSave(currentProfile));
-        if (currentProfile === 1) localStorage.removeItem(SAVE_KEYS.legacySkills);
-
-        // Update parent status in localStorage directly
-        const parentStatusObj = readObject(localStorage, SAVE_KEYS.parentStatus, DEFAULT_PARENT_STATUS);
-        parentStatusObj[currentProfile] = false;
-        localStorage.setItem(SAVE_KEYS.parentStatus, JSON.stringify(parentStatusObj));
-
-        // Update profile name in localStorage directly
-        const profileNamesObj = readObject(localStorage, SAVE_KEYS.profileNames, DEFAULT_PROFILE_NAMES);
-        profileNamesObj[currentProfile] = `Player ${currentProfile}`;
-        localStorage.setItem(SAVE_KEYS.profileNames, JSON.stringify(profileNamesObj));
-
+        resetProfile(browserStorage, currentProfile);
         window.location.reload();
     };
 
