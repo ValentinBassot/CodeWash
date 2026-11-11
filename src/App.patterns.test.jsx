@@ -69,13 +69,22 @@ describe('patterns (Simon says with axolotls)', () => {
         expect(second[0]).toBe(first[0]);
     });
 
-    it('KNOWN DEBT D24: every round deals the standard 12 damage, the progressive damage is ignored', () => {
+    it('every round deals the damage of the difficulty, like the other games: 12 at difficulty 1', () => {
         render(<App />);
         startPatterns();
         playRound();
         expect(patterns()).toMatchObject({ mobHealth: 48, xp: 20 });
         playRound();
         expect(patterns()).toMatchObject({ mobHealth: 36, xp: 40 });
+    });
+
+    it('at difficulty 2, a round deals 36 damage to a 180 HP mob', () => {
+        playWith((s) => {
+            Object.assign(s.skills.patterns, { difficulty: 2, mobHealth: 180, mobMaxHealth: 180 });
+        });
+        startPatterns();
+        playRound();
+        expect(patterns()).toMatchObject({ mobHealth: 144, mobMaxHealth: 180 });
     });
 
     it('five rounds defeat the mob', () => {
