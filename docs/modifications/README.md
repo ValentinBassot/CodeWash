@@ -49,3 +49,4 @@ Every change to the project has its own short note in this folder, written in th
 | 038 | 2026-11-10 | [A wrong word costs a heart in the writing game](038-wrong-word-costs-a-heart.md) |
 | 039 | 2026-11-11 | [Remove the progressive damage the patterns game never applied](039-remove-ignored-progressive-damage.md) |
 | 040 | 2026-11-11 | ["Jack of All Trades" without any skill has no tier](040-jack-of-all-trades-without-skills.md) |
+| 041 | 2026-11-11 | [Old saves get a mob matching their difficulty](041-old-save-mob-health.md) |

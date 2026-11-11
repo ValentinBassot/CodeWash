@@ -178,7 +178,7 @@ describe('corrupted profile entries (D14)', () => {
 });
 
 describe('known debt', () => {
-    it('KNOWN DEBT D44: an old save without mob health gets a difficulty-1 mob whatever its difficulty', () => {
+    it('an old save without mob health gets a mob matching its difficulty', () => {
         localStorage.setItem(
             'heroSkills_v23_p1',
             JSON.stringify({ skills: { writing: { level: 30, difficulty: 2 } } }),
@@ -186,7 +186,18 @@ describe('known debt', () => {
 
         render(<App />);
 
-        expect(saveOf(1).skills.writing).toMatchObject({ difficulty: 2, mobHealth: 60, mobMaxHealth: 60 });
+        expect(saveOf(1).skills.writing).toMatchObject({ difficulty: 2, mobHealth: 180, mobMaxHealth: 180 });
+    });
+
+    it('a saved mob health is kept as it is', () => {
+        localStorage.setItem(
+            'heroSkills_v23_p1',
+            JSON.stringify({ skills: { writing: { level: 30, difficulty: 2, mobHealth: 100, mobMaxHealth: 180 } } }),
+        );
+
+        render(<App />);
+
+        expect(saveOf(1).skills.writing).toMatchObject({ mobHealth: 100, mobMaxHealth: 180 });
     });
 
     it('KNOWN DEBT D28: a corrupted skills save is silently replaced by a new game', () => {
