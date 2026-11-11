@@ -54,3 +54,4 @@ Every change to the project has its own short note in this folder, written in th
 | 043 | 2026-11-11 | [The save is parsed once per profile load](043-parse-save-once.md) |
 | 044 | 2026-11-11 | [Switching profile keeps each profile's stats and border](044-profile-switch-keeps-each-profile.md) |
 | 045 | 2026-11-11 | [Saved levels and difficulties are brought back in range](045-validate-saved-level-and-difficulty.md) |
+| 046 | 2026-11-11 | [An invalid saved current profile opens profile 1](046-invalid-current-profile.md) |

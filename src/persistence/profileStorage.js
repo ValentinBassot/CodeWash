@@ -30,3 +30,10 @@ export const readObject = (storage, key, fallback) => {
 
 export const DEFAULT_PROFILE_NAMES = { 1: 'Player 1', 2: 'Player 2', 3: 'Player 3' };
 export const DEFAULT_PARENT_STATUS = { 1: false, 2: false, 3: false };
+
+const PROFILE_IDS = [1, 2, 3];
+
+export const readCurrentProfile = (storage) => {
+    const saved = parseInt(storage.getItem(SAVE_KEYS.currentProfile), 10);
+    return PROFILE_IDS.includes(saved) ? saved : 1;
+};

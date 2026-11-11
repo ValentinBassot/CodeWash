@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SAVE_KEYS, readObject, readProfileSave } from './profileStorage';
+import { SAVE_KEYS, readCurrentProfile, readObject, readProfileSave } from './profileStorage';
 
 const storageWith = (entries) => ({ getItem: (key) => (key in entries ? entries[key] : null) });
 
@@ -54,5 +54,23 @@ describe('readObject', () => {
         const result = readObject(storageWith(entries), 'k', fallback);
         expect(result).toEqual(fallback);
         expect(result).not.toBe(fallback);
+    });
+});
+
+describe('readCurrentProfile', () => {
+    it.each([
+        ['1', 1],
+        ['2', 2],
+        ['3', 3],
+    ])('reads the saved profile %s', (saved, profile) => {
+        expect(readCurrentProfile(storageWith({ currentProfile_v1: saved }))).toBe(profile);
+    });
+
+    it('opens profile 1 when nothing is saved', () => {
+        expect(readCurrentProfile(storageWith({}))).toBe(1);
+    });
+
+    it.each(['abc', '0', '4', '-1', ''])('opens profile 1 for the invalid entry "%s"', (saved) => {
+        expect(readCurrentProfile(storageWith({ currentProfile_v1: saved }))).toBe(1);
     });
 });

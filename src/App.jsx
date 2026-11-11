@@ -13,6 +13,7 @@ import {
     DEFAULT_PARENT_STATUS,
     DEFAULT_PROFILE_NAMES,
     SAVE_KEYS,
+    readCurrentProfile,
     readObject,
     readProfileSave,
 } from './persistence/profileStorage';
@@ -87,9 +88,7 @@ const MIC_OFF_TEXT = 'Mic Off';
 const BOSS_HEALING_ANIMATION_DURATION = 600;
 
 const App = () => {
-    const [currentProfile, setCurrentProfile] = useState(() =>
-        localStorage.getItem(SAVE_KEYS.currentProfile) ? parseInt(localStorage.getItem(SAVE_KEYS.currentProfile)) : 1,
-    );
+    const [currentProfile, setCurrentProfile] = useState(() => readCurrentProfile(localStorage));
     const [profileNames, setProfileNames] = useState(() =>
         readObject(localStorage, SAVE_KEYS.profileNames, DEFAULT_PROFILE_NAMES),
     );

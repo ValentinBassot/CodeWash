@@ -165,6 +165,17 @@ describe('corrupted profile entries (D14)', () => {
         expect(saveOf(1).skills.reading.level).toBe(1);
     });
 
+    it.each(['abc', '7', '0', ''])('currentProfile_v1 = "%s": the game opens profile 1', (value) => {
+        localStorage.setItem('currentProfile_v1', value);
+
+        render(<App />);
+
+        expect(localStorage.getItem('currentProfile_v1')).toBe('1');
+        expect(Object.keys(localStorage).filter((key) => key.startsWith('heroSkills_v23_p'))).toEqual([
+            'heroSkills_v23_p1',
+        ]);
+    });
+
     it('a corrupted entry does not erase the progress saved elsewhere', () => {
         const save = freshSave();
         save.skills.math.level = 9;
