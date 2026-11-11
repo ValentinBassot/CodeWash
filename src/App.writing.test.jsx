@@ -70,11 +70,25 @@ describe('writing battle', () => {
         expect(writing()).toMatchObject({ mobHealth: 1620 - 324, mobMaxHealth: 1620 });
     });
 
-    it('KNOWN DEBT D23: a wrong word never costs a heart, ten of them do not kill the player', () => {
+    it('a wrong word costs a heart like in math: ten of them kill the player', () => {
         render(<App />);
         startWritingBattle();
-        for (let miss = 0; miss < 10; miss++) spellWrong();
+        for (let miss = 0; miss < 9; miss++) spellWrong();
         expect(save().stats.totalDeaths).toBe(0);
+        spellWrong();
+        expect(save().stats.totalDeaths).toBe(1);
         expect(writing()).toMatchObject({ level: 1, mobHealth: 60 });
+    });
+
+    it('a wrong word against a boss heals the boss instead of hurting the player', () => {
+        playWith((s) => {
+            s.skills.writing.level = 20;
+        });
+        startWritingBattle();
+        spellRight();
+        expect(writing().mobHealth).toBe(48);
+        spellWrong();
+        expect(writing().mobHealth).toBe(60);
+        expect(save().stats.totalDeaths).toBe(0);
     });
 });

@@ -147,14 +147,15 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D17 | Clock and timers not injectable (28 timers) | `PhantomEvent.jsx:21,55`, timers across `src/` | global | 3 | 3 | 9 | M | P2 | Done (031) |
 | D18 | Audio mixed with game logic (11 `new Audio`) | `soundManager.js`, `SkillCard.jsx` | I/O in domain | 4 | 4 | 16 | M | P1 | Done (033) |
 | D19 | Speech recognition hard-wired in `App` | `App.jsx:913,1000,1012,1086` | I/O in domain | 4 | 3 | 12 | M | P1 | Done (035) |
-| D20 | Subtraction can ask `0 - 1` | `gameUtils.js:254` (`generateMathProblem`, case `-`) | bug | 3 | 4 | 12 | S | P2 | Pinned (007) |
+| D20 | Subtraction can ask `0 - 1` | `gameUtils.js:254` (`generateMathProblem`, case `-`) | bug | 3 | 4 | 12 | S | P2 | Done (037) |
 | D21 | Out-of-range difficulty or level accepted silently | `gameUtils.js` (`getEncounterType`, `getDifficultyMultiplier`, `getWordForDifficulty`, `generateMathProblem`, `getReadingWord`) | fragile parser | 2 | 2 | 4 | S | P3 | Identified |
 | D22 | Login day computed in UTC, not local time | `App.jsx:1117`, `achievementUtils.js:190` | bug | 2 | 3 | 6 | S | P3 | Done (032) |
-| D23 | Wrong answer has no penalty in the writing game | `SkillCard.jsx` (writing input `onChange`) | bug | 2 | 5 | 10 | S | P3 | Pinned (015) |
-| D24 | Progressive damage of the axolotl game ignored | `SkillCard.jsx:348`, `App.jsx:1421` | bug | 2 | 5 | 10 | S | P3 | Pinned (019) |
-| D25 | "Jack of All Trades" reaches its top tier with no skill | `achievements.js:105` | bug | 2 | 2 | 4 | S | P3 | Pinned (008) |
-| D44 | Old saves without mob health get a difficulty-1 mob whatever their difficulty: the backfill never runs because defaults are merged first | `App.jsx` (`loadSkills`, mob health backfill) | bug | 3 | 2 | 6 | S | P3 | Pinned (010) |
+| D23 | Wrong answer has no penalty in the writing game | `SkillCard.jsx` (writing input `onChange`) | bug | 2 | 5 | 10 | S | P3 | Done (038) |
+| D24 | Progressive damage of the axolotl game ignored | `SkillCard.jsx:348`, `App.jsx:1421` | bug | 2 | 5 | 10 | S | P3 | Done (039) |
+| D25 | "Jack of All Trades" reaches its top tier with no skill | `achievements.js:105` | bug | 2 | 2 | 4 | S | P3 | Done (040) |
+| D44 | Old saves without mob health get a difficulty-1 mob whatever their difficulty: the backfill never runs because defaults are merged first | `App.jsx` (`loadSkills`, mob health backfill) | bug | 3 | 2 | 6 | S | P3 | Done (041) |
 | D46 | The rule that judges a spoken word (exact, homophone, or noise under 2 letters) is copied in `App` and `SkillCard`, with `MIN_SPOKEN_TEXT_LENGTH` defined twice | `App.jsx` (`onresult` of `startVoiceListener`), `SkillCard.jsx` (wrong-reading effect) | duplication | 3 | 3 | 9 | S | P2 | Done (034) |
+| D48 | "Jack of All Trades" progress text always says "6/6 skills": it counts the skills at or above the lowest level, which is every skill | `achievements.js` (`skill_mastery.getProgressText`) | unclear rule | 2 | 5 | 10 | S | P3 | Identified |
 
 ### Phase 3: hot spots
 
@@ -193,7 +194,7 @@ Impact (rows) × likelihood (columns). Top-right is treated first.
 | **5** | | | | D26, D27 | D01 |
 | **4** | | | D07, D14, D19 | D05, D15, D16, D18, D31, D38 | D30, D33 |
 | **3** | | D44 | D03, D09, D17, D28, D29, D40, D41, D46, D47 | D20, D45 | D02, D04, D06, D32, D34, D35, D36, D37, D39 |
-| **2** | | D10, D11, D21, D25 | D22, D43 | D08 | D12, D13, D23, D24, D42 |
+| **2** | | D10, D11, D21, D25 | D22, D43 | D08 | D12, D13, D23, D24, D42, D48 |
 | **1** | | | | | |
 
 ## 5. Attack plan

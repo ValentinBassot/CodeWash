@@ -273,7 +273,7 @@ export const generateMathProblem = (difficulty) => {
         case '-':
             // Ensure positive result
             a = Math.floor(random() * (maxVal - minVal + 1)) + minVal;
-            b = Math.floor(random() * a) + 1; // b is always less than or equal to a
+            b = a === 0 ? 0 : Math.floor(random() * a) + 1;
             question = `${a} - ${b} = ?`;
             answer = (a - b).toString();
             break;

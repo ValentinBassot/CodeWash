@@ -177,9 +177,22 @@ describe('math problems', () => {
         expect(generateMathProblem(7)).toMatchObject({ answer: '32', isNightmare: true });
     });
 
-    it('KNOWN DEBT D20: subtraction can ask 0 - 1 and expect -1', () => {
+    it('subtraction from 0 asks 0 - 0, never a negative result', () => {
         rollRandom(0.5, 0, 0);
-        expect(generateMathProblem(3)).toEqual({ type: 'math', question: '0 - 1 = ?', answer: '-1' });
+        expect(generateMathProblem(3)).toEqual({ type: 'math', question: '0 - 0 = ?', answer: '0' });
+    });
+
+    it('subtraction keeps taking away at least 1 from a positive number', () => {
+        rollRandom(0.5, 0.5, 0);
+        expect(generateMathProblem(3)).toEqual({ type: 'math', question: '10 - 1 = ?', answer: '9' });
+    });
+
+    it('no subtraction of difficulties 3 to 5 has a negative answer', () => {
+        for (const difficulty of [3, 4, 5]) {
+            for (let draw = 0; draw < 2000; draw++) {
+                expect(Number(generateMathProblem(difficulty).answer)).toBeGreaterThanOrEqual(0);
+            }
+        }
     });
 });
 

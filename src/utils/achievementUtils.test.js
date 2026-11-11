@@ -118,8 +118,10 @@ describe('tiered achievements', () => {
         expect(ACHIEVEMENTS.skill_mastery.getProgressText(stats(), sixSkillsAt(40))).toBe('6/6 skills at level 40+');
     });
 
-    it('KNOWN DEBT D25: with no skill at all, Jack of All Trades reaches its top tier', () => {
-        expect(getCurrentTier('skill_mastery', stats(), {})).toBe(7);
+    it('with no skill at all, Jack of All Trades has no tier and no progress', () => {
+        expect(getCurrentTier('skill_mastery', stats(), {})).toBe(-1);
+        expect(isAchievementUnlocked('skill_mastery', stats(), {})).toBe(false);
+        expect(ACHIEVEMENTS.skill_mastery.getProgressText(stats(), {})).toBe('0/6 skills at level 0+');
     });
 
     it('progress inside a tier is a floored percentage, 100 at the top', () => {

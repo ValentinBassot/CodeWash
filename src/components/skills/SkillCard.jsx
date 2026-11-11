@@ -382,11 +382,8 @@ const SkillCard = ({
                 const newRounds = completedRounds + 1;
                 setCompletedRounds(newRounds);
 
-                // Apply progressive damage based on round number (increases with each round)
-                // Using a gentle exponential formula: damage = round * 1.5 (rounded)
-                const damage = Math.round(newRounds * 1.5);
                 setTimeout(() => {
-                    onMathSubmit('WIN', damage);
+                    onMathSubmit('WIN');
                 }, 300);
 
                 // For difficulty 7, reset sequence each round instead of building
@@ -775,6 +772,7 @@ const SkillCard = ({
                                                         } else if (val.length === answerNoSpaces.length) {
                                                             setIsWrong(true);
                                                             playMismatch();
+                                                            onMathSubmit('WRONG');
                                                             setTimeout(() => {
                                                                 setIsWrong(false);
                                                                 setMathInput('');

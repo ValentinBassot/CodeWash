@@ -145,7 +145,7 @@ const App = () => {
                         initial[key].earnedBadges = [];
                     }
                     // Ensure mobHealth exists (backward compatibility)
-                    if (typeof initial[key].mobHealth !== 'number') {
+                    if (typeof data[key].mobHealth !== 'number') {
                         const diff = initial[key].difficulty || 1;
                         initial[key].mobHealth = calculateMobHealth(diff);
                         initial[key].mobMaxHealth = calculateMobHealth(diff);
