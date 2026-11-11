@@ -10,12 +10,16 @@ import GlobalStyles from './components/ui/GlobalStyles';
 import SafeImage from './components/ui/SafeImage';
 import PixelHeart from './components/ui/PixelHeart';
 import {
-    DEFAULT_PARENT_STATUS,
-    DEFAULT_PROFILE_NAMES,
-    SAVE_KEYS,
+    browserStorage,
+    readBorder,
     readCurrentProfile,
-    readObject,
+    readParentStatus,
+    readProfileNames,
     readProfileSave,
+    resetProfile,
+    writeBorder,
+    writeProfileSave,
+    writeProfiles,
 } from './persistence/profileStorage';
 import { buildSkills, parseProfileSave, summarizeSkills } from './persistence/profileSave';
 import ResetModal from './components/modals/ResetModal';
@@ -88,28 +92,19 @@ const MIC_OFF_TEXT = 'Mic Off';
 const BOSS_HEALING_ANIMATION_DURATION = 600;
 
 const App = () => {
-    const [currentProfile, setCurrentProfile] = useState(() => readCurrentProfile(localStorage));
-    const [profileNames, setProfileNames] = useState(() =>
-        readObject(localStorage, SAVE_KEYS.profileNames, DEFAULT_PROFILE_NAMES),
-    );
-    const [parentStatus, setParentStatus] = useState(() =>
-        readObject(localStorage, SAVE_KEYS.parentStatus, DEFAULT_PARENT_STATUS),
-    );
+    const [currentProfile, setCurrentProfile] = useState(() => readCurrentProfile(browserStorage));
+    const [profileNames, setProfileNames] = useState(() => readProfileNames(browserStorage));
+    const [parentStatus, setParentStatus] = useState(() => readParentStatus(browserStorage));
     const [playerHealth, setPlayerHealth] = useState(10);
-
-    const loadBorder = (profileId) => ({
-        effect: localStorage.getItem(SAVE_KEYS.borderEffect(profileId)) || 'solid',
-        color: localStorage.getItem(SAVE_KEYS.borderColor(profileId)) || '#FFD700',
-    });
 
     const loadProfile = (profileId) => {
         try {
-            const save = parseProfileSave(readProfileSave(localStorage, profileId));
+            const save = parseProfileSave(readProfileSave(browserStorage, profileId));
             return {
                 skills: buildSkills(save.skills),
                 theme: save.theme,
                 stats: save.stats,
-                border: loadBorder(profileId),
+                border: readBorder(browserStorage, profileId),
             };
         } catch (e) {
             console.warn('Failed to parse saved skills:', e);
@@ -117,7 +112,7 @@ const App = () => {
                 skills: buildSkills({}),
                 theme: 'minecraft',
                 stats: getDefaultStats(),
-                border: loadBorder(profileId),
+                border: readBorder(browserStorage, profileId),
             };
         }
     };
@@ -128,7 +123,7 @@ const App = () => {
             return { ...summarizeSkills(liveSkills), skills: liveSkills, theme: activeTheme };
         }
 
-        const saved = readProfileSave(localStorage, id);
+        const saved = readProfileSave(browserStorage, id);
         if (!saved) return null;
         try {
             const save = parseProfileSave(saved);
@@ -177,17 +172,13 @@ const App = () => {
     const [borderColor, setBorderColor] = useState(initialProfile.border.color);
 
     useEffect(() => {
-        const dataToSave = { skills: skills, theme: activeTheme, stats: stats };
-        localStorage.setItem(SAVE_KEYS.profileSave(currentProfile), JSON.stringify(dataToSave));
-        localStorage.setItem(SAVE_KEYS.currentProfile, currentProfile);
-        localStorage.setItem(SAVE_KEYS.profileNames, JSON.stringify(profileNames));
-        localStorage.setItem(SAVE_KEYS.parentStatus, JSON.stringify(parentStatus));
+        writeProfileSave(browserStorage, currentProfile, { skills: skills, theme: activeTheme, stats: stats });
+        writeProfiles(browserStorage, { currentProfile, profileNames, parentStatus });
     }, [skills, currentProfile, activeTheme, profileNames, parentStatus, stats]);
 
     // Save cosmetics preferences
     useEffect(() => {
-        localStorage.setItem(SAVE_KEYS.borderEffect(currentProfile), selectedBorder);
-        localStorage.setItem(SAVE_KEYS.borderColor(currentProfile), borderColor);
+        writeBorder(browserStorage, currentProfile, { effect: selectedBorder, color: borderColor });
     }, [selectedBorder, borderColor, currentProfile]);
 
     // Calculate unlocked borders based on earned badges (memoized)
@@ -879,20 +870,7 @@ const App = () => {
         }
     };
     const handleReset = () => {
-        // Remove skills data for current profile
-        localStorage.removeItem(SAVE_KEYS.profileSave(currentProfile));
-        if (currentProfile === 1) localStorage.removeItem(SAVE_KEYS.legacySkills);
-
-        // Update parent status in localStorage directly
-        const parentStatusObj = readObject(localStorage, SAVE_KEYS.parentStatus, DEFAULT_PARENT_STATUS);
-        parentStatusObj[currentProfile] = false;
-        localStorage.setItem(SAVE_KEYS.parentStatus, JSON.stringify(parentStatusObj));
-
-        // Update profile name in localStorage directly
-        const profileNamesObj = readObject(localStorage, SAVE_KEYS.profileNames, DEFAULT_PROFILE_NAMES);
-        profileNamesObj[currentProfile] = `Player ${currentProfile}`;
-        localStorage.setItem(SAVE_KEYS.profileNames, JSON.stringify(profileNamesObj));
-
+        resetProfile(browserStorage, currentProfile);
         window.location.reload();
     };
 

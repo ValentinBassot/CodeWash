@@ -1,5 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { SAVE_KEYS, readCurrentProfile, readObject, readProfileSave } from './profileStorage';
+import {
+    SAVE_KEYS,
+    readBorder,
+    readCurrentProfile,
+    readObject,
+    readParentStatus,
+    readPhantomLastSpawn,
+    readProfileNames,
+    readProfileSave,
+    resetProfile,
+    writeBorder,
+    writePhantomLastSpawn,
+    writeProfileSave,
+    writeProfiles,
+} from './profileStorage';
+
+const memoryStorage = (entries = {}) => {
+    const data = { ...entries };
+    return {
+        data,
+        getItem: (key) => (key in data ? data[key] : null),
+        setItem: (key, value) => {
+            data[key] = String(value);
+        },
+        removeItem: (key) => {
+            delete data[key];
+        },
+    };
+};
 
 const storageWith = (entries) => ({ getItem: (key) => (key in entries ? entries[key] : null) });
 
@@ -72,5 +100,83 @@ describe('readCurrentProfile', () => {
 
     it.each(['abc', '0', '4', '-1', ''])('opens profile 1 for the invalid entry "%s"', (saved) => {
         expect(readCurrentProfile(storageWith({ currentProfile_v1: saved }))).toBe(1);
+    });
+});
+
+describe('border', () => {
+    it('is solid gold when nothing is saved', () => {
+        expect(readBorder(memoryStorage(), 1)).toEqual({ effect: 'solid', color: '#FFD700' });
+    });
+
+    it('is written and read per profile', () => {
+        const storage = memoryStorage();
+        writeBorder(storage, 2, { effect: 'rainbow', color: '#ff0000' });
+        expect(storage.data).toEqual({ borderEffect_p2: 'rainbow', borderColor_p2: '#ff0000' });
+        expect(readBorder(storage, 2)).toEqual({ effect: 'rainbow', color: '#ff0000' });
+        expect(readBorder(storage, 1)).toEqual({ effect: 'solid', color: '#FFD700' });
+    });
+});
+
+describe('profile names and parent status', () => {
+    it('have defaults when nothing is saved', () => {
+        expect(readProfileNames(memoryStorage())).toEqual({ 1: 'Player 1', 2: 'Player 2', 3: 'Player 3' });
+        expect(readParentStatus(memoryStorage())).toEqual({ 1: false, 2: false, 3: false });
+    });
+
+    it('are written with the current profile and read back', () => {
+        const storage = memoryStorage();
+        const profileNames = { 1: 'Robo', 2: 'Player 2', 3: 'Player 3' };
+        const parentStatus = { 1: false, 2: true, 3: false };
+        writeProfiles(storage, { currentProfile: 2, profileNames, parentStatus });
+        expect(readCurrentProfile(storage)).toBe(2);
+        expect(readProfileNames(storage)).toEqual(profileNames);
+        expect(readParentStatus(storage)).toEqual(parentStatus);
+    });
+});
+
+describe('writeProfileSave', () => {
+    it('writes the save of the profile as JSON under its own key', () => {
+        const storage = memoryStorage();
+        writeProfileSave(storage, 3, { skills: {}, theme: 'spy', stats: {} });
+        expect(storage.data).toEqual({ heroSkills_v23_p3: '{"skills":{},"theme":"spy","stats":{}}' });
+    });
+});
+
+describe('resetProfile', () => {
+    const filled = () =>
+        memoryStorage({
+            heroSkills_v23: 'legacy',
+            heroSkills_v23_p1: 'one',
+            heroSkills_v23_p2: 'two',
+            heroProfileNames_v1: JSON.stringify({ 1: 'Robo', 2: 'Zed', 3: 'Player 3' }),
+            heroParentStatus_v1: JSON.stringify({ 1: true, 2: true, 3: false }),
+        });
+
+    it('erases the save, name and parent status of that profile only', () => {
+        const storage = filled();
+        resetProfile(storage, 2);
+        expect(storage.data.heroSkills_v23_p2).toBeUndefined();
+        expect(storage.data.heroSkills_v23_p1).toBe('one');
+        expect(storage.data.heroSkills_v23).toBe('legacy');
+        expect(readProfileNames(storage)).toEqual({ 1: 'Robo', 2: 'Player 2', 3: 'Player 3' });
+        expect(readParentStatus(storage)).toEqual({ 1: true, 2: false, 3: false });
+    });
+
+    it('also erases the legacy save for profile 1', () => {
+        const storage = filled();
+        resetProfile(storage, 1);
+        expect(storage.data.heroSkills_v23_p1).toBeUndefined();
+        expect(storage.data.heroSkills_v23).toBeUndefined();
+        expect(storage.data.heroSkills_v23_p2).toBe('two');
+    });
+});
+
+describe('phantom last spawn', () => {
+    it('is 0 when never recorded, then the recorded time', () => {
+        const storage = memoryStorage();
+        expect(readPhantomLastSpawn(storage)).toBe(0);
+        writePhantomLastSpawn(storage, 1700000000000);
+        expect(storage.data).toEqual({ phantomEvent_lastSpawn_v1: '1700000000000' });
+        expect(readPhantomLastSpawn(storage)).toBe(1700000000000);
     });
 });
