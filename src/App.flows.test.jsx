@@ -54,6 +54,40 @@ describe('profiles', () => {
         expect(read('heroSkills_v23_p1')).not.toBeNull();
     });
 
+    it('switching profile loads the stats of the new profile and keeps those of the first one', () => {
+        localStorage.setItem(
+            'heroSkills_v23_p1',
+            JSON.stringify({ skills: {}, theme: 'minecraft', stats: { totalMobsDefeated: 42 } }),
+        );
+        localStorage.setItem(
+            'heroSkills_v23_p2',
+            JSON.stringify({ skills: {}, theme: 'spy', stats: { totalMobsDefeated: 3 } }),
+        );
+        render(<App />);
+        openSettings();
+
+        fireEvent.click(profileCard('Player 2'));
+        expect(read('heroSkills_v23_p2').stats.totalMobsDefeated).toBe(3);
+
+        fireEvent.click(profileCard('Player 1'));
+        expect(read('heroSkills_v23_p1').stats.totalMobsDefeated).toBe(42);
+        expect(read('heroSkills_v23_p2').stats.totalMobsDefeated).toBe(3);
+    });
+
+    it('switching profile loads the border of the new profile and keeps the one of the first', () => {
+        localStorage.setItem('borderEffect_p1', 'rainbow');
+        localStorage.setItem('borderColor_p1', '#ff0000');
+        localStorage.setItem('borderEffect_p2', 'solid');
+        localStorage.setItem('borderColor_p2', '#00ff00');
+        render(<App />);
+        openSettings();
+
+        fireEvent.click(profileCard('Player 2'));
+        expect(localStorage.getItem('borderEffect_p2')).toBe('solid');
+        expect(localStorage.getItem('borderColor_p2')).toBe('#00ff00');
+        expect(localStorage.getItem('borderEffect_p1')).toBe('rainbow');
+    });
+
     it('the current profile can be renamed', () => {
         render(<App />);
         openSettings();

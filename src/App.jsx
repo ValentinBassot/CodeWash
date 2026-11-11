@@ -98,13 +98,28 @@ const App = () => {
     );
     const [playerHealth, setPlayerHealth] = useState(10);
 
+    const loadBorder = (profileId) => ({
+        effect: localStorage.getItem(SAVE_KEYS.borderEffect(profileId)) || 'solid',
+        color: localStorage.getItem(SAVE_KEYS.borderColor(profileId)) || '#FFD700',
+    });
+
     const loadProfile = (profileId) => {
         try {
             const save = parseProfileSave(readProfileSave(localStorage, profileId));
-            return { skills: buildSkills(save.skills), theme: save.theme, stats: save.stats };
+            return {
+                skills: buildSkills(save.skills),
+                theme: save.theme,
+                stats: save.stats,
+                border: loadBorder(profileId),
+            };
         } catch (e) {
             console.warn('Failed to parse saved skills:', e);
-            return { skills: buildSkills({}), theme: 'minecraft', stats: getDefaultStats() };
+            return {
+                skills: buildSkills({}),
+                theme: 'minecraft',
+                stats: getDefaultStats(),
+                border: loadBorder(profileId),
+            };
         }
     };
 
@@ -159,14 +174,8 @@ const App = () => {
     const bgmManager = useRef(getBGMManager());
 
     // Cosmetics state
-    const [selectedBorder, setSelectedBorder] = useState(() => {
-        const saved = localStorage.getItem(SAVE_KEYS.borderEffect(currentProfile));
-        return saved || 'solid';
-    });
-    const [borderColor, setBorderColor] = useState(() => {
-        const saved = localStorage.getItem(SAVE_KEYS.borderColor(currentProfile));
-        return saved || '#FFD700';
-    });
+    const [selectedBorder, setSelectedBorder] = useState(initialProfile.border.effect);
+    const [borderColor, setBorderColor] = useState(initialProfile.border.color);
 
     useEffect(() => {
         const dataToSave = { skills: skills, theme: activeTheme, stats: stats };
@@ -835,6 +844,9 @@ const App = () => {
         const next = loadProfile(newId);
         setSkills(next.skills);
         setActiveTheme(next.theme);
+        setStats(next.stats);
+        setSelectedBorder(next.border.effect);
+        setBorderColor(next.border.color);
         setCurrentProfile(newId);
     };
     const handleRenameProfile = (id, newName) => {
