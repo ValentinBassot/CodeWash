@@ -53,3 +53,4 @@ Every change to the project has its own short note in this folder, written in th
 | 042 | 2026-11-11 | [Skills are built from a save outside App](042-build-skills-outside-app.md) |
 | 043 | 2026-11-11 | [The save is parsed once per profile load](043-parse-save-once.md) |
 | 044 | 2026-11-11 | [Switching profile keeps each profile's stats and border](044-profile-switch-keeps-each-profile.md) |
+| 045 | 2026-11-11 | [Saved levels and difficulties are brought back in range](045-validate-saved-level-and-difficulty.md) |

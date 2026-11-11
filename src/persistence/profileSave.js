@@ -1,5 +1,6 @@
 import { SKILL_DATA } from '../constants/gameData';
 import {
+    MAX_DIFFICULTY,
     calculateMobHealth,
     getRandomBoss,
     getRandomFriendlyMob,
@@ -40,13 +41,17 @@ const fillMissing = (skill, field, draw) => {
     if (!skill[field]) skill[field] = draw();
 };
 
+const atLeastOne = (value) => (typeof value === 'number' ? Math.max(1, Math.floor(value)) : 1);
+
 const restoreSkill = (skillId, fresh, saved) => {
     const skill = { ...fresh, ...saved };
-    if (typeof skill.difficulty !== 'number') skill.difficulty = 1;
+    const savedDifficulty = skill.difficulty;
+    skill.level = atLeastOne(skill.level);
+    skill.difficulty = Math.min(MAX_DIFFICULTY, atLeastOne(savedDifficulty));
     if (!Array.isArray(skill.earnedBadges)) skill.earnedBadges = [];
-    if (typeof saved.mobHealth !== 'number') {
-        skill.mobHealth = calculateMobHealth(skill.difficulty || 1);
-        skill.mobMaxHealth = calculateMobHealth(skill.difficulty || 1);
+    if (typeof saved.mobHealth !== 'number' || skill.difficulty !== savedDifficulty) {
+        skill.mobHealth = calculateMobHealth(skill.difficulty);
+        skill.mobMaxHealth = calculateMobHealth(skill.difficulty);
     }
     if (typeof skill.lostLevel !== 'boolean') skill.lostLevel = false;
     if (skill.recoveryDifficulty === undefined) skill.recoveryDifficulty = null;

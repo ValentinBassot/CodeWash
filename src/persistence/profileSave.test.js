@@ -75,6 +75,43 @@ describe('buildSkills', () => {
         ).toMatchObject({ difficulty: 1, earnedBadges: [], lostLevel: false, recoveryDifficulty: null });
     });
 
+    it.each([
+        [0, 1],
+        [-3, 1],
+        [8, 7],
+        [99, 7],
+        [2.6, 2],
+    ])('brings a saved difficulty of %s back to %s, with a mob of that difficulty', (saved, kept) => {
+        const health = 60 * 3 ** (kept - 1);
+        expect(buildSkills({ math: { difficulty: saved, mobHealth: 5, mobMaxHealth: 5 } }).math).toMatchObject({
+            difficulty: kept,
+            mobHealth: health,
+            mobMaxHealth: health,
+        });
+    });
+
+    it.each([
+        [0, 1],
+        [-4, 1],
+        ['x', 1],
+        [null, 1],
+        [3.9, 3],
+    ])('brings a saved level of %s back to %s', (saved, kept) => {
+        expect(buildSkills({ math: { level: saved } }).math.level).toBe(kept);
+    });
+
+    it('keeps a valid level and difficulty untouched', () => {
+        expect(buildSkills({ math: { level: 140, difficulty: 7 } }).math).toMatchObject({ level: 140, difficulty: 7 });
+    });
+
+    it('keeps the saved mob health of a save without difficulty', () => {
+        expect(buildSkills({ math: { mobHealth: 30, mobMaxHealth: 60 } }).math).toMatchObject({
+            difficulty: 1,
+            mobHealth: 30,
+            mobMaxHealth: 60,
+        });
+    });
+
     it('refills a cleared miniboss or boss for battle skills, not for cleaning and memory', () => {
         const cleared = { currentMiniboss: null, currentBoss: null, currentMinibossAura: null, currentBossAura: null };
         const skills = buildSkills({ math: { ...cleared }, cleaning: { ...cleared }, memory: { ...cleared } });

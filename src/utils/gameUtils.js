@@ -128,8 +128,10 @@ export const calculateMobHealth = (difficulty) => {
 
 // Calculate expected difficulty based on player level
 // Difficulty unlocks every 20 levels: 1-20 → Diff 1, 21-40 → Diff 2, etc.
+export const MAX_DIFFICULTY = 7;
+
 export const getExpectedDifficulty = (playerLevel) => {
-    return Math.min(7, Math.floor((playerLevel - 1) / 20) + 1);
+    return Math.min(MAX_DIFFICULTY, Math.floor((playerLevel - 1) / 20) + 1);
 };
 
 // Calculate XP reward for defeating a mob
