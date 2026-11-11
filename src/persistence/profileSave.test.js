@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { buildSkills, createNewSkill, summarizeSkills } from './profileSave';
+import { buildSkills, createNewSkill, parseProfileSave, summarizeSkills } from './profileSave';
+import { getDefaultStats } from '../utils/achievementUtils';
 import { SKILL_DATA } from '../constants/gameData';
 import { createSeededRandom, resetRandomSource, setRandomSource } from '../domain/random';
 
@@ -95,5 +96,34 @@ describe('summarizeSkills', () => {
             highestLevel: 5,
         });
         expect(summarizeSkills({})).toEqual({ totalLevel: 0, highestLevel: 0 });
+    });
+});
+
+describe('parseProfileSave', () => {
+    it('gives an empty save for a missing entry', () => {
+        expect(parseProfileSave(null)).toEqual({ skills: {}, theme: 'minecraft', stats: getDefaultStats() });
+        expect(parseProfileSave('')).toEqual({ skills: {}, theme: 'minecraft', stats: getDefaultStats() });
+    });
+
+    it('reads skills, theme and stats, completing the stats with their defaults', () => {
+        const raw = JSON.stringify({ skills: { math: { level: 4 } }, theme: 'spy', stats: { totalDeaths: 2 } });
+        expect(parseProfileSave(raw)).toEqual({
+            skills: { math: { level: 4 } },
+            theme: 'spy',
+            stats: { ...getDefaultStats(), totalDeaths: 2 },
+        });
+    });
+
+    it('reads the old format where the skills are the whole entry', () => {
+        expect(parseProfileSave(JSON.stringify({ math: { level: 4 } }))).toEqual({
+            skills: { math: { level: 4 } },
+            theme: 'minecraft',
+            stats: getDefaultStats(),
+        });
+    });
+
+    it('throws on a corrupted entry', () => {
+        expect(() => parseProfileSave('{oops')).toThrow(SyntaxError);
+        expect(() => parseProfileSave('null')).toThrow(TypeError);
     });
 });

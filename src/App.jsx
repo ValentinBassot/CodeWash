@@ -16,7 +16,7 @@ import {
     readObject,
     readProfileSave,
 } from './persistence/profileStorage';
-import { buildSkills, summarizeSkills } from './persistence/profileSave';
+import { buildSkills, parseProfileSave, summarizeSkills } from './persistence/profileSave';
 import ResetModal from './components/modals/ResetModal';
 import BugReportModal from './components/modals/BugReportModal';
 import SettingsDrawer from './components/drawers/SettingsDrawer';
@@ -98,40 +98,14 @@ const App = () => {
     );
     const [playerHealth, setPlayerHealth] = useState(10);
 
-    const loadSkills = (profileId) => {
-        const saved = readProfileSave(localStorage, profileId);
+    const loadProfile = (profileId) => {
         try {
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                return buildSkills(parsed.skills || parsed);
-            }
+            const save = parseProfileSave(readProfileSave(localStorage, profileId));
+            return { skills: buildSkills(save.skills), theme: save.theme, stats: save.stats };
         } catch (e) {
             console.warn('Failed to parse saved skills:', e);
+            return { skills: buildSkills({}), theme: 'minecraft', stats: getDefaultStats() };
         }
-        return buildSkills({});
-    };
-    const loadTheme = (profileId) => {
-        const saved = readProfileSave(localStorage, profileId);
-        try {
-            return JSON.parse(saved).theme || 'minecraft';
-        } catch (e) {
-            console.warn('Failed to parse theme:', e);
-        }
-        return 'minecraft';
-    };
-
-    const loadStats = (profileId) => {
-        const saved = readProfileSave(localStorage, profileId);
-        try {
-            const data = JSON.parse(saved);
-            if (data.stats) {
-                // Merge with default stats to ensure all fields exist
-                return { ...getDefaultStats(), ...data.stats };
-            }
-        } catch (e) {
-            console.warn('Failed to parse stats:', e);
-        }
-        return getDefaultStats();
     };
 
     const getProfileStats = (id, liveSkills = null) => {
@@ -143,19 +117,18 @@ const App = () => {
         const saved = readProfileSave(localStorage, id);
         if (!saved) return null;
         try {
-            const data = JSON.parse(saved);
-            const skillsData = data.skills || data;
-            const theme = data.theme || 'minecraft';
-            return { ...summarizeSkills(skillsData), skills: skillsData, theme };
+            const save = parseProfileSave(saved);
+            return { ...summarizeSkills(save.skills), skills: save.skills, theme: save.theme };
         } catch (e) {
             console.warn('Failed to parse profile stats:', e);
             return null;
         }
     };
 
-    const [skills, setSkills] = useState(() => loadSkills(currentProfile));
-    const [activeTheme, setActiveTheme] = useState(() => loadTheme(currentProfile));
-    const [stats, setStats] = useState(() => loadStats(currentProfile));
+    const [initialProfile] = useState(() => loadProfile(currentProfile));
+    const [skills, setSkills] = useState(initialProfile.skills);
+    const [activeTheme, setActiveTheme] = useState(initialProfile.theme);
+    const [stats, setStats] = useState(initialProfile.stats);
     const [achievementToast, setAchievementToast] = useState(null);
     const [battlingSkillId, setBattlingSkillId] = useState(null);
     const [battleDifficulty, setBattleDifficulty] = useState(null); // Track battle's starting difficulty for consistent challenge generation
@@ -859,10 +832,9 @@ const App = () => {
     const handleSwitchProfile = (newId) => {
         if (newId === currentProfile) return;
         playClick();
-        const newSkills = loadSkills(newId);
-        const newTheme = loadTheme(newId);
-        setSkills(newSkills);
-        setActiveTheme(newTheme);
+        const next = loadProfile(newId);
+        setSkills(next.skills);
+        setActiveTheme(next.theme);
         setCurrentProfile(newId);
     };
     const handleRenameProfile = (id, newName) => {

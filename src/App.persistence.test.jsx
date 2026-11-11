@@ -207,12 +207,12 @@ describe('known debt', () => {
 
         expect(saveOf(1).skills.reading.level).toBe(1);
         expect(warn).toHaveBeenCalledWith('Failed to parse saved skills:', expect.any(SyntaxError));
+        expect(warn).toHaveBeenCalledTimes(1);
     });
 
-    it('KNOWN DEBT D28: a new player triggers two swallowed errors while the empty save is read', () => {
+    it('a new player starts without any warning', () => {
         render(<App />);
 
-        expect(warn).toHaveBeenCalledWith('Failed to parse theme:', expect.any(TypeError));
-        expect(warn).toHaveBeenCalledWith('Failed to parse stats:', expect.any(TypeError));
+        expect(warn).not.toHaveBeenCalled();
     });
 });

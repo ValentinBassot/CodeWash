@@ -7,6 +7,7 @@ import {
     getRandomMob,
 } from '../utils/gameUtils';
 import { getRandomAura } from '../utils/mobDisplayUtils';
+import { getDefaultStats } from '../utils/achievementUtils';
 
 const ENCOUNTERLESS_SKILLS = ['cleaning', 'memory'];
 
@@ -88,4 +89,14 @@ export const summarizeSkills = (skills) => {
         }
     });
     return { totalLevel, highestLevel };
+};
+
+export const parseProfileSave = (raw) => {
+    if (!raw) return { skills: {}, theme: 'minecraft', stats: getDefaultStats() };
+    const data = JSON.parse(raw);
+    return {
+        skills: data.skills || data,
+        theme: data.theme || 'minecraft',
+        stats: data.stats ? { ...getDefaultStats(), ...data.stats } : getDefaultStats(),
+    };
 };

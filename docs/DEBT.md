@@ -142,6 +142,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | ID | Item | Location | Smell | I | L | Risk | Effort | Prio | Status |
 |---|---|---|---|---|---|---|---|---|---|
 | D14 | `JSON.parse` without `try/catch` in state initializers: a corrupted save crashes the game at startup | `App.jsx:51,52,971,977` | fragile parser | 4 | 3 | 12 | S | P1 | Done (026) |
+| D49 | Switching profile keeps the previous profile's stats in memory and writes them into the new profile's save: the new profile's own stats are lost | `App.jsx` (`handleSwitchProfile` reloads skills and theme, not stats) | data loss | 5 | 4 | 20 | S | P1 | Identified |
 | D15 | Persistence scattered, legacy migrations duplicated | `App.jsx:50-285,966`, `PhantomEvent.jsx:21,55` | duplication | 4 | 4 | 16 | M | P1 | In progress (025) |
 | D16 | `Math.random` called directly (34 times): untestable | `gameUtils.js`, `SkillCard.jsx`, `PhantomEvent.jsx`, others | global | 4 | 4 | 16 | M | P1 | Done (027) |
 | D17 | Clock and timers not injectable (28 timers) | `PhantomEvent.jsx:21,55`, timers across `src/` | global | 3 | 3 | 9 | M | P2 | Done (031) |
@@ -163,7 +164,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 |---|---|---|---|---|---|---|---|---|---|
 | D26 | God component: `App` is one 1172-line function with 31 `useState` | `App.jsx:49` (also complexity 31 at `:94`, 24 at `:569`) | tight coupling | 5 | 4 | 20 | XL | P1 | Identified |
 | D27 | `SkillCard`: 611-line function, complexity 107, every mini-game inside | `SkillCard.jsx:65` | complexity | 5 | 4 | 20 | XL | P1 | Identified |
-| D28 | Errors swallowed (`console.warn`, empty `.play().catch`) | `App.jsx:168,180,197,237`, `soundManager.js:127,136,185,255,269,283` | silent error | 3 | 3 | 9 | S | P2 | Pinned (010) |
+| D28 | Errors swallowed (`console.warn`, empty `.play().catch`) | `App.jsx:168,180,197,237`, `soundManager.js:127,136,185,255,269,283` | silent error | 3 | 3 | 9 | S | P2 | In progress (043) |
 | D29 | 1217 lines of CSS inside a component | `GlobalStyles.jsx:3` | large file | 3 | 3 | 9 | M | P3 | Identified |
 | D47 | Tests that mount the whole App take 4 to 8 s each; under parallel coverage the slowest exceed 20 s, so the timeout was raised to 30 s | `src/App.*.test.jsx`, `vite.config.js` (`testTimeout`) | slow tests | 3 | 3 | 9 | M | P2 | Identified |
 
@@ -191,7 +192,7 @@ Impact (rows) × likelihood (columns). Top-right is treated first.
 
 | Impact \ Likelihood | 1 | 2 | 3 | 4 | 5 |
 |---|---|---|---|---|---|
-| **5** | | | | D26, D27 | D01 |
+| **5** | | | | D26, D27, D49 | D01 |
 | **4** | | | D07, D14, D19 | D05, D15, D16, D18, D31, D38 | D30, D33 |
 | **3** | | D44 | D03, D09, D17, D28, D29, D40, D41, D46, D47 | D20, D45 | D02, D04, D06, D32, D34, D35, D36, D37, D39 |
 | **2** | | D10, D11, D21, D25 | D22, D43 | D08 | D12, D13, D23, D24, D42, D48 |
