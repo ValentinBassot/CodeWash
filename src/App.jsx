@@ -3,12 +3,21 @@ import { Menu, Sparkles, Gift, Maximize, Minimize, Settings, Bug } from 'lucide-
 import { random } from './domain/random';
 import { todayKey } from './domain/clock';
 import { judgeSpokenWord } from './domain/reading';
-import { describeHit, recordDefeat, resolveHit } from './domain/battle';
+import {
+    describeHit,
+    getAuraForSkill,
+    getChallengeDifficulty,
+    recordDefeat,
+    resolveHit,
+    withDifficulty,
+} from './domain/battle';
+import { generateChallenge } from './domain/challenge';
 import { isSpeechRecognitionAvailable } from './io/speechRecognition';
 import { useVoiceListener } from './hooks/useVoiceListener';
 import { useCarousel } from './hooks/useCarousel';
 import { summarizeSavedProfile } from './persistence/profiles';
 import { useProfiles } from './hooks/useProfiles';
+import { useAchievementToast } from './hooks/useAchievementToast';
 import { grantParentPrivileges } from './domain/parent';
 
 // Modules
@@ -27,14 +36,7 @@ import PhantomEvent from './components/PhantomEvent';
 import AchievementToast from './components/ui/AchievementToast';
 
 // Utils & Constants
-import {
-    getMobForSkill,
-    getEncounterType,
-    generateMathProblem,
-    getReadingWord,
-    getWordForDifficulty,
-    calculateMobHealth,
-} from './utils/gameUtils';
+import { getMobForSkill, getEncounterType } from './utils/gameUtils';
 import {
     BASE_ASSETS,
     THEME_CONFIG,
@@ -55,9 +57,8 @@ import {
     playSuccessfulHit,
     playMobHurt,
     playMobDeath,
-    playAchievement,
 } from './utils/soundManager';
-import { getNewlyUnlockedAchievements, getNewTierAchievements, isAchievementUnlocked } from './utils/achievementUtils';
+import { isAchievementUnlocked } from './utils/achievementUtils';
 
 // Parent verification privilege constants
 
@@ -65,6 +66,7 @@ import { getNewlyUnlockedAchievements, getNewTierAchievements, isAchievementUnlo
 
 // Boss healing animation duration (ms)
 const BOSS_HEALING_ANIMATION_DURATION = 600;
+const ACHIEVEMENT_CHECK_DELAY_MS = 100;
 
 const App = () => {
     const profiles = useProfiles();
@@ -94,7 +96,7 @@ const App = () => {
         return summarizeSavedProfile(browserStorage, id);
     };
 
-    const [achievementToast, setAchievementToast] = useState(null);
+    const { toast: achievementToast, announce: checkAchievements } = useAchievementToast();
     const [battlingSkillId, setBattlingSkillId] = useState(null);
     const [battleDifficulty, setBattleDifficulty] = useState(null); // Track battle's starting difficulty for consistent challenge generation
     const [challengeData, setChallengeData] = useState(null);
@@ -204,69 +206,23 @@ const App = () => {
         playClick();
     };
 
-    const generateChallenge = (type, diff) => {
-        // Math: Use difficulty-based problem generation
-        if (type === 'math') {
-            return generateMathProblem(diff);
-        }
-        // Patterns: Simon Says - no challenge data needed, handled in SkillCard
-        if (type === 'patterns') {
-            return { type: 'patterns', question: 'Simon Says!', answer: 'WIN' };
-        }
-        // Reading: Use difficulty-based word selection
-        if (type === 'reading') {
-            const word = getReadingWord(diff);
-            return { type, question: word, answer: word };
-        }
-        // Writing: Use difficulty-based word selection from comprehensive index
-        if (type === 'writing') {
-            const wordData = getWordForDifficulty(diff);
-            // Use displayName in uppercase for the answer (handles multi-word items with spaces)
-            const answer = wordData.displayName.toUpperCase();
-            return {
-                type,
-                question: 'Spell it!',
-                answer,
-                images: [wordData.image],
-                displayName: wordData.displayName,
-            };
-        }
-        // Memory: No specific challenge data, handled in SkillCard
-        if (type === 'memory') return { type: 'memory', question: 'Find Pairs!', answer: 'WIN' };
-        // Cleaning: Manual task
-        return { type: 'manual', question: 'Task Complete?', answer: 'yes' };
-    };
-
     // Regenerate challenge when difficulty or level changes during active battle
     // This fixes the issue where challenges use stale difficulty after leveling up
     // Removed problematic useEffect that was causing infinite loop
     // The startBattle function already sets battleDifficulty correctly
 
-    // Check for achievement unlocks
-    const checkAchievements = useCallback((oldStats, newStats, oldSkills, newSkills) => {
-        // Check for newly unlocked one-time achievements
-        const newlyUnlocked = getNewlyUnlockedAchievements(oldStats, newStats, oldSkills, newSkills);
-
-        // Check for tiered achievement progress
-        const newTiers = getNewTierAchievements(oldStats, newStats, oldSkills, newSkills);
-
-        // Show toast for the first achievement/tier unlocked
-        if (newlyUnlocked.length > 0) {
-            // Show first newly unlocked achievement
-            setAchievementToast({ achievementId: newlyUnlocked[0], tierIndex: null });
-            playAchievement();
-        } else if (newTiers.length > 0) {
-            // Show first new tier
-            setAchievementToast({
-                achievementId: newTiers[0].achievementId,
-                tierIndex: newTiers[0].tierIndex,
-            });
-            playAchievement();
-        }
-    }, []);
+    const recordStats = (update, skillsAfter) => {
+        const { skills, stats } = liveRef.current;
+        const statsAfter = update(stats);
+        setStats(update);
+        setTimeout(
+            () => checkAchievements(stats, statsAfter, skills, skillsAfter || skills),
+            ACHIEVEMENT_CHECK_DELAY_MS,
+        );
+    };
 
     const handleSuccessHit = (skillId, isWrong) => {
-        const { skills, stats, playerHealth } = liveRef.current;
+        const { skills, playerHealth } = liveRef.current;
         const battlingSkillId = battlingSkillIdRef.current;
         // Handle wrong answer
         if (isWrong === 'WRONG') {
@@ -307,9 +263,7 @@ const App = () => {
 
             playDeath();
             setShowDeathOverlay(true);
-            const statsAfterDeath = { ...stats, totalDeaths: (stats.totalDeaths || 0) + 1 };
-            setStats((prevStats) => ({ ...prevStats, totalDeaths: (prevStats.totalDeaths || 0) + 1 }));
-            setTimeout(() => checkAchievements(stats, statsAfterDeath, skills, skills), 100);
+            recordStats((current) => ({ ...current, totalDeaths: (current.totalDeaths || 0) + 1 }));
 
             if (battlingSkillId) {
                 setSkills((prev) => {
@@ -362,11 +316,7 @@ const App = () => {
         setSkills((prev) => ({ ...prev, [skillId]: nextSkill }));
 
         if (events.defeated) {
-            const statsAfterDefeat = recordDefeat(stats, events.defeated);
-            setStats((prevStats) => recordDefeat(prevStats, events.defeated));
-            setTimeout(() => {
-                checkAchievements(stats, statsAfterDefeat, skills, { ...skills, [skillId]: nextSkill });
-            }, 100);
+            recordStats((current) => recordDefeat(current, events.defeated), { ...skills, [skillId]: nextSkill });
         }
         if (events.levelRestored) {
             setShowLevelRestored(true);
@@ -402,66 +352,20 @@ const App = () => {
 
     // Helper function to set difficulty for a specific skill
     const setSkillDifficulty = (skillId, newDiff) => {
-        setSkills((prev) => {
-            const current = prev[skillId];
-            const newMobMaxHealth = calculateMobHealth(newDiff);
-            return {
-                ...prev,
-                [skillId]: {
-                    ...current,
-                    difficulty: newDiff,
-                    mobHealth: newMobMaxHealth,
-                    mobMaxHealth: newMobMaxHealth,
-                },
-            };
-        });
+        setSkills((prev) => ({ ...prev, [skillId]: withDifficulty(prev[skillId], newDiff) }));
     };
 
-    // Wrapper for setActiveTheme to track theme changes
-    const handleThemeChange = useCallback(
-        (newTheme) => {
-            if (newTheme !== activeTheme) {
-                setActiveTheme(newTheme);
-                setStats((prevStats) => {
-                    const newStats = {
-                        ...prevStats,
-                        themeChanges: (prevStats.themeChanges || 0) + 1,
-                    };
+    const handleThemeChange = (newTheme) => {
+        if (newTheme === activeTheme) return;
+        setActiveTheme(newTheme);
+        recordStats((current) => ({ ...current, themeChanges: (current.themeChanges || 0) + 1 }));
+    };
 
-                    // Check achievements
-                    setTimeout(() => {
-                        checkAchievements(prevStats, newStats, skills, skills);
-                    }, 100);
-
-                    return newStats;
-                });
-            }
-        },
-        [activeTheme, skills, checkAchievements, setActiveTheme, setStats],
-    );
-
-    // Wrapper for setSelectedBorder to track border changes
-    const handleBorderChange = useCallback(
-        (newBorder) => {
-            if (newBorder !== selectedBorder) {
-                setSelectedBorder(newBorder);
-                setStats((prevStats) => {
-                    const newStats = {
-                        ...prevStats,
-                        borderChanges: (prevStats.borderChanges || 0) + 1,
-                    };
-
-                    // Check achievements
-                    setTimeout(() => {
-                        checkAchievements(prevStats, newStats, skills, skills);
-                    }, 100);
-
-                    return newStats;
-                });
-            }
-        },
-        [selectedBorder, skills, checkAchievements, setSelectedBorder, setStats],
-    );
+    const handleBorderChange = (newBorder) => {
+        if (newBorder === selectedBorder) return;
+        setSelectedBorder(newBorder);
+        recordStats((current) => ({ ...current, borderChanges: (current.borderChanges || 0) + 1 }));
+    };
 
     // Award a free level from phantom click
     const handlePhantomLevelAward = (skillId) => {
@@ -516,17 +420,8 @@ const App = () => {
     const startBattle = (id) => {
         const skill = SKILL_DATA.find((s) => s.id === id);
         setBattlingSkillId(id);
-        // Use the skill's current difficulty setting
-        const currentDiff = skills[id].difficulty || 1;
-        const playerLevel = skills[id].level;
-
-        // For miniboss encounters, use difficulty+1 for content (capped at 7)
-        const encounterType = getEncounterType(playerLevel);
-        const challengeDiff = encounterType === 'miniboss' ? Math.min(7, currentDiff + 1) : currentDiff;
-
-        // Store the battle's challenge difficulty so it remains consistent throughout the battle
+        const challengeDiff = getChallengeDifficulty(skills[id]);
         setBattleDifficulty(challengeDiff);
-
         setChallengeData(generateChallenge(skill.challengeType, challengeDiff));
         playClick();
         startBGM(); // Start BGM on first battle (user interaction)
@@ -534,7 +429,6 @@ const App = () => {
     };
 
     const endBattle = () => {
-        console.log('[Battle] Ending battle, cleaning up speech recognition');
         setBattlingSkillId(null);
         setBattleDifficulty(null);
         setChallengeData(null);
@@ -576,13 +470,6 @@ const App = () => {
         if (lootBox) setTimeout(() => setLootBox(null), 4000);
     }, [lootBox]);
 
-    // Achievement toast auto-dismiss
-    useEffect(() => {
-        if (achievementToast) {
-            setTimeout(() => setAchievementToast(null), 6000);
-        }
-    }, [achievementToast]);
-
     // Track login date (once per day)
     useEffect(() => {
         if (loginTrackedRef.current) return; // Skip if already tracked
@@ -604,34 +491,6 @@ const App = () => {
     const containerStyle = { ...currentThemeData.style, fontFamily: '"VT323", monospace' };
 
     const carousel = useCarousel({ items: SKILL_DATA, locked: Boolean(battlingSkillId) });
-
-    // Helper to get the aura for the current mob encounter
-    const getAuraForSkill = (skillConfig, userSkill) => {
-        // Memory and Cleaning don't use auras
-        if (skillConfig.id === 'memory' || skillConfig.id === 'cleaning') {
-            return null;
-        }
-
-        const encounterType = getEncounterType(userSkill.level);
-
-        if (encounterType === 'boss') {
-            return userSkill.currentBossAura;
-        }
-
-        if (encounterType === 'miniboss') {
-            return userSkill.currentMinibossAura;
-        }
-
-        // Combat skills have their own auras
-        const combatSkillAuras = {
-            reading: userSkill.readingMobAura,
-            math: userSkill.mathMobAura,
-            writing: userSkill.writingMobAura,
-            patterns: userSkill.patternMobAura,
-        };
-
-        return combatSkillAuras[skillConfig.id] || null;
-    };
 
     return (
         <div
@@ -936,7 +795,7 @@ const App = () => {
                                     isCenter={item.offset === 0}
                                     isBattling={item.offset === 0 && battlingSkillId === item.id}
                                     mobName={getMobForSkill(item, skills[item.id])}
-                                    mobAura={getAuraForSkill(item, skills[item.id])}
+                                    mobAura={getAuraForSkill(item.id, skills[item.id])}
                                     challenge={challengeData}
                                     isListening={isListening}
                                     spokenText={spokenText}
@@ -1025,21 +884,9 @@ const App = () => {
             <PhantomEvent
                 battlingSkillId={battlingSkillId}
                 onAwardLevel={handlePhantomLevelAward}
-                onPhantomCaught={() => {
-                    setStats((prevStats) => {
-                        const newStats = {
-                            ...prevStats,
-                            phantomsCaught: (prevStats.phantomsCaught || 0) + 1,
-                        };
-
-                        // Check achievements
-                        setTimeout(() => {
-                            checkAchievements(prevStats, newStats, skills, skills);
-                        }, 100);
-
-                        return newStats;
-                    });
-                }}
+                onPhantomCaught={() =>
+                    recordStats((current) => ({ ...current, phantomsCaught: (current.phantomsCaught || 0) + 1 }))
+                }
             />
         </div>
     );

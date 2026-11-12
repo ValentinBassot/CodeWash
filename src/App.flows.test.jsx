@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { StrictMode } from 'react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import App from './App';
-import { save, typeInto, useGameClock } from './test/game';
+import { playWith, save, typeInto, useGameClock } from './test/game';
 
 const read = (key) => JSON.parse(localStorage.getItem(key));
 const topButton = (icon) => document.querySelector(`button > svg.lucide-${icon}`).closest('button');
@@ -40,6 +41,55 @@ describe('themes', () => {
         expect(themeButton('Minecraft').disabled).toBe(true);
         fireEvent.click(themeButton('Minecraft'));
         expect(save().stats.themeChanges).toBe(0);
+    });
+});
+
+describe('borders', () => {
+    const borderButtons = () =>
+        [...document.querySelectorAll('button')].filter((b) => /^(ACTIVE)?(Default|Copper)/.test(b.textContent));
+
+    it('picking an unlocked border saves it and counts one border change, picking it again counts nothing', () => {
+        playWith((s) => {
+            s.skills.math.earnedBadges = [1];
+        });
+        openCosmetics();
+        const unlocked = borderButtons().filter((b) => !b.disabled);
+        expect(unlocked.length).toBeGreaterThan(1);
+
+        fireEvent.click(unlocked[1]);
+        expect(localStorage.getItem('borderEffect_p1')).not.toBe('solid');
+        expect(save().stats.borderChanges).toBe(1);
+
+        fireEvent.click(unlocked[1]);
+        expect(save().stats.borderChanges).toBe(1);
+    });
+
+    it('a locked border cannot be picked', () => {
+        render(<App />);
+        openCosmetics();
+        const locked = borderButtons().filter((b) => b.disabled);
+        expect(locked.length).toBeGreaterThan(0);
+        fireEvent.click(locked[0]);
+        expect(localStorage.getItem('borderEffect_p1')).toBe('solid');
+        expect(save().stats.borderChanges).toBe(0);
+    });
+});
+
+describe('achievements in development (StrictMode)', () => {
+    it('the first theme change announces its achievement once', () => {
+        const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+        render(
+            <StrictMode>
+                <App />
+            </StrictMode>,
+        );
+        openCosmetics();
+        fireEvent.click(themeButton('Pokemon'));
+        play.mockClear();
+        act(() => vi.advanceTimersByTime(200));
+
+        expect(save().stats.themeChanges).toBe(1);
+        expect(play.mock.contexts.filter((audio) => audio.src.includes('notification'))).toHaveLength(1);
     });
 });
 
