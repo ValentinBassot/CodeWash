@@ -108,6 +108,23 @@ describe('difficulty picker', () => {
         expect(skill('reading')).toMatchObject({ difficulty: 1, mobHealth: 60 });
     });
 
+    it('is still hidden at level 20, while the first boss is not beaten', () => {
+        playWith((s) => {
+            s.skills.reading.level = 20;
+        });
+        expect(document.querySelector('svg.lucide-plus')).toBeNull();
+    });
+
+    it('opens one more difficulty after each boss, up to 7', () => {
+        playWith((s) => {
+            s.skills.reading.level = 41;
+            s.skills.reading.difficulty = 2;
+        });
+        fireEvent.click(difficultyButton('plus'));
+        fireEvent.click(difficultyButton('plus'));
+        expect(skill('reading').difficulty).toBe(3);
+    });
+
     it('is hidden before the first boss', () => {
         render(<App />);
         expect(document.querySelector('svg.lucide-plus')).toBeNull();

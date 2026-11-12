@@ -36,7 +36,7 @@ import PhantomEvent from './components/PhantomEvent';
 import AchievementToast from './components/ui/AchievementToast';
 
 // Utils & Constants
-import { getMobForSkill, getEncounterType } from './utils/gameUtils';
+import { getMobForSkill, getEncounterType, getExpectedDifficulty } from './utils/gameUtils';
 import {
     BASE_ASSETS,
     THEME_CONFIG,
@@ -806,7 +806,7 @@ const App = () => {
                                     onMicClick={() => voice.toggle(item.id)}
                                     difficulty={skills[item.id].difficulty || 1}
                                     setDifficulty={(newDiff) => setSkillDifficulty(item.id, newDiff)}
-                                    unlockedDifficulty={Math.min(7, Math.floor(skills[item.id].level / 20) + 1)}
+                                    unlockedDifficulty={getExpectedDifficulty(skills[item.id].level)}
                                     selectedBorder={selectedBorder}
                                     borderColor={borderColor}
                                     bossHealing={bossHealing === item.id}
