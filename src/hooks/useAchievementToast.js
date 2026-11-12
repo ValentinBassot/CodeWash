@@ -12,16 +12,19 @@ export const firstNewAchievement = (oldStats, newStats, oldSkills, newSkills) =>
 };
 
 export const useAchievementToast = () => {
-    const [toast, setToast] = useState(null);
+    const [queue, setQueue] = useState([]);
+    const toast = queue[0] || null;
 
     useEffect(() => {
-        if (toast) setTimeout(() => setToast(null), TOAST_DURATION_MS);
+        if (!toast) return undefined;
+        const timer = setTimeout(() => setQueue((waiting) => waiting.slice(1)), TOAST_DURATION_MS);
+        return () => clearTimeout(timer);
     }, [toast]);
 
     const announce = useCallback((oldStats, newStats, oldSkills, newSkills) => {
         const achievement = firstNewAchievement(oldStats, newStats, oldSkills, newSkills);
         if (!achievement) return;
-        setToast(achievement);
+        setQueue((waiting) => [...waiting, achievement]);
         playAchievement();
     }, []);
 

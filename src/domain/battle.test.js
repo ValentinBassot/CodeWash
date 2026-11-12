@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     describeHit,
     getAuraForSkill,
+    afterDeath,
     getChallengeDifficulty,
     recordDefeat,
     resolveHit,
@@ -194,6 +195,42 @@ describe('withDifficulty', () => {
         const skill = { level: 45, difficulty: 1, mobHealth: 12, mobMaxHealth: 60 };
         expect(withDifficulty(skill, 3)).toEqual({ level: 45, difficulty: 3, mobHealth: 540, mobMaxHealth: 540 });
         expect(skill.difficulty).toBe(1);
+    });
+});
+
+describe('afterDeath', () => {
+    it('costs a level and remembers the level was lost', () => {
+        const skill = skillOf('math', { level: 25, difficulty: 2, mobHealth: 100, mobMaxHealth: 180 });
+        expect(afterDeath(skill)).toMatchObject({
+            level: 24,
+            lostLevel: true,
+            recoveryDifficulty: 1,
+            difficulty: 2,
+            mobHealth: 100,
+            mobMaxHealth: 180,
+        });
+    });
+
+    it('level 1 cannot drop and nothing is lost', () => {
+        expect(afterDeath(skillOf('math'))).toMatchObject({ level: 1, lostLevel: false, difficulty: 1 });
+    });
+
+    it('falling back to a boss level brings the difficulty down to the one that boss unlocks, with a fresh mob', () => {
+        const skill = skillOf('math', { level: 21, difficulty: 2, mobHealth: 100, mobMaxHealth: 180 });
+        expect(afterDeath(skill)).toMatchObject({
+            level: 20,
+            lostLevel: true,
+            difficulty: 1,
+            mobHealth: 60,
+            mobMaxHealth: 60,
+        });
+    });
+
+    it('does not change the skill it receives', () => {
+        const skill = skillOf('math', { level: 21, difficulty: 2 });
+        const copy = structuredClone(skill);
+        afterDeath(skill);
+        expect(skill).toEqual(copy);
     });
 });
 

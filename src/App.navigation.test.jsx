@@ -108,6 +108,18 @@ describe('difficulty picker', () => {
         expect(skill('reading')).toMatchObject({ difficulty: 1, mobHealth: 60 });
     });
 
+    it('stays available when the difficulty is already above what the level unlocks, so it can be lowered', () => {
+        playWith((s) => {
+            s.skills.reading.level = 20;
+            s.skills.reading.difficulty = 2;
+            s.skills.reading.mobHealth = 180;
+            s.skills.reading.mobMaxHealth = 180;
+        });
+        fireEvent.click(difficultyButton('minus'));
+        expect(skill('reading')).toMatchObject({ difficulty: 1, mobHealth: 60 });
+        expect(document.querySelector('svg.lucide-plus')).toBeNull();
+    });
+
     it('is still hidden at level 20, while the first boss is not beaten', () => {
         playWith((s) => {
             s.skills.reading.level = 20;

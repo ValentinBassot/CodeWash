@@ -4,6 +4,7 @@ import { random } from './domain/random';
 import { todayKey } from './domain/clock';
 import { judgeSpokenWord } from './domain/reading';
 import {
+    afterDeath,
     describeHit,
     getAuraForSkill,
     getChallengeDifficulty,
@@ -214,6 +215,7 @@ const App = () => {
     const recordStats = (update, skillsAfter) => {
         const { skills, stats } = liveRef.current;
         const statsAfter = update(stats);
+        liveRef.current = { ...liveRef.current, stats: statsAfter };
         setStats(update);
         setTimeout(
             () => checkAchievements(stats, statsAfter, skills, skillsAfter || skills),
@@ -266,18 +268,7 @@ const App = () => {
             recordStats((current) => ({ ...current, totalDeaths: (current.totalDeaths || 0) + 1 }));
 
             if (battlingSkillId) {
-                setSkills((prev) => {
-                    const current = prev[battlingSkillId];
-                    return {
-                        ...prev,
-                        [battlingSkillId]: {
-                            ...current,
-                            level: Math.max(1, current.level - 1),
-                            lostLevel: current.level > 1,
-                            recoveryDifficulty: Math.max(1, (current.difficulty || 1) - 1),
-                        },
-                    };
-                });
+                setSkills((prev) => ({ ...prev, [battlingSkillId]: afterDeath(prev[battlingSkillId]) }));
             }
 
             setTimeout(() => {
@@ -812,7 +803,10 @@ const App = () => {
                                     onMicClick={() => voice.toggle(item.id)}
                                     difficulty={skills[item.id].difficulty || 1}
                                     setDifficulty={(newDiff) => setSkillDifficulty(item.id, newDiff)}
-                                    unlockedDifficulty={getExpectedDifficulty(skills[item.id].level)}
+                                    unlockedDifficulty={Math.max(
+                                        getExpectedDifficulty(skills[item.id].level),
+                                        skills[item.id].difficulty || 1,
+                                    )}
                                     selectedBorder={selectedBorder}
                                     borderColor={borderColor}
                                     bossHealing={bossHealing === item.id}

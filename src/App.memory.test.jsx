@@ -106,6 +106,17 @@ describe('perfect memory game (D62)', () => {
         expect(save().stats.perfectMemoryGames).toBe(1);
     });
 
+    it('a first perfect game that is also a first victory announces both achievements, one after the other', () => {
+        render(<App />);
+        startMemory();
+        winGame();
+        wait(100);
+        const toast = () => document.querySelector('.animate-achievement-toast')?.textContent || '';
+        expect(toast()).toContain('Perfectionist');
+        wait(6000);
+        expect(toast()).toContain('First Steps');
+    });
+
     it('a game won after a mismatch does not', () => {
         render(<App />);
         startMemory();
