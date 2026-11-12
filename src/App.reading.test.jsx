@@ -102,6 +102,29 @@ describe('reading battle with speech recognition', () => {
         expect(save().stats.totalDeaths).toBe(1);
     });
 
+    it('dying in a reading battle costs a level, as in math', () => {
+        localStorage.setItem('heroSkills_v23_p1', JSON.stringify({ skills: { reading: { level: 5 } } }));
+        render(<App />);
+        startReadingBattle();
+        for (let miss = 0; miss < 10; miss++) recognition().hear('zzz');
+
+        expect(save().stats.totalDeaths).toBe(1);
+        expect(reading()).toMatchObject({ level: 4, lostLevel: true });
+    });
+
+    it('a wrong word against a boss heals it instead of costing a heart, as in math', () => {
+        localStorage.setItem(
+            'heroSkills_v23_p1',
+            JSON.stringify({ skills: { reading: { level: 20, mobHealth: 12, mobMaxHealth: 60 } } }),
+        );
+        render(<App />);
+        startReadingBattle();
+        for (let miss = 0; miss < 10; miss++) recognition().hear('zzz');
+
+        expect(reading().mobHealth).toBe(60);
+        expect(save().stats.totalDeaths).toBe(0);
+    });
+
     it('a single letter is treated as noise: ten of them cost nothing', () => {
         render(<App />);
         startReadingBattle();

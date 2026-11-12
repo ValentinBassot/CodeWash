@@ -324,6 +324,7 @@ const App = () => {
 
     const handleSuccessHit = (skillId, isWrong) => {
         const { skills, stats, playerHealth } = liveRef.current;
+        const battlingSkillId = battlingSkillIdRef.current;
         // Handle wrong answer
         if (isWrong === 'WRONG') {
             // Check if player is fighting a boss
