@@ -152,6 +152,7 @@ const App = () => {
     const [bossHealing, setBossHealing] = useState(null); // skillId of boss being healed
     const recognitionRef = useRef(null);
     const battlingSkillIdRef = useRef(null);
+    const micRefusedRef = useRef(false);
     const liveRef = useRef({ skills, stats, playerHealth });
     const challengeDataRef = useRef(null);
     const damageIdRef = useRef(0); // Counter for generating unique damage number IDs
@@ -671,6 +672,7 @@ const App = () => {
         }
 
         console.log('[Speech Recognition] Initializing for skill:', targetId);
+        micRefusedRef.current = false;
         recognitionRef.current = createSpeechRecognition();
         recognitionRef.current.lang = 'en-US';
         recognitionRef.current.continuous = true;
@@ -685,6 +687,10 @@ const App = () => {
         recognitionRef.current.onend = () => {
             console.log('[Speech Recognition] Ended');
             setIsListening(false);
+            if (micRefusedRef.current) {
+                if (recognitionRef.current === recognition) recognitionRef.current = null;
+                return;
+            }
             if (battlingSkillIdRef.current === 'reading' || targetId === 'reading') {
                 setTimeout(() => {
                     if (recognitionRef.current !== recognition) return;
@@ -705,6 +711,7 @@ const App = () => {
                 console.log('[Speech Recognition] No speech detected, continuing...');
             } else if (event.error === 'not-allowed') {
                 console.error('[Speech Recognition] Microphone permission denied');
+                micRefusedRef.current = true;
                 setSpokenText('Mic permission denied');
                 setIsListening(false);
             } else {

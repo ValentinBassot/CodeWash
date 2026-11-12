@@ -173,6 +173,8 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D53 | A profile never played shows "LV. 0" in the settings while a new game is at total level 6 | `App.jsx` (`getProfileStats` returns `null` without a save), `ProfileCard.jsx:144` | hardcoded value | 2 | 5 | 10 | S | P2 | Done (050) |
 | D54 | Accessibility: 6 icon buttons without a name, 181 images without `alt`, 2 inputs without a label, Escape does not close the drawers | `App.jsx` (top bar), `SafeImage.jsx`, drawers | other | 3 | 5 | 15 | M | P1 | Done (052) |
 | D55 | The browser tab is titled `eliott-rpg-game`, the package name, not the name of the game | `index.html` | hardcoded value | 1 | 5 | 5 | S | P3 | Done (051) |
+| D56 | Below tablet width the layout breaks: at 390 px the top buttons cover the title and the skill buttons are off screen | `App.jsx` (absolute positions in pixels), `SkillCard.jsx` | hardcoded value | 3 | 2 | 6 | L | P3 | Identified |
+| D57 | When the microphone is refused, speech recognition restarts every 100 ms for the whole reading battle (about 15 errors in 1.5 s) | `App.jsx` (`startVoiceListener`, `onend` restarts without looking at the error) | silent error | 3 | 4 | 12 | S | P2 | Done (053) |
 
 ### Phase 4: features and their debt
 
@@ -200,7 +202,7 @@ Impact (rows) × likelihood (columns). Top-right is treated first.
 |---|---|---|---|---|---|
 | **5** | | | | D26, D27, D49 | D01 |
 | **4** | | | D07, D14, D19 | D05, D15, D16, D18, D31, D38 | D30, D33 |
-| **3** | | D44, D51 | D03, D09, D17, D28, D29, D40, D41, D46, D47 | D20, D45 | D02, D04, D06, D32, D34, D35, D36, D37, D39, D52, D54 |
+| **3** | | D44, D51, D56 | D03, D09, D17, D28, D29, D40, D41, D46, D47 | D20, D45, D57 | D02, D04, D06, D32, D34, D35, D36, D37, D39, D52, D54 |
 | **2** | | D10, D11, D21, D25 | D22, D43, D50 | D08 | D12, D13, D23, D24, D42, D48, D53 |
 | **1** | | | | | D55 |
 

@@ -25,6 +25,12 @@ class FakeRecognition {
     endOnItsOwn() {
         act(() => this.onend());
     }
+    refuseMicrophone() {
+        act(() => {
+            this.onerror({ error: 'not-allowed' });
+            this.onend();
+        });
+    }
 }
 
 const reading = () => skill('reading');
@@ -134,6 +140,27 @@ describe('reading battle with speech recognition', () => {
         recognition().hear(shownWord());
 
         expect(reading().mobHealth).toBe(48);
+    });
+
+    it('when the microphone is refused, listening does not start again and the player is told', () => {
+        render(<App />);
+        startReadingBattle();
+        recognition().refuseMicrophone();
+        wait(2000);
+
+        expect(FakeRecognition.instances).toHaveLength(1);
+        expect(screen.getByText('Mic permission denied')).toBeTruthy();
+    });
+
+    it('after a refusal, the microphone button tries again', () => {
+        render(<App />);
+        startReadingBattle();
+        recognition().refuseMicrophone();
+        wait(2000);
+        fireEvent.click(micButton());
+
+        expect(FakeRecognition.instances).toHaveLength(2);
+        expect(screen.getByText('Listening...')).toBeTruthy();
     });
 
     it('the microphone button starts listening again after it was stopped', () => {
