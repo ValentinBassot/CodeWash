@@ -7,24 +7,16 @@ import { describeHit, recordDefeat, resolveHit } from './domain/battle';
 import { isSpeechRecognitionAvailable } from './io/speechRecognition';
 import { useVoiceListener } from './hooks/useVoiceListener';
 import { useCarousel } from './hooks/useCarousel';
+import { summarizeSavedProfile } from './persistence/profiles';
+import { useProfiles } from './hooks/useProfiles';
+import { grantParentPrivileges } from './domain/parent';
 
 // Modules
 import GlobalStyles from './components/ui/GlobalStyles';
 import SafeImage from './components/ui/SafeImage';
 import PixelHeart from './components/ui/PixelHeart';
-import {
-    browserStorage,
-    readBorder,
-    readCurrentProfile,
-    readParentStatus,
-    readProfileNames,
-    readProfileSave,
-    resetProfile,
-    writeBorder,
-    writeProfileSave,
-    writeProfiles,
-} from './persistence/profileStorage';
-import { NEW_GAME_SUMMARY, buildSkills, parseProfileSave, summarizeSkills } from './persistence/profileSave';
+import { browserStorage } from './persistence/profileStorage';
+import { summarizeSkills } from './persistence/profileSave';
 import ResetModal from './components/modals/ResetModal';
 import BugReportModal from './components/modals/BugReportModal';
 import SettingsDrawer from './components/drawers/SettingsDrawer';
@@ -65,17 +57,9 @@ import {
     playMobDeath,
     playAchievement,
 } from './utils/soundManager';
-import {
-    getDefaultStats,
-    getNewlyUnlockedAchievements,
-    getNewTierAchievements,
-    isAchievementUnlocked,
-} from './utils/achievementUtils';
+import { getNewlyUnlockedAchievements, getNewTierAchievements, isAchievementUnlocked } from './utils/achievementUtils';
 
 // Parent verification privilege constants
-const PARENT_PRIVILEGE_LEVEL = 200;
-const PARENT_PRIVILEGE_DIFFICULTY = 7;
-const PARENT_PRIVILEGE_BADGES = [1, 2, 3, 4, 5, 6, 7, 8];
 
 // Voice recognition constants
 
@@ -83,30 +67,23 @@ const PARENT_PRIVILEGE_BADGES = [1, 2, 3, 4, 5, 6, 7, 8];
 const BOSS_HEALING_ANIMATION_DURATION = 600;
 
 const App = () => {
-    const [currentProfile, setCurrentProfile] = useState(() => readCurrentProfile(browserStorage));
-    const [profileNames, setProfileNames] = useState(() => readProfileNames(browserStorage));
-    const [parentStatus, setParentStatus] = useState(() => readParentStatus(browserStorage));
+    const profiles = useProfiles();
+    const {
+        currentProfile,
+        profileNames,
+        parentStatus,
+        skills,
+        setSkills,
+        stats,
+        setStats,
+        activeTheme,
+        setActiveTheme,
+        selectedBorder,
+        setSelectedBorder,
+        borderColor,
+        setBorderColor,
+    } = profiles;
     const [playerHealth, setPlayerHealth] = useState(10);
-
-    const loadProfile = (profileId) => {
-        try {
-            const save = parseProfileSave(readProfileSave(browserStorage, profileId));
-            return {
-                skills: buildSkills(save.skills),
-                theme: save.theme,
-                stats: save.stats,
-                border: readBorder(browserStorage, profileId),
-            };
-        } catch (e) {
-            console.warn('Failed to parse saved skills:', e);
-            return {
-                skills: buildSkills({}),
-                theme: 'minecraft',
-                stats: getDefaultStats(),
-                border: readBorder(browserStorage, profileId),
-            };
-        }
-    };
 
     const getProfileStats = (id, liveSkills = null) => {
         // Use live skills if provided (for current profile with pending state changes)
@@ -114,21 +91,9 @@ const App = () => {
             return { ...summarizeSkills(liveSkills), skills: liveSkills, theme: activeTheme };
         }
 
-        const saved = readProfileSave(browserStorage, id);
-        if (!saved) return { ...NEW_GAME_SUMMARY, skills: {} };
-        try {
-            const save = parseProfileSave(saved);
-            return { ...summarizeSkills(save.skills), skills: save.skills, theme: save.theme };
-        } catch (e) {
-            console.warn('Failed to parse profile stats:', e);
-            return null;
-        }
+        return summarizeSavedProfile(browserStorage, id);
     };
 
-    const [initialProfile] = useState(() => loadProfile(currentProfile));
-    const [skills, setSkills] = useState(initialProfile.skills);
-    const [activeTheme, setActiveTheme] = useState(initialProfile.theme);
-    const [stats, setStats] = useState(initialProfile.stats);
     const [achievementToast, setAchievementToast] = useState(null);
     const [battlingSkillId, setBattlingSkillId] = useState(null);
     const [battleDifficulty, setBattleDifficulty] = useState(null); // Track battle's starting difficulty for consistent challenge generation
@@ -152,20 +117,6 @@ const App = () => {
     const [bgmVol, setBgmVol] = useState(0.3);
     const [sfxVol, setSfxVolState] = useState(0.5);
     const bgmManager = useRef(getBGMManager());
-
-    // Cosmetics state
-    const [selectedBorder, setSelectedBorder] = useState(initialProfile.border.effect);
-    const [borderColor, setBorderColor] = useState(initialProfile.border.color);
-
-    useEffect(() => {
-        writeProfileSave(browserStorage, currentProfile, { skills: skills, theme: activeTheme, stats: stats });
-        writeProfiles(browserStorage, { currentProfile, profileNames, parentStatus });
-    }, [skills, currentProfile, activeTheme, profileNames, parentStatus, stats]);
-
-    // Save cosmetics preferences
-    useEffect(() => {
-        writeBorder(browserStorage, currentProfile, { effect: selectedBorder, color: borderColor });
-    }, [selectedBorder, borderColor, currentProfile]);
 
     // Calculate unlocked borders based on earned badges (memoized)
     const unlockedBorders = React.useMemo(() => {
@@ -486,7 +437,7 @@ const App = () => {
                 });
             }
         },
-        [activeTheme, skills, checkAchievements],
+        [activeTheme, skills, checkAchievements, setActiveTheme, setStats],
     );
 
     // Wrapper for setSelectedBorder to track border changes
@@ -509,7 +460,7 @@ const App = () => {
                 });
             }
         },
-        [selectedBorder, skills, checkAchievements],
+        [selectedBorder, skills, checkAchievements, setSelectedBorder, setStats],
     );
 
     // Award a free level from phantom click
@@ -594,46 +545,18 @@ const App = () => {
     const handleSwitchProfile = (newId) => {
         if (newId === currentProfile) return;
         playClick();
-        const next = loadProfile(newId);
-        setSkills(next.skills);
-        setActiveTheme(next.theme);
-        setStats(next.stats);
-        setSelectedBorder(next.border.effect);
-        setBorderColor(next.border.color);
-        setCurrentProfile(newId);
-    };
-    const handleRenameProfile = (id, newName) => {
-        setProfileNames((prev) => ({ ...prev, [id]: newName }));
+        profiles.switchProfile(newId);
     };
     const handleParentVerified = (profileId, verified) => {
-        setParentStatus((prev) => ({ ...prev, [profileId]: verified }));
-
-        if (verified && profileId === currentProfile) {
-            // When parent verification passes, apply parent privileges to all skills
-            setSkills((prev) => {
-                const updated = {};
-                Object.keys(prev).forEach((skillId) => {
-                    const current = prev[skillId];
-                    updated[skillId] = {
-                        ...current,
-                        level: PARENT_PRIVILEGE_LEVEL,
-                        difficulty: PARENT_PRIVILEGE_DIFFICULTY,
-                        earnedBadges: [...PARENT_PRIVILEGE_BADGES],
-                        mobHealth: calculateMobHealth(PARENT_PRIVILEGE_DIFFICULTY, PARENT_PRIVILEGE_LEVEL),
-                        mobMaxHealth: calculateMobHealth(PARENT_PRIVILEGE_DIFFICULTY, PARENT_PRIVILEGE_LEVEL),
-                    };
-                });
-                return updated;
-            });
-
-            // Force a re-render to ensure UI immediately reflects the new levels
-            setTimeout(() => {
-                setSkills((current) => ({ ...current }));
-            }, 0);
-        }
+        profiles.setParentVerified(profileId, verified);
+        if (!verified || profileId !== currentProfile) return;
+        setSkills(grantParentPrivileges);
+        setTimeout(() => {
+            setSkills((current) => ({ ...current }));
+        }, 0);
     };
     const handleReset = () => {
-        resetProfile(browserStorage, currentProfile);
+        profiles.resetCurrentProfile();
         window.location.reload();
     };
 
@@ -801,7 +724,7 @@ const App = () => {
                 currentProfile={currentProfile}
                 onSwitchProfile={handleSwitchProfile}
                 profileNames={profileNames}
-                onRenameProfile={handleRenameProfile}
+                onRenameProfile={profiles.renameProfile}
                 getProfileStats={getProfileStats}
                 parentStatus={parentStatus}
                 onParentVerified={handleParentVerified}

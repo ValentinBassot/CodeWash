@@ -66,3 +66,5 @@ Every change to the project has its own short note in this folder, written in th
 | 055 | 2026-11-12 | [Speech recognition lives in its own hook](055-voice-listener-hook.md) |
 | 056 | 2026-11-12 | [A word heard with a space around it still counts](056-trim-heard-word.md) |
 | 057 | 2026-11-12 | [The card carousel lives in its own hook](057-carousel-hook.md) |
+| 058 | 2026-11-12 | [Loading and summarizing a profile leave App](058-profile-loading-out-of-app.md) |
+| 059 | 2026-11-12 | [The profiles and their save live in a hook](059-profiles-hook.md) |
