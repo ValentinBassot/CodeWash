@@ -152,6 +152,7 @@ const App = () => {
     const [bossHealing, setBossHealing] = useState(null); // skillId of boss being healed
     const recognitionRef = useRef(null);
     const battlingSkillIdRef = useRef(null);
+    const liveRef = useRef({ skills, stats, playerHealth });
     const challengeDataRef = useRef(null);
     const damageIdRef = useRef(0); // Counter for generating unique damage number IDs
     const loginTrackedRef = useRef(false); // Track if we've already recorded today's login
@@ -321,6 +322,7 @@ const App = () => {
     }, []);
 
     const handleSuccessHit = (skillId, isWrong) => {
+        const { skills, stats, playerHealth } = liveRef.current;
         // Handle wrong answer
         if (isWrong === 'WRONG') {
             // Check if player is fighting a boss
@@ -351,59 +353,39 @@ const App = () => {
                 }
             }
 
-            // Non-boss encounters: damage player
-            setPlayerHealth((h) => {
-                const newH = h - 1;
-                if (newH <= 0) {
-                    // Death sequence - play UI death sound
-                    playDeath();
-                    setShowDeathOverlay(true);
-
-                    // Track death in stats
-                    setStats((prevStats) => {
-                        const newStats = {
-                            ...prevStats,
-                            totalDeaths: (prevStats.totalDeaths || 0) + 1,
-                        };
-
-                        // Check achievements after death
-                        setTimeout(() => {
-                            checkAchievements(prevStats, newStats, skills, skills);
-                        }, 100);
-
-                        return newStats;
-                    });
-
-                    // Reduce player level by 1 for the active skill (minimum level 1)
-                    if (battlingSkillId) {
-                        setSkills((prev) => {
-                            const current = prev[battlingSkillId];
-                            const newLevel = Math.max(1, current.level - 1);
-                            const currentDiff = current.difficulty || 1;
-                            return {
-                                ...prev,
-                                [battlingSkillId]: {
-                                    ...current,
-                                    level: newLevel,
-                                    lostLevel: current.level > 1, // Only true if we actually lost a level
-                                    recoveryDifficulty: Math.max(1, currentDiff - 1),
-                                },
-                            };
-                        });
-                    }
-
-                    // End battle after short delay
-                    setTimeout(() => {
-                        setBattlingSkillId(null);
-                        setShowDeathOverlay(false);
-                    }, 2000);
-
-                    return 10; // Heal to full health
-                }
-                // Player takes damage but doesn't die - play fail sound
+            const remainingHealth = playerHealth - 1;
+            if (remainingHealth > 0) {
                 playFail();
-                return newH;
-            });
+                setPlayerHealth(remainingHealth);
+                return;
+            }
+
+            playDeath();
+            setShowDeathOverlay(true);
+            const statsAfterDeath = { ...stats, totalDeaths: (stats.totalDeaths || 0) + 1 };
+            setStats((prevStats) => ({ ...prevStats, totalDeaths: (prevStats.totalDeaths || 0) + 1 }));
+            setTimeout(() => checkAchievements(stats, statsAfterDeath, skills, skills), 100);
+
+            if (battlingSkillId) {
+                setSkills((prev) => {
+                    const current = prev[battlingSkillId];
+                    return {
+                        ...prev,
+                        [battlingSkillId]: {
+                            ...current,
+                            level: Math.max(1, current.level - 1),
+                            lostLevel: current.level > 1,
+                            recoveryDifficulty: Math.max(1, (current.difficulty || 1) - 1),
+                        },
+                    };
+                });
+            }
+
+            setTimeout(() => {
+                setBattlingSkillId(null);
+                setShowDeathOverlay(false);
+            }, 2000);
+            setPlayerHealth(10);
             return;
         }
 
@@ -431,40 +413,31 @@ const App = () => {
             playSuccessfulHit();
         }
 
-        setSkills((prev) => {
-            const current = prev[skillId];
-            const { skill: nextSkill, events } = resolveHit(skillId, current);
+        const { skill: nextSkill, events } = resolveHit(skillId, currentSkillState);
+        setSkills((prev) => ({ ...prev, [skillId]: nextSkill }));
 
-            if (events.defeated) {
-                setStats((prevStats) => {
-                    const newStats = recordDefeat(prevStats, events.defeated);
-                    setTimeout(() => {
-                        checkAchievements(prevStats, newStats, prev, {
-                            ...prev,
-                            [skillId]: { ...current, level: nextSkill.level },
-                        });
-                    }, 100);
-                    return newStats;
-                });
-            }
-            if (events.levelRestored) {
-                setShowLevelRestored(true);
-                setTimeout(() => setShowLevelRestored(false), 2000);
-                playNotification();
-            }
-            events.newBadgeLevels.forEach((level) => {
-                setLootBox({
-                    level,
-                    skillName: skillConfig.fantasyName,
-                    item: 'New Rank!',
-                    img: BASE_ASSETS.badges.Wood,
-                });
-                playNotification();
+        if (events.defeated) {
+            const statsAfterDefeat = recordDefeat(stats, events.defeated);
+            setStats((prevStats) => recordDefeat(prevStats, events.defeated));
+            setTimeout(() => {
+                checkAchievements(stats, statsAfterDefeat, skills, { ...skills, [skillId]: nextSkill });
+            }, 100);
+        }
+        if (events.levelRestored) {
+            setShowLevelRestored(true);
+            setTimeout(() => setShowLevelRestored(false), 2000);
+            playNotification();
+        }
+        events.newBadgeLevels.forEach((level) => {
+            setLootBox({
+                level,
+                skillName: skillConfig.fantasyName,
+                item: 'New Rank!',
+                img: BASE_ASSETS.badges.Wood,
             });
-            if (events.leveledUp) playLevelUp();
-
-            return { ...prev, [skillId]: nextSkill };
+            playNotification();
         });
+        if (events.leveledUp) playLevelUp();
 
         // Generate next challenge for continuous gameplay
         if (skillConfig.hasChallenge && skillConfig.id !== 'memory') {
@@ -579,6 +552,10 @@ const App = () => {
     useEffect(() => {
         battlingSkillIdRef.current = battlingSkillId;
     }, [battlingSkillId]);
+
+    useEffect(() => {
+        liveRef.current = { skills, stats, playerHealth };
+    }, [skills, stats, playerHealth]);
 
     const startBattle = (id) => {
         const skill = SKILL_DATA.find((s) => s.id === id);
