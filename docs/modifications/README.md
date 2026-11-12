@@ -56,3 +56,13 @@ Every change to the project has its own short note in this folder, written in th
 | 045 | 2026-11-11 | [Saved levels and difficulties are brought back in range](045-validate-saved-level-and-difficulty.md) |
 | 046 | 2026-11-11 | [An invalid saved current profile opens profile 1](046-invalid-current-profile.md) |
 | 047 | 2026-11-11 | [Every read and write of the save goes through the persistence module](047-storage-behind-persistence.md) |
+| 048 | 2026-11-12 | [The result of a hit is computed outside App](048-hit-resolution-out-of-app.md) |
+| 049 | 2026-11-12 | [A victory and a death count once in development](049-pure-state-updates.md) |
+| 050 | 2026-11-12 | [A profile never played shows the level of a new game](050-level-of-unplayed-profile.md) |
+| 051 | 2026-11-12 | [The browser tab shows the name of the game](051-tab-title.md) |
+| 052 | 2026-11-12 | [Buttons, images, inputs and drawers are usable without seeing them](052-accessible-names.md) |
+| 053 | 2026-11-12 | [A refused microphone no longer restarts in a loop](053-refused-microphone.md) |
+| 054 | 2026-11-12 | [A reading battle follows the same death and boss rules as math](054-reading-battle-rules.md) |
+| 055 | 2026-11-12 | [Speech recognition lives in its own hook](055-voice-listener-hook.md) |
+| 056 | 2026-11-12 | [A word heard with a space around it still counts](056-trim-heard-word.md) |
+| 057 | 2026-11-12 | [The card carousel lives in its own hook](057-carousel-hook.md) |

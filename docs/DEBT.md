@@ -157,18 +157,26 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D44 | Old saves without mob health get a difficulty-1 mob whatever their difficulty: the backfill never runs because defaults are merged first | `App.jsx` (`loadSkills`, mob health backfill) | bug | 3 | 2 | 6 | S | P3 | Done (041) |
 | D46 | The rule that judges a spoken word (exact, homophone, or noise under 2 letters) is copied in `App` and `SkillCard`, with `MIN_SPOKEN_TEXT_LENGTH` defined twice | `App.jsx` (`onresult` of `startVoiceListener`), `SkillCard.jsx` (wrong-reading effect) | duplication | 3 | 3 | 9 | S | P2 | Done (034) |
 | D48 | "Jack of All Trades" progress text always says "6/6 skills": it counts the skills at or above the lowest level, which is every skill | `achievements.js` (`skill_mastery.getProgressText`) | unclear rule | 2 | 5 | 10 | S | P3 | Identified |
-| D50 | Two rules decide when a difficulty unlocks: the selector opens difficulty 2 at level 20, the XP rule expects it from level 21; the maximum `7` is also written in three places | `App.jsx` (`unlockedDifficulty`, miniboss `challengeDiff`), `gameUtils.js` (`getExpectedDifficulty`) | duplication | 2 | 3 | 6 | S | P3 | Identified |
+| D50 | Two rules decide when a difficulty unlocks: the selector opens difficulty 2 at level 20, the XP rule expects it from level 21, so the level-20 boss beaten on difficulty 2 gives three levels at once; the maximum `7` is also written in three places | `App.jsx` (`unlockedDifficulty`, miniboss `challengeDiff`), `gameUtils.js` (`getExpectedDifficulty`) | duplication | 2 | 3 | 6 | S | P3 | Identified |
 | D51 | An invalid saved current profile (`abc`, `7`, `0`) opens a phantom profile (`heroSkills_v23_pNaN`): the player sees an empty game | `App.jsx` (`currentProfile` initializer, `parseInt` without check) | fragile parser | 3 | 2 | 6 | S | P3 | Done (046) |
 
 ### Phase 3: hot spots
 
 | ID | Item | Location | Smell | I | L | Risk | Effort | Prio | Status |
 |---|---|---|---|---|---|---|---|---|---|
-| D26 | God component: `App` is one 1172-line function with 31 `useState` | `App.jsx:49` (also complexity 31 at `:94`, 24 at `:569`) | tight coupling | 5 | 4 | 20 | XL | P1 | Identified |
+| D26 | God component: `App` is one 1172-line function with 31 `useState` | `App.jsx:49` (also complexity 31 at `:94`, 24 at `:569`) | tight coupling | 5 | 4 | 20 | XL | P1 | In progress (048, 055, 057) |
 | D27 | `SkillCard`: 611-line function, complexity 107, every mini-game inside | `SkillCard.jsx:65` | complexity | 5 | 4 | 20 | XL | P1 | Identified |
 | D28 | Errors swallowed (`console.warn`, empty `.play().catch`) | `App.jsx:168,180,197,237`, `soundManager.js:127,136,185,255,269,283` | silent error | 3 | 3 | 9 | S | P2 | In progress (043) |
 | D29 | 1217 lines of CSS inside a component | `GlobalStyles.jsx:3` | large file | 3 | 3 | 9 | M | P3 | Identified |
 | D47 | Tests that mount the whole App take 4 to 8 s each; under parallel coverage the slowest exceed 20 s, so the timeout was raised to 30 s | `src/App.*.test.jsx`, `vite.config.js` (`testTimeout`) | slow tests | 3 | 3 | 9 | M | P2 | Identified |
+| D52 | Side effects inside state updates: in development (`StrictMode`) React runs them twice, so one victory counts two defeated mobs and one death counts two deaths and costs two levels | `App.jsx` (`handleSuccessHit`: `setStats`, sounds and timers inside `setSkills` and `setPlayerHealth`) | tight coupling | 3 | 5 | 15 | S | P1 | Done (049) |
+| D53 | A profile never played shows "LV. 0" in the settings while a new game is at total level 6 | `App.jsx` (`getProfileStats` returns `null` without a save), `ProfileCard.jsx:144` | hardcoded value | 2 | 5 | 10 | S | P2 | Done (050) |
+| D54 | Accessibility: 6 icon buttons without a name, 181 images without `alt`, 2 inputs without a label, Escape does not close the drawers | `App.jsx` (top bar), `SafeImage.jsx`, drawers | other | 3 | 5 | 15 | M | P1 | Done (052) |
+| D55 | The browser tab is titled `eliott-rpg-game`, the package name, not the name of the game | `index.html` | hardcoded value | 1 | 5 | 5 | S | P3 | Done (051) |
+| D56 | Below tablet width the layout breaks: at 390 px the top buttons cover the title and the skill buttons are off screen | `App.jsx` (absolute positions in pixels), `SkillCard.jsx` | hardcoded value | 3 | 2 | 6 | L | P3 | Identified |
+| D57 | When the microphone is refused, speech recognition restarts every 100 ms for the whole reading battle (about 15 errors in 1.5 s) | `App.jsx` (`startVoiceListener`, `onend` restarts without looking at the error) | silent error | 3 | 4 | 12 | S | P2 | Done (053) |
+| D58 | In a reading battle, dying costs no level and a wrong word against a boss costs a heart instead of healing the boss: speech recognition calls a copy of the hit handler made before the battle was recorded | `App.jsx` (`startVoiceListener` `onresult`, `handleSuccessHit`) | tight coupling | 3 | 4 | 12 | S | P2 | Done (054) |
+| D59 | A word heard with a space around it (` cat`) is judged wrong and costs a heart; browsers put such a space before the results that follow the first one in a continuous session | `domain/reading.js` (`normalizeSpeech` does not trim) | fragile parser | 3 | 4 | 12 | S | P2 | Done (056) |
 
 ### Phase 4: features and their debt
 
@@ -196,9 +204,9 @@ Impact (rows) × likelihood (columns). Top-right is treated first.
 |---|---|---|---|---|---|
 | **5** | | | | D26, D27, D49 | D01 |
 | **4** | | | D07, D14, D19 | D05, D15, D16, D18, D31, D38 | D30, D33 |
-| **3** | | D44, D51 | D03, D09, D17, D28, D29, D40, D41, D46, D47 | D20, D45 | D02, D04, D06, D32, D34, D35, D36, D37, D39 |
-| **2** | | D10, D11, D21, D25 | D22, D43, D50 | D08 | D12, D13, D23, D24, D42, D48 |
-| **1** | | | | | |
+| **3** | | D44, D51, D56 | D03, D09, D17, D28, D29, D40, D41, D46, D47 | D20, D45, D57, D58, D59 | D02, D04, D06, D32, D34, D35, D36, D37, D39, D52, D54 |
+| **2** | | D10, D11, D21, D25 | D22, D43, D50 | D08 | D12, D13, D23, D24, D42, D48, D53 |
+| **1** | | | | | D55 |
 
 ## 5. Attack plan
 

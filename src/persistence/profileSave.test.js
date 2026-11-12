@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { buildSkills, createNewSkill, parseProfileSave, summarizeSkills } from './profileSave';
+import { NEW_GAME_SUMMARY, buildSkills, createNewSkill, parseProfileSave, summarizeSkills } from './profileSave';
 import { getDefaultStats } from '../utils/achievementUtils';
 import { SKILL_DATA } from '../constants/gameData';
 import { createSeededRandom, resetRandomSource, setRandomSource } from '../domain/random';
@@ -133,6 +133,10 @@ describe('summarizeSkills', () => {
             highestLevel: 5,
         });
         expect(summarizeSkills({})).toEqual({ totalLevel: 0, highestLevel: 0 });
+    });
+
+    it('a new game has the summary of its freshly built skills', () => {
+        expect(NEW_GAME_SUMMARY).toEqual(summarizeSkills(buildSkills({})));
     });
 });
 

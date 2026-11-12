@@ -25,6 +25,12 @@ class FakeRecognition {
     endOnItsOwn() {
         act(() => this.onend());
     }
+    refuseMicrophone() {
+        act(() => {
+            this.onerror({ error: 'not-allowed' });
+            this.onend();
+        });
+    }
 }
 
 const reading = () => skill('reading');
@@ -82,6 +88,14 @@ describe('reading battle with speech recognition', () => {
         expect(reading()).toMatchObject({ xp: 20, mobHealth: 48 });
     });
 
+    it('a word heard with a space before it still counts', () => {
+        render(<App />);
+        startReadingBattle();
+        recognition().hear(` ${shownWord().toLowerCase()}`);
+        expect(reading()).toMatchObject({ xp: 20, mobHealth: 48 });
+        expect(save().stats.totalDeaths).toBe(0);
+    });
+
     it('five words read aloud defeat the mob', () => {
         render(<App />);
         startReadingBattle();
@@ -94,6 +108,29 @@ describe('reading battle with speech recognition', () => {
         startReadingBattle();
         for (let miss = 0; miss < 10; miss++) recognition().hear('WRONGWORD');
         expect(save().stats.totalDeaths).toBe(1);
+    });
+
+    it('dying in a reading battle costs a level, as in math', () => {
+        localStorage.setItem('heroSkills_v23_p1', JSON.stringify({ skills: { reading: { level: 5 } } }));
+        render(<App />);
+        startReadingBattle();
+        for (let miss = 0; miss < 10; miss++) recognition().hear('zzz');
+
+        expect(save().stats.totalDeaths).toBe(1);
+        expect(reading()).toMatchObject({ level: 4, lostLevel: true });
+    });
+
+    it('a wrong word against a boss heals it instead of costing a heart, as in math', () => {
+        localStorage.setItem(
+            'heroSkills_v23_p1',
+            JSON.stringify({ skills: { reading: { level: 20, mobHealth: 12, mobMaxHealth: 60 } } }),
+        );
+        render(<App />);
+        startReadingBattle();
+        for (let miss = 0; miss < 10; miss++) recognition().hear('zzz');
+
+        expect(reading().mobHealth).toBe(60);
+        expect(save().stats.totalDeaths).toBe(0);
     });
 
     it('a single letter is treated as noise: ten of them cost nothing', () => {
@@ -134,6 +171,27 @@ describe('reading battle with speech recognition', () => {
         recognition().hear(shownWord());
 
         expect(reading().mobHealth).toBe(48);
+    });
+
+    it('when the microphone is refused, listening does not start again and the player is told', () => {
+        render(<App />);
+        startReadingBattle();
+        recognition().refuseMicrophone();
+        wait(2000);
+
+        expect(FakeRecognition.instances).toHaveLength(1);
+        expect(screen.getByText('Mic permission denied')).toBeTruthy();
+    });
+
+    it('after a refusal, the microphone button tries again', () => {
+        render(<App />);
+        startReadingBattle();
+        recognition().refuseMicrophone();
+        wait(2000);
+        fireEvent.click(micButton());
+
+        expect(FakeRecognition.instances).toHaveLength(2);
+        expect(screen.getByText('Listening...')).toBeTruthy();
     });
 
     it('the microphone button starts listening again after it was stopped', () => {

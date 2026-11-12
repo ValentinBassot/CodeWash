@@ -19,7 +19,7 @@ const SafeImage = ({ src, alt, className, onClick }) => {
         );
     }
 
-    return <img src={src} alt={alt} className={className} onError={() => setError(true)} onClick={onClick} />;
+    return <img src={src} alt={alt ?? ''} className={className} onError={() => setError(true)} onClick={onClick} />;
 };
 
 export default SafeImage;

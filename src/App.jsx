@@ -2,8 +2,11 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Menu, Sparkles, Gift, Maximize, Minimize, Settings, Bug } from 'lucide-react';
 import { random } from './domain/random';
 import { todayKey } from './domain/clock';
-import { judgeSpokenWord, normalizeSpeech } from './domain/reading';
-import { createSpeechRecognition, isSpeechRecognitionAvailable } from './io/speechRecognition';
+import { judgeSpokenWord } from './domain/reading';
+import { describeHit, recordDefeat, resolveHit } from './domain/battle';
+import { isSpeechRecognitionAvailable } from './io/speechRecognition';
+import { useVoiceListener } from './hooks/useVoiceListener';
+import { useCarousel } from './hooks/useCarousel';
 
 // Modules
 import GlobalStyles from './components/ui/GlobalStyles';
@@ -21,7 +24,7 @@ import {
     writeProfileSave,
     writeProfiles,
 } from './persistence/profileStorage';
-import { buildSkills, parseProfileSave, summarizeSkills } from './persistence/profileSave';
+import { NEW_GAME_SUMMARY, buildSkills, parseProfileSave, summarizeSkills } from './persistence/profileSave';
 import ResetModal from './components/modals/ResetModal';
 import BugReportModal from './components/modals/BugReportModal';
 import SettingsDrawer from './components/drawers/SettingsDrawer';
@@ -33,21 +36,13 @@ import AchievementToast from './components/ui/AchievementToast';
 
 // Utils & Constants
 import {
-    getRandomMob,
-    getRandomFriendlyMob,
-    getRandomMiniboss,
-    getRandomBoss,
     getMobForSkill,
     getEncounterType,
     generateMathProblem,
     getReadingWord,
     getWordForDifficulty,
-    calculateDamage,
     calculateMobHealth,
-    calculateXPReward,
-    calculateXPToLevel,
 } from './utils/gameUtils';
-import { getRandomAura } from './utils/mobDisplayUtils';
 import {
     BASE_ASSETS,
     THEME_CONFIG,
@@ -60,8 +55,6 @@ import {
 import {
     getBGMManager,
     setSfxVolume,
-    playActionCardLeft,
-    playActionCardRight,
     playClick,
     playDeath,
     playFail,
@@ -76,7 +69,6 @@ import {
     getDefaultStats,
     getNewlyUnlockedAchievements,
     getNewTierAchievements,
-    addUniqueToArray,
     isAchievementUnlocked,
 } from './utils/achievementUtils';
 
@@ -86,7 +78,6 @@ const PARENT_PRIVILEGE_DIFFICULTY = 7;
 const PARENT_PRIVILEGE_BADGES = [1, 2, 3, 4, 5, 6, 7, 8];
 
 // Voice recognition constants
-const MIC_OFF_TEXT = 'Mic Off';
 
 // Boss healing animation duration (ms)
 const BOSS_HEALING_ANIMATION_DURATION = 600;
@@ -124,7 +115,7 @@ const App = () => {
         }
 
         const saved = readProfileSave(browserStorage, id);
-        if (!saved) return null;
+        if (!saved) return { ...NEW_GAME_SUMMARY, skills: {} };
         try {
             const save = parseProfileSave(saved);
             return { ...summarizeSkills(save.skills), skills: save.skills, theme: save.theme };
@@ -148,18 +139,13 @@ const App = () => {
     const [isCosmeticsOpen, setIsCosmeticsOpen] = useState(false);
     const [isResetOpen, setIsResetOpen] = useState(false);
     const [isBugReportOpen, setIsBugReportOpen] = useState(false);
-    const [isListening, setIsListening] = useState(false);
-    const [spokenText, setSpokenText] = useState('');
     const [damageNumbers, setDamageNumbers] = useState([]);
-    const [selectedIndex, setSelectedIndex] = useState(0);
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragStartX, setDragStartX] = useState(0);
     const [showDeathOverlay, setShowDeathOverlay] = useState(false);
     const [showLevelRestored, setShowLevelRestored] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [bossHealing, setBossHealing] = useState(null); // skillId of boss being healed
-    const recognitionRef = useRef(null);
     const battlingSkillIdRef = useRef(null);
+    const liveRef = useRef({ skills, stats, playerHealth });
     const challengeDataRef = useRef(null);
     const damageIdRef = useRef(0); // Counter for generating unique damage number IDs
     const loginTrackedRef = useRef(false); // Track if we've already recorded today's login
@@ -329,6 +315,8 @@ const App = () => {
     }, []);
 
     const handleSuccessHit = (skillId, isWrong) => {
+        const { skills, stats, playerHealth } = liveRef.current;
+        const battlingSkillId = battlingSkillIdRef.current;
         // Handle wrong answer
         if (isWrong === 'WRONG') {
             // Check if player is fighting a boss
@@ -359,59 +347,39 @@ const App = () => {
                 }
             }
 
-            // Non-boss encounters: damage player
-            setPlayerHealth((h) => {
-                const newH = h - 1;
-                if (newH <= 0) {
-                    // Death sequence - play UI death sound
-                    playDeath();
-                    setShowDeathOverlay(true);
-
-                    // Track death in stats
-                    setStats((prevStats) => {
-                        const newStats = {
-                            ...prevStats,
-                            totalDeaths: (prevStats.totalDeaths || 0) + 1,
-                        };
-
-                        // Check achievements after death
-                        setTimeout(() => {
-                            checkAchievements(prevStats, newStats, skills, skills);
-                        }, 100);
-
-                        return newStats;
-                    });
-
-                    // Reduce player level by 1 for the active skill (minimum level 1)
-                    if (battlingSkillId) {
-                        setSkills((prev) => {
-                            const current = prev[battlingSkillId];
-                            const newLevel = Math.max(1, current.level - 1);
-                            const currentDiff = current.difficulty || 1;
-                            return {
-                                ...prev,
-                                [battlingSkillId]: {
-                                    ...current,
-                                    level: newLevel,
-                                    lostLevel: current.level > 1, // Only true if we actually lost a level
-                                    recoveryDifficulty: Math.max(1, currentDiff - 1),
-                                },
-                            };
-                        });
-                    }
-
-                    // End battle after short delay
-                    setTimeout(() => {
-                        setBattlingSkillId(null);
-                        setShowDeathOverlay(false);
-                    }, 2000);
-
-                    return 10; // Heal to full health
-                }
-                // Player takes damage but doesn't die - play fail sound
+            const remainingHealth = playerHealth - 1;
+            if (remainingHealth > 0) {
                 playFail();
-                return newH;
-            });
+                setPlayerHealth(remainingHealth);
+                return;
+            }
+
+            playDeath();
+            setShowDeathOverlay(true);
+            const statsAfterDeath = { ...stats, totalDeaths: (stats.totalDeaths || 0) + 1 };
+            setStats((prevStats) => ({ ...prevStats, totalDeaths: (prevStats.totalDeaths || 0) + 1 }));
+            setTimeout(() => checkAchievements(stats, statsAfterDeath, skills, skills), 100);
+
+            if (battlingSkillId) {
+                setSkills((prev) => {
+                    const current = prev[battlingSkillId];
+                    return {
+                        ...prev,
+                        [battlingSkillId]: {
+                            ...current,
+                            level: Math.max(1, current.level - 1),
+                            lostLevel: current.level > 1,
+                            recoveryDifficulty: Math.max(1, (current.difficulty || 1) - 1),
+                        },
+                    };
+                });
+            }
+
+            setTimeout(() => {
+                setBattlingSkillId(null);
+                setShowDeathOverlay(false);
+            }, 2000);
+            setPlayerHealth(10);
             return;
         }
 
@@ -419,271 +387,51 @@ const App = () => {
         const skillConfig = SKILL_DATA.find((s) => s.id === skillId);
         const currentSkillState = skills[skillId];
         const skillDifficulty = currentSkillState.difficulty || 1;
-        const playerLevel = currentSkillState.level;
         const currentMobName = currentSkillState.currentMob;
+        const hit = describeHit(skillId, currentSkillState);
 
-        // Calculate damage using new RPG formulas
-        const damage = calculateDamage(playerLevel, skillDifficulty);
-
-        // Get encounter type for current level
-        const encounterType = getEncounterType(playerLevel);
-
-        // Cleaning/memory/miniboss are defeated in single hit
-        const isMiniboss = encounterType === 'miniboss' && skillConfig.id !== 'cleaning';
-        const isInstantDefeat = skillConfig.id === 'cleaning' || skillConfig.id === 'memory' || isMiniboss;
-        const actualDamage = isInstantDefeat ? currentSkillState.mobHealth : damage;
-
-        // Determine if this hit will defeat the mob
-        const willDefeatMob = currentSkillState.mobHealth - actualDamage <= 0;
-
-        // Show damage numbers and play sounds
         if (skillConfig.id !== 'memory') {
             const id = ++damageIdRef.current;
             setDamageNumbers((prev) => [
                 ...prev,
-                { id, skillId, val: actualDamage, x: random() * 100 - 50, y: random() * 50 - 25 },
+                { id, skillId, val: hit.dealt, x: random() * 100 - 50, y: random() * 50 - 25 },
             ]);
             setTimeout(() => setDamageNumbers((prev) => prev.filter((n) => n.id !== id)), 800);
 
-            // Play mob hurt or death sound based on if mob is defeated
-            if (willDefeatMob) {
+            if (hit.defeatsMob) {
                 playMobDeath(currentMobName);
             } else {
                 playMobHurt(currentMobName);
             }
 
-            // Play successful hit UI sound
             playSuccessfulHit();
         }
 
-        setSkills((prev) => {
-            const current = prev[skillId];
-            let newMobHealth = current.mobHealth - actualDamage;
-            let newLevel = current.level;
-            let newXp = current.xp;
-            let leveledUp = false;
-            let newMob = current.currentMob;
-            let newDifficulty = current.difficulty || 1;
-            let newBadges = [...(current.earnedBadges || [])];
-            let newMobMaxHealth = current.mobMaxHealth;
-            let newLostLevel = current.lostLevel;
-            let newRecoveryDifficulty = current.recoveryDifficulty;
-            let newMemoryMob = current.memoryMob;
-            let newPatternMob = current.patternMob;
-            let newMiniboss = current.currentMiniboss;
-            let newBoss = current.currentBoss;
-            let newReadingMob = current.readingMob;
-            let newMathMob = current.mathMob;
-            let newWritingMob = current.writingMob;
-            let newReadingMobAura = current.readingMobAura;
-            let newMathMobAura = current.mathMobAura;
-            let newWritingMobAura = current.writingMobAura;
-            let newPatternMobAura = current.patternMobAura;
-            let newMinibossAura = current.currentMinibossAura;
-            let newBossAura = current.currentBossAura;
+        const { skill: nextSkill, events } = resolveHit(skillId, currentSkillState);
+        setSkills((prev) => ({ ...prev, [skillId]: nextSkill }));
 
-            // Calculate XP reward for this hit
-            // Total XP is split evenly among all hits required to defeat the mob
-            const totalXPReward = calculateXPReward(skillDifficulty, playerLevel);
-            // For instant-defeat mobs (miniboss, cleaning, memory), actualDamage = full health, so hitsToKill = 1
-            // For regular mobs, actualDamage = damage, so hitsToKill = mobMaxHealth / damage
-            const effectiveDamage = isInstantDefeat ? current.mobMaxHealth : damage;
-            const hitsToKill = Math.ceil(current.mobMaxHealth / effectiveDamage);
-            const xpPerHit = Math.floor(totalXPReward / hitsToKill);
-
-            // If this hit doesn't defeat the mob, award partial XP
-            // If this hit defeats the mob, award any remaining XP (to account for rounding)
-            const willDefeatMobInUpdate = newMobHealth <= 0;
-            if (!willDefeatMobInUpdate) {
-                // Award partial XP for non-killing hit
-                newXp += xpPerHit;
-            }
-
-            // Mob defeated!
-            if (newMobHealth <= 0) {
-                // Calculate remaining XP to award (total - already awarded)
-                const hitsDealt = Math.ceil((current.mobMaxHealth - current.mobHealth) / effectiveDamage);
-                const xpAlreadyAwarded = hitsDealt * xpPerHit;
-                const remainingXP = totalXPReward - xpAlreadyAwarded;
-                newXp += remainingXP;
-
-                // Track stats for mob defeat
-                const encounterType = getEncounterType(current.level);
-                setStats((prevStats) => {
-                    const newStats = { ...prevStats };
-
-                    // Increment battle session counter
-                    newStats.battlesThisSession = (newStats.battlesThisSession || 0) + 1;
-
-                    if (encounterType === 'boss') {
-                        // Boss defeated
-                        newStats.totalBossesDefeated = (newStats.totalBossesDefeated || 0) + 1;
-                        newStats.uniqueBossesDefeated = addUniqueToArray(
-                            newStats.uniqueBossesDefeated || [],
-                            current.currentBoss,
-                        );
-                    } else if (encounterType === 'miniboss') {
-                        // Miniboss defeated
-                        newStats.totalMinibossesDefeated = (newStats.totalMinibossesDefeated || 0) + 1;
-                        newStats.uniqueMinibossesDefeated = addUniqueToArray(
-                            newStats.uniqueMinibossesDefeated || [],
-                            current.currentMiniboss,
-                        );
-                    } else {
-                        // Regular mob defeated
-                        newStats.totalMobsDefeated = (newStats.totalMobsDefeated || 0) + 1;
-                        newStats.uniqueMobsDefeated = addUniqueToArray(
-                            newStats.uniqueMobsDefeated || [],
-                            current.currentMob,
-                        );
-                    }
-
-                    // Check achievements after stats update
-                    setTimeout(() => {
-                        checkAchievements(prevStats, newStats, prev, {
-                            ...prev,
-                            [skillId]: { ...current, level: newLevel },
-                        });
-                    }, 100);
-
-                    return newStats;
-                });
-
-                // Update stable mobs for memory and patterns skills on completion
-                if (skillConfig.id === 'memory') {
-                    newMemoryMob = getRandomFriendlyMob();
-                }
-                if (skillConfig.id === 'patterns') {
-                    newPatternMob = getRandomMob(current.currentMob);
-                    newPatternMobAura = getRandomAura();
-                }
-
-                // Update stable mobs for combat skills on completion
-                const combatSkillMobUpdates = {
-                    reading: () => {
-                        newReadingMob = getRandomMob(current.readingMob);
-                        newReadingMobAura = getRandomAura();
-                    },
-                    math: () => {
-                        newMathMob = getRandomMob(current.mathMob);
-                        newMathMobAura = getRandomAura();
-                    },
-                    writing: () => {
-                        newWritingMob = getRandomMob(current.writingMob);
-                        newWritingMobAura = getRandomAura();
-                    },
-                };
-
-                if (combatSkillMobUpdates[skillConfig.id]) {
-                    combatSkillMobUpdates[skillConfig.id]();
-                }
-
-                // Update miniboss when defeating a miniboss encounter
-                if (getEncounterType(current.level) === 'miniboss') {
-                    newMiniboss = getRandomMiniboss();
-                    newMinibossAura = getRandomAura();
-                }
-
-                // Update boss when defeating a boss encounter
-                if (getEncounterType(current.level) === 'boss') {
-                    newBoss = getRandomBoss();
-                    newBossAura = getRandomAura();
-                }
-
-                // Check for level restoration first
-                if (newLostLevel) {
-                    newLevel += 1;
-                    newLostLevel = false;
-                    newRecoveryDifficulty = null;
-                    setShowLevelRestored(true);
-                    setTimeout(() => setShowLevelRestored(false), 2000);
-                    playNotification();
-                }
-
-                // Process level ups - use difficulty-scaled XP requirement
-                const xpToLevel = calculateXPToLevel(newDifficulty, newLevel);
-                if (newXp >= xpToLevel) {
-                    const levelsGained = Math.floor(newXp / xpToLevel);
-                    const oldLevel = newLevel;
-                    newLevel += levelsGained;
-                    newXp = newXp % xpToLevel;
-                    leveledUp = true;
-
-                    // Check if we just defeated a boss (leaving a boss level)
-                    // Badge/difficulty increment happens when crossing FROM a boss level (e.g., 20->21)
-                    // not when arriving AT a boss level (e.g., 19->20)
-                    // Cleaning is exempt from difficulty auto-increment
-                    if (skillConfig.id !== 'cleaning') {
-                        for (let lvl = oldLevel; lvl < newLevel; lvl++) {
-                            if (lvl % 20 === 0 && lvl > 0) {
-                                // Boss at level lvl was just defeated - increment difficulty (max 7)
-                                const newTier = Math.floor(lvl / 20);
-                                if (newDifficulty < 7) {
-                                    newDifficulty++;
-                                }
-                                // Award badge for this tier if not already earned
-                                if (!newBadges.includes(newTier) && newTier <= 7) {
-                                    newBadges.push(newTier);
-                                    // Show badge notification for defeating the boss
-                                    setLootBox({
-                                        level: lvl,
-                                        skillName: skillConfig.fantasyName,
-                                        item: 'New Rank!',
-                                        img: BASE_ASSETS.badges.Wood,
-                                    });
-                                    playNotification();
-                                }
-                            }
-                        }
-                    }
-
-                    // Get new mob if not at boss level
-                    if (newLevel % 20 !== 0 && (newLevel - 1) % 20 !== 0) {
-                        newMob = getRandomMob(current.currentMob);
-                    }
-
-                    if (leveledUp) {
-                        playLevelUp();
-                    }
-                }
-
-                // Spawn new mob with fresh health
-                newMobMaxHealth = calculateMobHealth(newDifficulty);
-                newMobHealth = newMobMaxHealth;
-                if (newLevel % 20 !== 0) {
-                    newMob = getRandomMob(current.currentMob);
-                }
-            }
-
-            return {
-                ...prev,
-                [skillId]: {
-                    ...current,
-                    level: newLevel,
-                    xp: newXp,
-                    currentMob: newMob,
-                    difficulty: newDifficulty,
-                    earnedBadges: newBadges,
-                    mobHealth: newMobHealth,
-                    mobMaxHealth: newMobMaxHealth,
-                    lostLevel: newLostLevel,
-                    recoveryDifficulty: newRecoveryDifficulty,
-                    memoryMob: newMemoryMob,
-                    patternMob: newPatternMob,
-                    currentMiniboss: newMiniboss,
-                    currentBoss: newBoss,
-                    readingMob: newReadingMob,
-                    mathMob: newMathMob,
-                    writingMob: newWritingMob,
-                    readingMobAura: newReadingMobAura,
-                    mathMobAura: newMathMobAura,
-                    writingMobAura: newWritingMobAura,
-                    patternMobAura: newPatternMobAura,
-                    currentMinibossAura: newMinibossAura,
-                    currentBossAura: newBossAura,
-                },
-            };
+        if (events.defeated) {
+            const statsAfterDefeat = recordDefeat(stats, events.defeated);
+            setStats((prevStats) => recordDefeat(prevStats, events.defeated));
+            setTimeout(() => {
+                checkAchievements(stats, statsAfterDefeat, skills, { ...skills, [skillId]: nextSkill });
+            }, 100);
+        }
+        if (events.levelRestored) {
+            setShowLevelRestored(true);
+            setTimeout(() => setShowLevelRestored(false), 2000);
+            playNotification();
+        }
+        events.newBadgeLevels.forEach((level) => {
+            setLootBox({
+                level,
+                skillName: skillConfig.fantasyName,
+                item: 'New Rank!',
+                img: BASE_ASSETS.badges.Wood,
+            });
+            playNotification();
         });
+        if (events.leveledUp) playLevelUp();
 
         // Generate next challenge for continuous gameplay
         if (skillConfig.hasChallenge && skillConfig.id !== 'memory') {
@@ -693,7 +441,7 @@ const App = () => {
             setChallengeData(generateChallenge(skillConfig.challengeType, challengeDiff));
             // Clear spokenText for reading challenges to prevent stale text from triggering false damage
             if (skillConfig.challengeType === 'reading') {
-                setSpokenText('');
+                voice.clearSpokenText();
             }
         } else if (skillConfig.id === 'memory') {
             setBattlingSkillId(null);
@@ -796,8 +544,23 @@ const App = () => {
     };
 
     useEffect(() => {
+        const closeDrawersOnEscape = (event) => {
+            if (event.key !== 'Escape') return;
+            setIsSettingsOpen(false);
+            setIsCosmeticsOpen(false);
+            setIsMenuOpen(false);
+        };
+        document.addEventListener('keydown', closeDrawersOnEscape);
+        return () => document.removeEventListener('keydown', closeDrawersOnEscape);
+    }, []);
+
+    useEffect(() => {
         battlingSkillIdRef.current = battlingSkillId;
     }, [battlingSkillId]);
+
+    useEffect(() => {
+        liveRef.current = { skills, stats, playerHealth };
+    }, [skills, stats, playerHealth]);
 
     const startBattle = (id) => {
         const skill = SKILL_DATA.find((s) => s.id === id);
@@ -816,7 +579,7 @@ const App = () => {
         setChallengeData(generateChallenge(skill.challengeType, challengeDiff));
         playClick();
         startBGM(); // Start BGM on first battle (user interaction)
-        if (skill.challengeType === 'reading' && isSpeechRecognitionAvailable()) startVoiceListener(id);
+        if (skill.challengeType === 'reading' && isSpeechRecognitionAvailable()) voice.start(id);
     };
 
     const endBattle = () => {
@@ -824,7 +587,7 @@ const App = () => {
         setBattlingSkillId(null);
         setBattleDifficulty(null);
         setChallengeData(null);
-        stopVoiceRecognition();
+        voice.stop();
         playClick();
     };
 
@@ -874,122 +637,17 @@ const App = () => {
         window.location.reload();
     };
 
-    // Helper function to stop and cleanup speech recognition
-    const stopVoiceRecognition = () => {
-        if (recognitionRef.current) {
-            try {
-                recognitionRef.current.stop();
-                console.log('[Speech Recognition] Stopped');
-            } catch (error) {
-                console.warn('[Speech Recognition] Error stopping:', error);
-            }
-            recognitionRef.current = null;
-        }
-        setIsListening(false);
-        setSpokenText(MIC_OFF_TEXT);
-    };
-
-    const startVoiceListener = (targetId) => {
-        if (!isSpeechRecognitionAvailable()) {
-            console.warn('[Speech Recognition] Web Speech API not available');
-            return;
-        }
-
-        // If recognition already exists and is active, don't reinitialize
-        if (recognitionRef.current) {
-            console.log('[Speech Recognition] Already initialized, skipping');
-            return;
-        }
-
-        console.log('[Speech Recognition] Initializing for skill:', targetId);
-        recognitionRef.current = createSpeechRecognition();
-        recognitionRef.current.lang = 'en-US';
-        recognitionRef.current.continuous = true;
-
-        recognitionRef.current.onstart = () => {
-            console.log('[Speech Recognition] Started listening');
-            setIsListening(true);
-            setSpokenText('Listening...');
-        };
-
-        const recognition = recognitionRef.current;
-        recognitionRef.current.onend = () => {
-            console.log('[Speech Recognition] Ended');
-            setIsListening(false);
-            if (battlingSkillIdRef.current === 'reading' || targetId === 'reading') {
-                setTimeout(() => {
-                    if (recognitionRef.current !== recognition) return;
-                    recognitionRef.current = null;
-                    if (battlingSkillIdRef.current === 'reading') {
-                        console.log('[Speech Recognition] Auto-restarting');
-                        startVoiceListener(targetId);
-                    }
-                }, 100);
-            } else {
-                setSpokenText(MIC_OFF_TEXT);
-            }
-        };
-
-        recognitionRef.current.onerror = (event) => {
-            console.error('[Speech Recognition] Error:', event.error);
-            if (event.error === 'no-speech') {
-                console.log('[Speech Recognition] No speech detected, continuing...');
-            } else if (event.error === 'not-allowed') {
-                console.error('[Speech Recognition] Microphone permission denied');
-                setSpokenText('Mic permission denied');
-                setIsListening(false);
-            } else {
-                console.error('[Speech Recognition] Error type:', event.error);
-            }
-        };
-
-        recognitionRef.current.onresult = (e) => {
-            const t = normalizeSpeech(e.results[e.results.length - 1][0].transcript);
-            console.log('[Speech Recognition] Recognized text:', t);
-            setSpokenText(t);
-            // Use the ref to get the CURRENT challenge data
+    const voice = useVoiceListener({
+        keepListening: () => battlingSkillIdRef.current === 'reading',
+        onHeard: (text, targetId) => {
             const currentChallenge = challengeDataRef.current;
-            if (currentChallenge && currentChallenge.type === 'reading') {
-                const verdict = judgeSpokenWord(t, currentChallenge.answer);
-                if (verdict === 'correct') {
-                    console.log('[Speech Recognition] Correct answer!');
-                    handleSuccessHit(targetId || battlingSkillId);
-                } else if (verdict === 'wrong') {
-                    // Wrong answer - trigger error feedback
-                    console.log('[Speech Recognition] Wrong answer');
-                    handleSuccessHit(targetId || battlingSkillId, 'WRONG');
-                }
-            }
-        };
-
-        try {
-            recognitionRef.current.start();
-            console.log('[Speech Recognition] Start command issued');
-        } catch (error) {
-            console.error('[Speech Recognition] Failed to start:', error);
-        }
-    };
-
-    // Toggle mic on/off when mic button is clicked
-    const toggleMicListener = (targetId) => {
-        console.log('[Mic Toggle] isListening:', isListening);
-
-        if (!isSpeechRecognitionAvailable()) {
-            console.warn('[Mic Toggle] Web Speech API not available');
-            setSpokenText('Mic not available');
-            return;
-        }
-
-        // If currently listening, stop it
-        if (recognitionRef.current && isListening) {
-            console.log('[Mic Toggle] Stopping recognition');
-            stopVoiceRecognition();
-        } else {
-            // If not listening, start it
-            console.log('[Mic Toggle] Starting recognition');
-            startVoiceListener(targetId);
-        }
-    };
+            if (!currentChallenge || currentChallenge.type !== 'reading') return;
+            const verdict = judgeSpokenWord(text, currentChallenge.answer);
+            if (verdict === 'correct') handleSuccessHit(targetId || battlingSkillId);
+            if (verdict === 'wrong') handleSuccessHit(targetId || battlingSkillId, 'WRONG');
+        },
+    });
+    const { isListening, spokenText } = voice;
 
     useEffect(() => {
         if (lootBox) setTimeout(() => setLootBox(null), 4000);
@@ -1019,52 +677,10 @@ const App = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Run once on mount, guarded by loginTrackedRef
 
-    const getVisibleItems = () => {
-        const items = [];
-        // Generate 7 items: 5 visible cards (offsets -2 to +2) + 2 hidden positions (±3) for smooth entry/exit animation
-        for (let i = -3; i <= 3; i++) {
-            let idx = selectedIndex + i;
-            let dataIndex = idx % SKILL_DATA.length;
-            if (dataIndex < 0) dataIndex += SKILL_DATA.length;
-            items.push({ ...SKILL_DATA[dataIndex], offset: i, key: idx });
-        }
-        return items;
-    };
     const currentThemeData = THEME_CONFIG[activeTheme] || THEME_CONFIG.minecraft;
     const containerStyle = { ...currentThemeData.style, fontFamily: '"VT323", monospace' };
 
-    // Drag handlers for carousel navigation
-    const handleDragStart = (clientX) => {
-        if (battlingSkillId) return;
-        setIsDragging(true);
-        setDragStartX(clientX);
-    };
-    const handleDragMove = (clientX) => {
-        if (!isDragging || battlingSkillId) return;
-        const diff = dragStartX - clientX;
-        if (Math.abs(diff) >= 100) {
-            if (diff > 0) {
-                setSelectedIndex((p) => p + 1);
-                playActionCardRight();
-            } else {
-                setSelectedIndex((p) => p - 1);
-                playActionCardLeft();
-            }
-            setIsDragging(false);
-        }
-    };
-    const handleDragEnd = () => {
-        setIsDragging(false);
-    };
-    const handleCardClick = (offset) => {
-        if (battlingSkillId || offset === 0) return;
-        setSelectedIndex((p) => p + offset);
-        if (offset > 0) {
-            playActionCardRight();
-        } else {
-            playActionCardLeft();
-        }
-    };
+    const carousel = useCarousel({ items: SKILL_DATA, locked: Boolean(battlingSkillId) });
 
     // Helper to get the aura for the current mob encounter
     const getAuraForSkill = (skillConfig, userSkill) => {
@@ -1105,6 +721,7 @@ const App = () => {
             {/* Top Left Buttons */}
             {/* Button dimensions: p-3 (12px) + icon(48px) + p-3 (12px) + border-2*2 (4px) = 76px + 8px gap = 84px spacing */}
             <button
+                aria-label="Open settings"
                 onClick={() => {
                     setIsMenuOpen(false);
                     setIsCosmeticsOpen(false);
@@ -1117,6 +734,7 @@ const App = () => {
                 <Settings size={48} className="text-slate-400" />
             </button>
             <button
+                aria-label="Open cosmetics"
                 onClick={() => {
                     setIsMenuOpen(false);
                     setIsSettingsOpen(false);
@@ -1204,6 +822,7 @@ const App = () => {
                 {isFullscreen ? <Minimize size={48} /> : <Maximize size={48} />}
             </button>
             <button
+                aria-label="Open achievements"
                 onClick={() => {
                     setIsSettingsOpen(false);
                     setIsCosmeticsOpen(false);
@@ -1230,6 +849,7 @@ const App = () => {
 
             {/* Bottom Right Bug Report Button */}
             <button
+                aria-label="Report a bug"
                 onClick={() => {
                     setIsMenuOpen(false);
                     setIsCosmeticsOpen(false);
@@ -1277,10 +897,8 @@ const App = () => {
 
                 {/* Left Chevron - Parenthesis style with gradient fade */}
                 <button
-                    onClick={() => {
-                        setSelectedIndex((p) => p - 1);
-                        playActionCardLeft();
-                    }}
+                    aria-label="Previous skill"
+                    onClick={() => carousel.move(-1)}
                     className="flex absolute left-0 z-30 items-center justify-center h-full"
                     style={{
                         background: 'linear-gradient(to right, rgba(100, 100, 100, 0.6), transparent)',
@@ -1307,10 +925,8 @@ const App = () => {
 
                 {/* Right Chevron - Parenthesis style with gradient fade */}
                 <button
-                    onClick={() => {
-                        setSelectedIndex((p) => p + 1);
-                        playActionCardRight();
-                    }}
+                    aria-label="Next skill"
+                    onClick={() => carousel.move(1)}
                     className="flex absolute right-0 z-30 items-center justify-center h-full"
                     style={{
                         background: 'linear-gradient(to left, rgba(100, 100, 100, 0.6), transparent)',
@@ -1336,19 +952,19 @@ const App = () => {
                 </button>
                 <div
                     className={`relative w-full flex items-center justify-center perspective-1000 h-[650px] mb-12 ${battlingSkillId ? 'z-50' : ''}`}
-                    style={{ cursor: battlingSkillId ? 'default' : isDragging ? 'grabbing' : 'grab' }}
-                    onMouseDown={(e) => handleDragStart(e.clientX)}
-                    onMouseMove={(e) => handleDragMove(e.clientX)}
-                    onMouseUp={handleDragEnd}
-                    onMouseLeave={handleDragEnd}
-                    onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+                    style={{ cursor: battlingSkillId ? 'default' : carousel.isDragging ? 'grabbing' : 'grab' }}
+                    onMouseDown={(e) => carousel.startDrag(e.clientX)}
+                    onMouseMove={(e) => carousel.drag(e.clientX)}
+                    onMouseUp={carousel.endDrag}
+                    onMouseLeave={carousel.endDrag}
+                    onTouchStart={(e) => carousel.startDrag(e.touches[0].clientX)}
                     onTouchMove={(e) => {
                         e.preventDefault();
-                        handleDragMove(e.touches[0].clientX);
+                        carousel.drag(e.touches[0].clientX);
                     }}
-                    onTouchEnd={handleDragEnd}
+                    onTouchEnd={carousel.endDrag}
                 >
-                    {getVisibleItems().map((item) => {
+                    {carousel.visibleItems.map((item) => {
                         const isItemBattling = item.offset === 0 && battlingSkillId === item.id;
                         // Calculate curved positioning based on offset
                         const getVerticalOffset = (offset) => {
@@ -1388,7 +1004,7 @@ const App = () => {
                                     // Smooth entry/exit transitions along the parabola
                                     transitionTimingFunction: 'cubic-bezier(0.4, 0.0, 0.2, 1)',
                                 }}
-                                onClick={() => handleCardClick(item.offset)}
+                                onClick={() => carousel.selectCard(item.offset)}
                             >
                                 <SkillCard
                                     config={item}
@@ -1405,7 +1021,7 @@ const App = () => {
                                     onStartBattle={() => startBattle(item.id)}
                                     onEndBattle={endBattle}
                                     onMathSubmit={(val) => handleSuccessHit(item.id, val)}
-                                    onMicClick={() => toggleMicListener(item.id)}
+                                    onMicClick={() => voice.toggle(item.id)}
                                     difficulty={skills[item.id].difficulty || 1}
                                     setDifficulty={(newDiff) => setSkillDifficulty(item.id, newDiff)}
                                     unlockedDifficulty={Math.min(7, Math.floor(skills[item.id].level / 20) + 1)}

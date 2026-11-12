@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { StrictMode } from 'react';
 import { render, screen } from '@testing-library/react';
 import App from './App';
 import { playWith, pressCard, save, skill, typeInto, useGameClock, wait } from './test/game';
@@ -137,5 +138,33 @@ describe('special encounters', () => {
             mobMaxHealth: 180,
         });
         expect(save().stats).toMatchObject({ totalBossesDefeated: 1, uniqueBossesDefeated: [boss] });
+    });
+});
+
+describe('in development (StrictMode, D52)', () => {
+    const renderStrict = () =>
+        render(
+            <StrictMode>
+                <App />
+            </StrictMode>,
+        );
+
+    it('a victory counts once', () => {
+        renderStrict();
+        startMathBattle();
+        for (let hit = 0; hit < 5; hit++) answerRight();
+
+        expect(math().level).toBe(2);
+        expect(save().stats).toMatchObject({ totalMobsDefeated: 1, battlesThisSession: 1 });
+    });
+
+    it('a death counts once and costs one level', () => {
+        localStorage.setItem('heroSkills_v23_p1', JSON.stringify({ skills: { math: { level: 5 } } }));
+        renderStrict();
+        startMathBattle();
+        for (let miss = 0; miss < 10; miss++) answerWrong();
+
+        expect(save().stats.totalDeaths).toBe(1);
+        expect(math()).toMatchObject({ level: 4, lostLevel: true });
     });
 });
