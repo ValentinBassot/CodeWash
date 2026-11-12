@@ -81,6 +81,7 @@ const SkillCard = ({
     difficulty,
     setDifficulty,
     unlockedDifficulty,
+    onPerfectMemoryGame,
     selectedBorder,
     borderColor,
     bossHealing,
@@ -507,7 +508,10 @@ const SkillCard = ({
                                 pairs={memoryPairs}
                                 gridCols={memoryGridCols}
                                 cardBack={themeData.assets.cardBack}
-                                onWin={() => onMathSubmit('WIN')}
+                                onWin={({ perfect }) => {
+                                    if (perfect) onPerfectMemoryGame();
+                                    onMathSubmit('WIN');
+                                }}
                             />
                         ) : (
                             <div className="flex-1 flex flex-col items-center justify-center">

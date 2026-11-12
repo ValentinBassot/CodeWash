@@ -76,5 +76,21 @@ describe('MemoryGame', () => {
         expect(onWin).not.toHaveBeenCalled();
         wait(500);
         expect(onWin).toHaveBeenCalledTimes(1);
+        expect(onWin).toHaveBeenCalledWith({ perfect: true });
+    });
+
+    it('a win after a mismatch is not perfect', () => {
+        const onWin = play();
+        const [[a], [b]] = pairs();
+        fireEvent.click(a);
+        fireEvent.click(b);
+        wait(800);
+        for (const [first, second] of pairs()) {
+            fireEvent.click(first);
+            fireEvent.click(second);
+            wait(300);
+        }
+        wait(500);
+        expect(onWin).toHaveBeenCalledWith({ perfect: false });
     });
 });

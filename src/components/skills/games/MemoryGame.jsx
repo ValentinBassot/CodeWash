@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import SafeImage from '../../ui/SafeImage';
 import { FRIENDLY_MOBS } from '../../../constants/gameData';
 import { dealMemoryCards } from '../../../domain/memory';
@@ -14,6 +14,7 @@ const MemoryGame = ({ pairs, gridCols, cardBack, onWin }) => {
     const [matchedFaces, setMatchedFaces] = useState([]);
     const [isChecking, setIsChecking] = useState(false);
     const [mismatchShake, setMismatchShake] = useState(false);
+    const mismatchCountRef = useRef(0);
 
     const checkPair = ([first, second]) => {
         if (cards[first].color === cards[second].color) {
@@ -22,9 +23,13 @@ const MemoryGame = ({ pairs, gridCols, cardBack, onWin }) => {
             setMatchedFaces(matched);
             setFlippedIndices([]);
             setIsChecking(false);
-            if (matched.length === pairs) setTimeout(onWin, WIN_DELAY_MS);
+            if (matched.length === pairs) {
+                const perfect = mismatchCountRef.current === 0;
+                setTimeout(() => onWin({ perfect }), WIN_DELAY_MS);
+            }
             return;
         }
+        mismatchCountRef.current += 1;
         playMismatch();
         setMismatchShake(true);
         setTimeout(() => {

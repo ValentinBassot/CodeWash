@@ -91,3 +91,27 @@ describe('memory (match and hatch)', () => {
         expect(cards()).toHaveLength(20);
     });
 });
+
+describe('perfect memory game (D62)', () => {
+    const winGame = () => {
+        while (cards().length > 0) matchPair(pairs()[0]);
+        wait(500);
+    };
+
+    it('a game won without any mismatch counts as perfect', () => {
+        render(<App />);
+        startMemory();
+        winGame();
+        expect(memory().level).toBe(2);
+        expect(save().stats.perfectMemoryGames).toBe(1);
+    });
+
+    it('a game won after a mismatch does not', () => {
+        render(<App />);
+        startMemory();
+        mismatch();
+        winGame();
+        expect(memory().level).toBe(2);
+        expect(save().stats.perfectMemoryGames).toBe(0);
+    });
+});

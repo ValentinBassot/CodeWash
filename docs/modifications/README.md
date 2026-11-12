@@ -73,3 +73,4 @@ Every change to the project has its own short note in this folder, written in th
 | 062 | 2026-11-12 | [The difficulty of a battle's questions is computed outside App](062-challenge-difficulty-out-of-app.md) |
 | 063 | 2026-11-12 | [A difficulty unlocks after its boss is beaten](063-difficulty-unlocks-after-the-boss.md) |
 | 064 | 2026-11-12 | [The memory game is its own component](064-memory-game-component.md) |
+| 065 | 2026-11-13 | [A memory game won without a mismatch counts as perfect](065-perfect-memory-game.md) |

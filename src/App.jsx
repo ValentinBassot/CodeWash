@@ -803,6 +803,12 @@ const App = () => {
                                     onStartBattle={() => startBattle(item.id)}
                                     onEndBattle={endBattle}
                                     onMathSubmit={(val) => handleSuccessHit(item.id, val)}
+                                    onPerfectMemoryGame={() =>
+                                        recordStats((current) => ({
+                                            ...current,
+                                            perfectMemoryGames: (current.perfectMemoryGames || 0) + 1,
+                                        }))
+                                    }
                                     onMicClick={() => voice.toggle(item.id)}
                                     difficulty={skills[item.id].difficulty || 1}
                                     setDifficulty={(newDiff) => setSkillDifficulty(item.id, newDiff)}
