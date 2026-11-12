@@ -176,6 +176,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D56 | Below tablet width the layout breaks: at 390 px the top buttons cover the title and the skill buttons are off screen | `App.jsx` (absolute positions in pixels), `SkillCard.jsx` | hardcoded value | 3 | 2 | 6 | L | P3 | Identified |
 | D57 | When the microphone is refused, speech recognition restarts every 100 ms for the whole reading battle (about 15 errors in 1.5 s) | `App.jsx` (`startVoiceListener`, `onend` restarts without looking at the error) | silent error | 3 | 4 | 12 | S | P2 | Done (053) |
 | D58 | In a reading battle, dying costs no level and a wrong word against a boss costs a heart instead of healing the boss: speech recognition calls a copy of the hit handler made before the battle was recorded | `App.jsx` (`startVoiceListener` `onresult`, `handleSuccessHit`) | tight coupling | 3 | 4 | 12 | S | P2 | Done (054) |
+| D59 | A word heard with a space around it (` cat`) is judged wrong and costs a heart; browsers put such a space before the results that follow the first one in a continuous session | `domain/reading.js` (`normalizeSpeech` does not trim) | fragile parser | 3 | 4 | 12 | S | P2 | Done (056) |
 
 ### Phase 4: features and their debt
 
@@ -203,7 +204,7 @@ Impact (rows) × likelihood (columns). Top-right is treated first.
 |---|---|---|---|---|---|
 | **5** | | | | D26, D27, D49 | D01 |
 | **4** | | | D07, D14, D19 | D05, D15, D16, D18, D31, D38 | D30, D33 |
-| **3** | | D44, D51, D56 | D03, D09, D17, D28, D29, D40, D41, D46, D47 | D20, D45, D57, D58 | D02, D04, D06, D32, D34, D35, D36, D37, D39, D52, D54 |
+| **3** | | D44, D51, D56 | D03, D09, D17, D28, D29, D40, D41, D46, D47 | D20, D45, D57, D58, D59 | D02, D04, D06, D32, D34, D35, D36, D37, D39, D52, D54 |
 | **2** | | D10, D11, D21, D25 | D22, D43, D50 | D08 | D12, D13, D23, D24, D42, D48, D53 |
 | **1** | | | | | D55 |
 

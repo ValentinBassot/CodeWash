@@ -88,6 +88,14 @@ describe('reading battle with speech recognition', () => {
         expect(reading()).toMatchObject({ xp: 20, mobHealth: 48 });
     });
 
+    it('a word heard with a space before it still counts', () => {
+        render(<App />);
+        startReadingBattle();
+        recognition().hear(` ${shownWord().toLowerCase()}`);
+        expect(reading()).toMatchObject({ xp: 20, mobHealth: 48 });
+        expect(save().stats.totalDeaths).toBe(0);
+    });
+
     it('five words read aloud defeat the mob', () => {
         render(<App />);
         startReadingBattle();

@@ -64,3 +64,4 @@ Every change to the project has its own short note in this folder, written in th
 | 053 | 2026-11-12 | [A refused microphone no longer restarts in a loop](053-refused-microphone.md) |
 | 054 | 2026-11-12 | [A reading battle follows the same death and boss rules as math](054-reading-battle-rules.md) |
 | 055 | 2026-11-12 | [Speech recognition lives in its own hook](055-voice-listener-hook.md) |
+| 056 | 2026-11-12 | [A word heard with a space around it still counts](056-trim-heard-word.md) |

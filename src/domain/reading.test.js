@@ -8,7 +8,12 @@ describe('normalizeSpeech', () => {
         expect(normalizeSpeech('ice-cream')).toBe('ICECREAM');
     });
 
-    it('keeps spaces and digits', () => {
+    it('removes the spaces around what was heard', () => {
+        expect(normalizeSpeech(' cat')).toBe('CAT');
+        expect(normalizeSpeech(' i love mom. ')).toBe('I LOVE MOM');
+    });
+
+    it('keeps inner spaces and digits', () => {
         expect(normalizeSpeech('i love mom 2')).toBe('I LOVE MOM 2');
     });
 });
