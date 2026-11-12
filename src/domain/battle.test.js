@@ -100,7 +100,7 @@ describe('resolveHit', () => {
         expect(events.newBadgeLevels).toEqual([]);
     });
 
-    it('KNOWN DEBT D50: the level-20 boss beaten on difficulty 2 gives three levels', () => {
+    it('a mob beaten above the expected difficulty gives several levels, which the picker no longer allows', () => {
         const boss = skillOf('math', { level: 20, difficulty: 2, mobHealth: 36, mobMaxHealth: 36 });
         expect(resolveHit('math', boss).skill.level).toBe(23);
     });
