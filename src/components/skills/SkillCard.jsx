@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import ReactDOM from 'react-dom';
 import { Mic, Plus, Minus } from 'lucide-react';
 import SafeImage from '../ui/SafeImage';
+import MemoryGame from './games/MemoryGame';
 import MobWithAura from '../ui/MobWithAura';
 import ParentalVerificationModal from '../ui/ParentalVerificationModal';
 import {
@@ -14,7 +15,7 @@ import {
     DIFFICULTY_IMAGES,
     DIFFICULTY_CONTENT,
 } from '../../constants/gameData';
-import { playAxolotlNote, playClick, playMatch, playMismatch } from '../../utils/soundManager';
+import { playAxolotlNote, playMatch, playMismatch } from '../../utils/soundManager';
 import { judgeSpokenWord } from '../../domain/reading';
 import { calculateXPToLevel } from '../../utils/gameUtils';
 import { AURA_ADJECTIVES } from '../../utils/mobDisplayUtils';
@@ -80,6 +81,7 @@ const SkillCard = ({
     difficulty,
     setDifficulty,
     unlockedDifficulty,
+    onPerfectMemoryGame,
     selectedBorder,
     borderColor,
     bossHealing,
@@ -92,15 +94,6 @@ const SkillCard = ({
     const inputRef = useRef(null);
     const readingWordRef = useRef(null);
     const prevSpokenTextRef = useRef('');
-
-    const [memoryCards, setMemoryCards] = useState([]);
-    const [flippedIndices, setFlippedIndices] = useState([]);
-    const [matchedPairs, setMatchedPairs] = useState([]);
-    const [isProcessingMatch, setIsProcessingMatch] = useState(false);
-    const [mismatchShake, setMismatchShake] = useState(false);
-
-    // Ref to track if memory game session was initialized for the current battle
-    const memorySessionStartedRef = useRef(false);
 
     // Simon Says state for Pattern Recognition
     const [simonSequence, setSimonSequence] = useState([]);
@@ -266,31 +259,6 @@ const SkillCard = ({
     const memoryGridCols = memoryConfig.gridCols || 4;
 
     useEffect(() => {
-        if (isBattling && config.id === 'memory' && !memorySessionStartedRef.current) {
-            // Only regenerate cards when entering battle if no session started yet
-            memorySessionStartedRef.current = true;
-            const allMobKeys = Object.keys(FRIENDLY_MOBS);
-            const shuffledMobs = [...allMobKeys].sort(() => random() - 0.5);
-            const selectedMobs = shuffledMobs.slice(0, memoryPairs);
-            // Create pairs from the selected mobs
-            let deck = [...selectedMobs, ...selectedMobs].sort(() => random() - 0.5);
-            setMemoryCards(deck.map((mobKey, i) => ({ id: i, color: mobKey, img: FRIENDLY_MOBS[mobKey] })));
-            setFlippedIndices([]);
-            setMatchedPairs([]);
-            setIsProcessingMatch(false);
-            setMismatchShake(false);
-        } else if (!isBattling && config.id === 'memory') {
-            // Reset memory game state and session ref when exiting battle
-            memorySessionStartedRef.current = false;
-            setMemoryCards([]);
-            setFlippedIndices([]);
-            setMatchedPairs([]);
-            setIsProcessingMatch(false);
-            setMismatchShake(false);
-        }
-    }, [isBattling, config.id, memoryPairs]);
-
-    useEffect(() => {
         if (damageNumbers.length > prevDamageCount.current) {
             setIsHit(true);
             setTimeout(() => setIsHit(false), 400);
@@ -432,37 +400,6 @@ const SkillCard = ({
         }
     }, [isBattling, config.id, startSimonGame]);
 
-    const handleCardClick = (index) => {
-        if (isProcessingMatch || flippedIndices.includes(index) || matchedPairs.includes(memoryCards[index].color))
-            return;
-        const newFlipped = [...flippedIndices, index];
-        setFlippedIndices(newFlipped);
-        playClick();
-
-        if (newFlipped.length === 2) {
-            setIsProcessingMatch(true);
-            setTimeout(() => {
-                if (memoryCards[newFlipped[0]].color === memoryCards[newFlipped[1]].color) {
-                    playMatch();
-                    const newMatched = [...matchedPairs, memoryCards[newFlipped[0]].color];
-                    setMatchedPairs(newMatched);
-                    setFlippedIndices([]);
-                    setIsProcessingMatch(false);
-                    // Win when all pairs are matched (use memoryPairs from difficulty config)
-                    if (newMatched.length === memoryPairs) setTimeout(() => onMathSubmit('WIN'), 500);
-                } else {
-                    playMismatch();
-                    setMismatchShake(true);
-                    setTimeout(() => {
-                        setMismatchShake(false);
-                        setFlippedIndices([]);
-                        setIsProcessingMatch(false);
-                    }, 500);
-                }
-            }, 300);
-        }
-    };
-
     const showMob = !isBattling || config.id !== 'memory';
     const topSectionBaseClass =
         config.id === 'memory' && isBattling
@@ -567,42 +504,15 @@ const SkillCard = ({
                 {isBattling ? (
                     <div className="flex flex-col h-full animate-in slide-in-from-bottom-10 duration-300">
                         {config.id === 'memory' ? (
-                            <div
-                                className={`flex-1 grid gap-2 bg-black/20 p-2 rounded items-center`}
-                                style={{ gridTemplateColumns: `repeat(${memoryGridCols}, 1fr)` }}
-                            >
-                                {memoryCards.map((card, index) => {
-                                    const isFlipped = flippedIndices.includes(index);
-                                    const isMatched = matchedPairs.includes(card.color);
-                                    if (isMatched) return <div key={card.id} className="w-full aspect-[2/3]"></div>;
-                                    return (
-                                        <div
-                                            key={card.id}
-                                            onClick={() => handleCardClick(index)}
-                                            className={`w-full aspect-[2/3] cursor-pointer transition-all duration-300 perspective-1000 relative transform-style-3d ${isFlipped ? 'rotate-y-180' : ''} ${mismatchShake && isFlipped ? 'animate-shake-flipped border-red-500' : ''}`}
-                                        >
-                                            <div
-                                                className="absolute inset-0 backface-hidden w-full h-full"
-                                                style={{ backfaceVisibility: 'hidden' }}
-                                            >
-                                                <SafeImage
-                                                    src={themeData.assets.cardBack}
-                                                    className="w-full h-full object-cover rounded border border-stone-600"
-                                                />
-                                            </div>
-                                            <div
-                                                className="absolute inset-0 backface-hidden w-full h-full rotate-y-180 bg-slate-800 rounded border border-white/20 flex items-center justify-center"
-                                                style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-                                            >
-                                                <SafeImage
-                                                    src={card.img}
-                                                    className="w-full h-full object-contain p-1"
-                                                />
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                            <MemoryGame
+                                pairs={memoryPairs}
+                                gridCols={memoryGridCols}
+                                cardBack={themeData.assets.cardBack}
+                                onWin={({ perfect }) => {
+                                    if (perfect) onPerfectMemoryGame();
+                                    onMathSubmit('WIN');
+                                }}
+                            />
                         ) : (
                             <div className="flex-1 flex flex-col items-center justify-center">
                                 {config.id === 'patterns' ? (
