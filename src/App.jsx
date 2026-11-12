@@ -7,6 +7,7 @@ import { describeHit, recordDefeat, resolveHit } from './domain/battle';
 import { isSpeechRecognitionAvailable } from './io/speechRecognition';
 import { useVoiceListener } from './hooks/useVoiceListener';
 import { useCarousel } from './hooks/useCarousel';
+import { loadProfile, summarizeSavedProfile } from './persistence/profiles';
 
 // Modules
 import GlobalStyles from './components/ui/GlobalStyles';
@@ -14,17 +15,15 @@ import SafeImage from './components/ui/SafeImage';
 import PixelHeart from './components/ui/PixelHeart';
 import {
     browserStorage,
-    readBorder,
     readCurrentProfile,
     readParentStatus,
     readProfileNames,
-    readProfileSave,
     resetProfile,
     writeBorder,
     writeProfileSave,
     writeProfiles,
 } from './persistence/profileStorage';
-import { NEW_GAME_SUMMARY, buildSkills, parseProfileSave, summarizeSkills } from './persistence/profileSave';
+import { summarizeSkills } from './persistence/profileSave';
 import ResetModal from './components/modals/ResetModal';
 import BugReportModal from './components/modals/BugReportModal';
 import SettingsDrawer from './components/drawers/SettingsDrawer';
@@ -65,12 +64,7 @@ import {
     playMobDeath,
     playAchievement,
 } from './utils/soundManager';
-import {
-    getDefaultStats,
-    getNewlyUnlockedAchievements,
-    getNewTierAchievements,
-    isAchievementUnlocked,
-} from './utils/achievementUtils';
+import { getNewlyUnlockedAchievements, getNewTierAchievements, isAchievementUnlocked } from './utils/achievementUtils';
 
 // Parent verification privilege constants
 const PARENT_PRIVILEGE_LEVEL = 200;
@@ -88,44 +82,16 @@ const App = () => {
     const [parentStatus, setParentStatus] = useState(() => readParentStatus(browserStorage));
     const [playerHealth, setPlayerHealth] = useState(10);
 
-    const loadProfile = (profileId) => {
-        try {
-            const save = parseProfileSave(readProfileSave(browserStorage, profileId));
-            return {
-                skills: buildSkills(save.skills),
-                theme: save.theme,
-                stats: save.stats,
-                border: readBorder(browserStorage, profileId),
-            };
-        } catch (e) {
-            console.warn('Failed to parse saved skills:', e);
-            return {
-                skills: buildSkills({}),
-                theme: 'minecraft',
-                stats: getDefaultStats(),
-                border: readBorder(browserStorage, profileId),
-            };
-        }
-    };
-
     const getProfileStats = (id, liveSkills = null) => {
         // Use live skills if provided (for current profile with pending state changes)
         if (liveSkills) {
             return { ...summarizeSkills(liveSkills), skills: liveSkills, theme: activeTheme };
         }
 
-        const saved = readProfileSave(browserStorage, id);
-        if (!saved) return { ...NEW_GAME_SUMMARY, skills: {} };
-        try {
-            const save = parseProfileSave(saved);
-            return { ...summarizeSkills(save.skills), skills: save.skills, theme: save.theme };
-        } catch (e) {
-            console.warn('Failed to parse profile stats:', e);
-            return null;
-        }
+        return summarizeSavedProfile(browserStorage, id);
     };
 
-    const [initialProfile] = useState(() => loadProfile(currentProfile));
+    const [initialProfile] = useState(() => loadProfile(browserStorage, currentProfile));
     const [skills, setSkills] = useState(initialProfile.skills);
     const [activeTheme, setActiveTheme] = useState(initialProfile.theme);
     const [stats, setStats] = useState(initialProfile.stats);
@@ -594,7 +560,7 @@ const App = () => {
     const handleSwitchProfile = (newId) => {
         if (newId === currentProfile) return;
         playClick();
-        const next = loadProfile(newId);
+        const next = loadProfile(browserStorage, newId);
         setSkills(next.skills);
         setActiveTheme(next.theme);
         setStats(next.stats);
