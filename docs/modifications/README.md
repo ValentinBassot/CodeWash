@@ -59,3 +59,4 @@ Every change to the project has its own short note in this folder, written in th
 | 048 | 2026-11-12 | [The result of a hit is computed outside App](048-hit-resolution-out-of-app.md) |
 | 049 | 2026-11-12 | [A victory and a death count once in development](049-pure-state-updates.md) |
 | 050 | 2026-11-12 | [A profile never played shows the level of a new game](050-level-of-unplayed-profile.md) |
+| 051 | 2026-11-12 | [The browser tab shows the name of the game](051-tab-title.md) |
