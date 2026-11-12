@@ -105,3 +105,5 @@ export const parseProfileSave = (raw) => {
         stats: data.stats ? { ...getDefaultStats(), ...data.stats } : getDefaultStats(),
     };
 };
+
+export const NEW_GAME_SUMMARY = { totalLevel: SKILL_DATA.length, highestLevel: 1 };

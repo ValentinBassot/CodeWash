@@ -22,7 +22,7 @@ import {
     writeProfileSave,
     writeProfiles,
 } from './persistence/profileStorage';
-import { buildSkills, parseProfileSave, summarizeSkills } from './persistence/profileSave';
+import { NEW_GAME_SUMMARY, buildSkills, parseProfileSave, summarizeSkills } from './persistence/profileSave';
 import ResetModal from './components/modals/ResetModal';
 import BugReportModal from './components/modals/BugReportModal';
 import SettingsDrawer from './components/drawers/SettingsDrawer';
@@ -116,7 +116,7 @@ const App = () => {
         }
 
         const saved = readProfileSave(browserStorage, id);
-        if (!saved) return null;
+        if (!saved) return { ...NEW_GAME_SUMMARY, skills: {} };
         try {
             const save = parseProfileSave(saved);
             return { ...summarizeSkills(save.skills), skills: save.skills, theme: save.theme };

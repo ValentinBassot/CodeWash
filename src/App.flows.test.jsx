@@ -88,6 +88,16 @@ describe('profiles', () => {
         expect(localStorage.getItem('borderEffect_p1')).toBe('rainbow');
     });
 
+    it('a profile never played shows the total level of a new game, like the current one', () => {
+        render(<App />);
+        openSettings();
+        const levelOf = (name) => profileCard(name).parentElement.textContent.match(/LV\.(\d+)/)[1];
+
+        expect(levelOf('Player 1')).toBe('6');
+        expect(levelOf('Player 2')).toBe('6');
+        expect(levelOf('Player 3')).toBe('6');
+    });
+
     it('the current profile can be renamed', () => {
         render(<App />);
         openSettings();
