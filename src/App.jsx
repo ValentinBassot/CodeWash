@@ -6,6 +6,7 @@ import { judgeSpokenWord } from './domain/reading';
 import { describeHit, recordDefeat, resolveHit } from './domain/battle';
 import { isSpeechRecognitionAvailable } from './io/speechRecognition';
 import { useVoiceListener } from './hooks/useVoiceListener';
+import { useCarousel } from './hooks/useCarousel';
 
 // Modules
 import GlobalStyles from './components/ui/GlobalStyles';
@@ -54,8 +55,6 @@ import {
 import {
     getBGMManager,
     setSfxVolume,
-    playActionCardLeft,
-    playActionCardRight,
     playClick,
     playDeath,
     playFail,
@@ -141,9 +140,6 @@ const App = () => {
     const [isResetOpen, setIsResetOpen] = useState(false);
     const [isBugReportOpen, setIsBugReportOpen] = useState(false);
     const [damageNumbers, setDamageNumbers] = useState([]);
-    const [selectedIndex, setSelectedIndex] = useState(0);
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragStartX, setDragStartX] = useState(0);
     const [showDeathOverlay, setShowDeathOverlay] = useState(false);
     const [showLevelRestored, setShowLevelRestored] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -681,52 +677,10 @@ const App = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Run once on mount, guarded by loginTrackedRef
 
-    const getVisibleItems = () => {
-        const items = [];
-        // Generate 7 items: 5 visible cards (offsets -2 to +2) + 2 hidden positions (±3) for smooth entry/exit animation
-        for (let i = -3; i <= 3; i++) {
-            let idx = selectedIndex + i;
-            let dataIndex = idx % SKILL_DATA.length;
-            if (dataIndex < 0) dataIndex += SKILL_DATA.length;
-            items.push({ ...SKILL_DATA[dataIndex], offset: i, key: idx });
-        }
-        return items;
-    };
     const currentThemeData = THEME_CONFIG[activeTheme] || THEME_CONFIG.minecraft;
     const containerStyle = { ...currentThemeData.style, fontFamily: '"VT323", monospace' };
 
-    // Drag handlers for carousel navigation
-    const handleDragStart = (clientX) => {
-        if (battlingSkillId) return;
-        setIsDragging(true);
-        setDragStartX(clientX);
-    };
-    const handleDragMove = (clientX) => {
-        if (!isDragging || battlingSkillId) return;
-        const diff = dragStartX - clientX;
-        if (Math.abs(diff) >= 100) {
-            if (diff > 0) {
-                setSelectedIndex((p) => p + 1);
-                playActionCardRight();
-            } else {
-                setSelectedIndex((p) => p - 1);
-                playActionCardLeft();
-            }
-            setIsDragging(false);
-        }
-    };
-    const handleDragEnd = () => {
-        setIsDragging(false);
-    };
-    const handleCardClick = (offset) => {
-        if (battlingSkillId || offset === 0) return;
-        setSelectedIndex((p) => p + offset);
-        if (offset > 0) {
-            playActionCardRight();
-        } else {
-            playActionCardLeft();
-        }
-    };
+    const carousel = useCarousel({ items: SKILL_DATA, locked: Boolean(battlingSkillId) });
 
     // Helper to get the aura for the current mob encounter
     const getAuraForSkill = (skillConfig, userSkill) => {
@@ -944,10 +898,7 @@ const App = () => {
                 {/* Left Chevron - Parenthesis style with gradient fade */}
                 <button
                     aria-label="Previous skill"
-                    onClick={() => {
-                        setSelectedIndex((p) => p - 1);
-                        playActionCardLeft();
-                    }}
+                    onClick={() => carousel.move(-1)}
                     className="flex absolute left-0 z-30 items-center justify-center h-full"
                     style={{
                         background: 'linear-gradient(to right, rgba(100, 100, 100, 0.6), transparent)',
@@ -975,10 +926,7 @@ const App = () => {
                 {/* Right Chevron - Parenthesis style with gradient fade */}
                 <button
                     aria-label="Next skill"
-                    onClick={() => {
-                        setSelectedIndex((p) => p + 1);
-                        playActionCardRight();
-                    }}
+                    onClick={() => carousel.move(1)}
                     className="flex absolute right-0 z-30 items-center justify-center h-full"
                     style={{
                         background: 'linear-gradient(to left, rgba(100, 100, 100, 0.6), transparent)',
@@ -1004,19 +952,19 @@ const App = () => {
                 </button>
                 <div
                     className={`relative w-full flex items-center justify-center perspective-1000 h-[650px] mb-12 ${battlingSkillId ? 'z-50' : ''}`}
-                    style={{ cursor: battlingSkillId ? 'default' : isDragging ? 'grabbing' : 'grab' }}
-                    onMouseDown={(e) => handleDragStart(e.clientX)}
-                    onMouseMove={(e) => handleDragMove(e.clientX)}
-                    onMouseUp={handleDragEnd}
-                    onMouseLeave={handleDragEnd}
-                    onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+                    style={{ cursor: battlingSkillId ? 'default' : carousel.isDragging ? 'grabbing' : 'grab' }}
+                    onMouseDown={(e) => carousel.startDrag(e.clientX)}
+                    onMouseMove={(e) => carousel.drag(e.clientX)}
+                    onMouseUp={carousel.endDrag}
+                    onMouseLeave={carousel.endDrag}
+                    onTouchStart={(e) => carousel.startDrag(e.touches[0].clientX)}
                     onTouchMove={(e) => {
                         e.preventDefault();
-                        handleDragMove(e.touches[0].clientX);
+                        carousel.drag(e.touches[0].clientX);
                     }}
-                    onTouchEnd={handleDragEnd}
+                    onTouchEnd={carousel.endDrag}
                 >
-                    {getVisibleItems().map((item) => {
+                    {carousel.visibleItems.map((item) => {
                         const isItemBattling = item.offset === 0 && battlingSkillId === item.id;
                         // Calculate curved positioning based on offset
                         const getVerticalOffset = (offset) => {
@@ -1056,7 +1004,7 @@ const App = () => {
                                     // Smooth entry/exit transitions along the parabola
                                     transitionTimingFunction: 'cubic-bezier(0.4, 0.0, 0.2, 1)',
                                 }}
-                                onClick={() => handleCardClick(item.offset)}
+                                onClick={() => carousel.selectCard(item.offset)}
                             >
                                 <SkillCard
                                     config={item}
