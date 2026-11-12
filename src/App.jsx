@@ -3,7 +3,8 @@ import { Menu, Sparkles, Gift, Maximize, Minimize, Settings, Bug } from 'lucide-
 import { random } from './domain/random';
 import { todayKey } from './domain/clock';
 import { judgeSpokenWord } from './domain/reading';
-import { describeHit, recordDefeat, resolveHit } from './domain/battle';
+import { describeHit, getAuraForSkill, recordDefeat, resolveHit, withDifficulty } from './domain/battle';
+import { generateChallenge } from './domain/challenge';
 import { isSpeechRecognitionAvailable } from './io/speechRecognition';
 import { useVoiceListener } from './hooks/useVoiceListener';
 import { useCarousel } from './hooks/useCarousel';
@@ -27,14 +28,7 @@ import PhantomEvent from './components/PhantomEvent';
 import AchievementToast from './components/ui/AchievementToast';
 
 // Utils & Constants
-import {
-    getMobForSkill,
-    getEncounterType,
-    generateMathProblem,
-    getReadingWord,
-    getWordForDifficulty,
-    calculateMobHealth,
-} from './utils/gameUtils';
+import { getMobForSkill, getEncounterType } from './utils/gameUtils';
 import {
     BASE_ASSETS,
     THEME_CONFIG,
@@ -204,39 +198,6 @@ const App = () => {
         playClick();
     };
 
-    const generateChallenge = (type, diff) => {
-        // Math: Use difficulty-based problem generation
-        if (type === 'math') {
-            return generateMathProblem(diff);
-        }
-        // Patterns: Simon Says - no challenge data needed, handled in SkillCard
-        if (type === 'patterns') {
-            return { type: 'patterns', question: 'Simon Says!', answer: 'WIN' };
-        }
-        // Reading: Use difficulty-based word selection
-        if (type === 'reading') {
-            const word = getReadingWord(diff);
-            return { type, question: word, answer: word };
-        }
-        // Writing: Use difficulty-based word selection from comprehensive index
-        if (type === 'writing') {
-            const wordData = getWordForDifficulty(diff);
-            // Use displayName in uppercase for the answer (handles multi-word items with spaces)
-            const answer = wordData.displayName.toUpperCase();
-            return {
-                type,
-                question: 'Spell it!',
-                answer,
-                images: [wordData.image],
-                displayName: wordData.displayName,
-            };
-        }
-        // Memory: No specific challenge data, handled in SkillCard
-        if (type === 'memory') return { type: 'memory', question: 'Find Pairs!', answer: 'WIN' };
-        // Cleaning: Manual task
-        return { type: 'manual', question: 'Task Complete?', answer: 'yes' };
-    };
-
     // Regenerate challenge when difficulty or level changes during active battle
     // This fixes the issue where challenges use stale difficulty after leveling up
     // Removed problematic useEffect that was causing infinite loop
@@ -402,19 +363,7 @@ const App = () => {
 
     // Helper function to set difficulty for a specific skill
     const setSkillDifficulty = (skillId, newDiff) => {
-        setSkills((prev) => {
-            const current = prev[skillId];
-            const newMobMaxHealth = calculateMobHealth(newDiff);
-            return {
-                ...prev,
-                [skillId]: {
-                    ...current,
-                    difficulty: newDiff,
-                    mobHealth: newMobMaxHealth,
-                    mobMaxHealth: newMobMaxHealth,
-                },
-            };
-        });
+        setSkills((prev) => ({ ...prev, [skillId]: withDifficulty(prev[skillId], newDiff) }));
     };
 
     // Wrapper for setActiveTheme to track theme changes
@@ -604,34 +553,6 @@ const App = () => {
     const containerStyle = { ...currentThemeData.style, fontFamily: '"VT323", monospace' };
 
     const carousel = useCarousel({ items: SKILL_DATA, locked: Boolean(battlingSkillId) });
-
-    // Helper to get the aura for the current mob encounter
-    const getAuraForSkill = (skillConfig, userSkill) => {
-        // Memory and Cleaning don't use auras
-        if (skillConfig.id === 'memory' || skillConfig.id === 'cleaning') {
-            return null;
-        }
-
-        const encounterType = getEncounterType(userSkill.level);
-
-        if (encounterType === 'boss') {
-            return userSkill.currentBossAura;
-        }
-
-        if (encounterType === 'miniboss') {
-            return userSkill.currentMinibossAura;
-        }
-
-        // Combat skills have their own auras
-        const combatSkillAuras = {
-            reading: userSkill.readingMobAura,
-            math: userSkill.mathMobAura,
-            writing: userSkill.writingMobAura,
-            patterns: userSkill.patternMobAura,
-        };
-
-        return combatSkillAuras[skillConfig.id] || null;
-    };
 
     return (
         <div
@@ -936,7 +857,7 @@ const App = () => {
                                     isCenter={item.offset === 0}
                                     isBattling={item.offset === 0 && battlingSkillId === item.id}
                                     mobName={getMobForSkill(item, skills[item.id])}
-                                    mobAura={getAuraForSkill(item, skills[item.id])}
+                                    mobAura={getAuraForSkill(item.id, skills[item.id])}
                                     challenge={challengeData}
                                     isListening={isListening}
                                     spokenText={spokenText}

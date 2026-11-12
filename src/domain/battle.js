@@ -162,3 +162,25 @@ export const recordDefeat = (stats, defeated) => {
         [unique]: addUniqueToArray(stats[unique] || [], defeated.name),
     };
 };
+
+const AURA_FIELDS = {
+    reading: 'readingMobAura',
+    math: 'mathMobAura',
+    writing: 'writingMobAura',
+    patterns: 'patternMobAura',
+};
+
+export const getAuraForSkill = (skillId, skill) => {
+    if (skillId === 'memory' || skillId === 'cleaning') return null;
+    const encounterType = getEncounterType(skill.level);
+    if (encounterType === 'boss') return skill.currentBossAura;
+    if (encounterType === 'miniboss') return skill.currentMinibossAura;
+    return skill[AURA_FIELDS[skillId]] || null;
+};
+
+export const withDifficulty = (skill, difficulty) => ({
+    ...skill,
+    difficulty,
+    mobHealth: calculateMobHealth(difficulty),
+    mobMaxHealth: calculateMobHealth(difficulty),
+});

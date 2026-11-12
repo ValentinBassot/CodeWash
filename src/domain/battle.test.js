@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { describeHit, recordDefeat, resolveHit } from './battle';
+import { describeHit, getAuraForSkill, recordDefeat, resolveHit, withDifficulty } from './battle';
 import { createNewSkill } from '../persistence/profileSave';
 import { getDefaultStats } from '../utils/achievementUtils';
 import { createSeededRandom, resetRandomSource, setRandomSource } from './random';
@@ -153,5 +153,39 @@ describe('recordDefeat', () => {
         const once = recordDefeat(getDefaultStats(), { encounterType: 'hostile', name: 'Zed' });
         const twice = recordDefeat(once, { encounterType: 'hostile', name: 'Zed' });
         expect(twice).toMatchObject({ totalMobsDefeated: 2, uniqueMobsDefeated: ['Zed'], battlesThisSession: 2 });
+    });
+});
+
+describe('getAuraForSkill', () => {
+    const skill = {
+        level: 3,
+        mathMobAura: 'math-aura',
+        readingMobAura: 'reading-aura',
+        currentMinibossAura: 'miniboss-aura',
+        currentBossAura: 'boss-aura',
+    };
+
+    it('a battle skill shows the aura of its own mob', () => {
+        expect(getAuraForSkill('math', skill)).toBe('math-aura');
+        expect(getAuraForSkill('reading', skill)).toBe('reading-aura');
+    });
+
+    it('a miniboss or a boss shows its own aura', () => {
+        expect(getAuraForSkill('math', { ...skill, level: 10 })).toBe('miniboss-aura');
+        expect(getAuraForSkill('math', { ...skill, level: 20 })).toBe('boss-aura');
+    });
+
+    it('memory and cleaning never have an aura, nor a skill whose aura is missing', () => {
+        expect(getAuraForSkill('memory', { ...skill, level: 20 })).toBeNull();
+        expect(getAuraForSkill('cleaning', { ...skill, level: 10 })).toBeNull();
+        expect(getAuraForSkill('writing', skill)).toBeNull();
+    });
+});
+
+describe('withDifficulty', () => {
+    it('sets the difficulty and gives a full-health mob of that difficulty', () => {
+        const skill = { level: 45, difficulty: 1, mobHealth: 12, mobMaxHealth: 60 };
+        expect(withDifficulty(skill, 3)).toEqual({ level: 45, difficulty: 3, mobHealth: 540, mobMaxHealth: 540 });
+        expect(skill.difficulty).toBe(1);
     });
 });
