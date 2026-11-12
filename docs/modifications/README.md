@@ -56,3 +56,4 @@ Every change to the project has its own short note in this folder, written in th
 | 045 | 2026-11-11 | [Saved levels and difficulties are brought back in range](045-validate-saved-level-and-difficulty.md) |
 | 046 | 2026-11-11 | [An invalid saved current profile opens profile 1](046-invalid-current-profile.md) |
 | 047 | 2026-11-11 | [Every read and write of the save goes through the persistence module](047-storage-behind-persistence.md) |
+| 048 | 2026-11-12 | [The result of a hit is computed outside App](048-hit-resolution-out-of-app.md) |

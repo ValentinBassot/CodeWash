@@ -157,14 +157,14 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D44 | Old saves without mob health get a difficulty-1 mob whatever their difficulty: the backfill never runs because defaults are merged first | `App.jsx` (`loadSkills`, mob health backfill) | bug | 3 | 2 | 6 | S | P3 | Done (041) |
 | D46 | The rule that judges a spoken word (exact, homophone, or noise under 2 letters) is copied in `App` and `SkillCard`, with `MIN_SPOKEN_TEXT_LENGTH` defined twice | `App.jsx` (`onresult` of `startVoiceListener`), `SkillCard.jsx` (wrong-reading effect) | duplication | 3 | 3 | 9 | S | P2 | Done (034) |
 | D48 | "Jack of All Trades" progress text always says "6/6 skills": it counts the skills at or above the lowest level, which is every skill | `achievements.js` (`skill_mastery.getProgressText`) | unclear rule | 2 | 5 | 10 | S | P3 | Identified |
-| D50 | Two rules decide when a difficulty unlocks: the selector opens difficulty 2 at level 20, the XP rule expects it from level 21; the maximum `7` is also written in three places | `App.jsx` (`unlockedDifficulty`, miniboss `challengeDiff`), `gameUtils.js` (`getExpectedDifficulty`) | duplication | 2 | 3 | 6 | S | P3 | Identified |
+| D50 | Two rules decide when a difficulty unlocks: the selector opens difficulty 2 at level 20, the XP rule expects it from level 21, so the level-20 boss beaten on difficulty 2 gives three levels at once; the maximum `7` is also written in three places | `App.jsx` (`unlockedDifficulty`, miniboss `challengeDiff`), `gameUtils.js` (`getExpectedDifficulty`) | duplication | 2 | 3 | 6 | S | P3 | Identified |
 | D51 | An invalid saved current profile (`abc`, `7`, `0`) opens a phantom profile (`heroSkills_v23_pNaN`): the player sees an empty game | `App.jsx` (`currentProfile` initializer, `parseInt` without check) | fragile parser | 3 | 2 | 6 | S | P3 | Done (046) |
 
 ### Phase 3: hot spots
 
 | ID | Item | Location | Smell | I | L | Risk | Effort | Prio | Status |
 |---|---|---|---|---|---|---|---|---|---|
-| D26 | God component: `App` is one 1172-line function with 31 `useState` | `App.jsx:49` (also complexity 31 at `:94`, 24 at `:569`) | tight coupling | 5 | 4 | 20 | XL | P1 | Identified |
+| D26 | God component: `App` is one 1172-line function with 31 `useState` | `App.jsx:49` (also complexity 31 at `:94`, 24 at `:569`) | tight coupling | 5 | 4 | 20 | XL | P1 | In progress (048) |
 | D27 | `SkillCard`: 611-line function, complexity 107, every mini-game inside | `SkillCard.jsx:65` | complexity | 5 | 4 | 20 | XL | P1 | Identified |
 | D28 | Errors swallowed (`console.warn`, empty `.play().catch`) | `App.jsx:168,180,197,237`, `soundManager.js:127,136,185,255,269,283` | silent error | 3 | 3 | 9 | S | P2 | In progress (043) |
 | D29 | 1217 lines of CSS inside a component | `GlobalStyles.jsx:3` | large file | 3 | 3 | 9 | M | P3 | Identified |
