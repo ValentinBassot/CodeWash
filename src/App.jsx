@@ -3,7 +3,14 @@ import { Menu, Sparkles, Gift, Maximize, Minimize, Settings, Bug } from 'lucide-
 import { random } from './domain/random';
 import { todayKey } from './domain/clock';
 import { judgeSpokenWord } from './domain/reading';
-import { describeHit, getAuraForSkill, recordDefeat, resolveHit, withDifficulty } from './domain/battle';
+import {
+    describeHit,
+    getAuraForSkill,
+    getChallengeDifficulty,
+    recordDefeat,
+    resolveHit,
+    withDifficulty,
+} from './domain/battle';
 import { generateChallenge } from './domain/challenge';
 import { isSpeechRecognitionAvailable } from './io/speechRecognition';
 import { useVoiceListener } from './hooks/useVoiceListener';
@@ -413,17 +420,8 @@ const App = () => {
     const startBattle = (id) => {
         const skill = SKILL_DATA.find((s) => s.id === id);
         setBattlingSkillId(id);
-        // Use the skill's current difficulty setting
-        const currentDiff = skills[id].difficulty || 1;
-        const playerLevel = skills[id].level;
-
-        // For miniboss encounters, use difficulty+1 for content (capped at 7)
-        const encounterType = getEncounterType(playerLevel);
-        const challengeDiff = encounterType === 'miniboss' ? Math.min(7, currentDiff + 1) : currentDiff;
-
-        // Store the battle's challenge difficulty so it remains consistent throughout the battle
+        const challengeDiff = getChallengeDifficulty(skills[id]);
         setBattleDifficulty(challengeDiff);
-
         setChallengeData(generateChallenge(skill.challengeType, challengeDiff));
         playClick();
         startBGM(); // Start BGM on first battle (user interaction)
@@ -431,7 +429,6 @@ const App = () => {
     };
 
     const endBattle = () => {
-        console.log('[Battle] Ending battle, cleaning up speech recognition');
         setBattlingSkillId(null);
         setBattleDifficulty(null);
         setChallengeData(null);

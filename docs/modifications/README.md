@@ -70,3 +70,4 @@ Every change to the project has its own short note in this folder, written in th
 | 059 | 2026-11-12 | [The profiles and their save live in a hook](059-profiles-hook.md) |
 | 060 | 2026-11-12 | [Challenges, auras and difficulty changes are computed outside App](060-challenge-aura-difficulty-out-of-app.md) |
 | 061 | 2026-11-12 | [One way to record a stat and announce an achievement](061-achievement-toast-hook.md) |
+| 062 | 2026-11-12 | [The difficulty of a battle's questions is computed outside App](062-challenge-difficulty-out-of-app.md) |

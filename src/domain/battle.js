@@ -184,3 +184,8 @@ export const withDifficulty = (skill, difficulty) => ({
     mobHealth: calculateMobHealth(difficulty),
     mobMaxHealth: calculateMobHealth(difficulty),
 });
+
+export const getChallengeDifficulty = (skill) => {
+    const difficulty = skill.difficulty || 1;
+    return getEncounterType(skill.level) === 'miniboss' ? Math.min(MAX_DIFFICULTY, difficulty + 1) : difficulty;
+};

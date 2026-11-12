@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { describeHit, getAuraForSkill, recordDefeat, resolveHit, withDifficulty } from './battle';
+import {
+    describeHit,
+    getAuraForSkill,
+    getChallengeDifficulty,
+    recordDefeat,
+    resolveHit,
+    withDifficulty,
+} from './battle';
 import { createNewSkill } from '../persistence/profileSave';
 import { getDefaultStats } from '../utils/achievementUtils';
 import { createSeededRandom, resetRandomSource, setRandomSource } from './random';
@@ -187,5 +194,18 @@ describe('withDifficulty', () => {
         const skill = { level: 45, difficulty: 1, mobHealth: 12, mobMaxHealth: 60 };
         expect(withDifficulty(skill, 3)).toEqual({ level: 45, difficulty: 3, mobHealth: 540, mobMaxHealth: 540 });
         expect(skill.difficulty).toBe(1);
+    });
+});
+
+describe('getChallengeDifficulty', () => {
+    it('is the difficulty of the skill against a mob or a boss, 1 when none is set', () => {
+        expect(getChallengeDifficulty({ level: 3, difficulty: 2 })).toBe(2);
+        expect(getChallengeDifficulty({ level: 20, difficulty: 2 })).toBe(2);
+        expect(getChallengeDifficulty({ level: 3 })).toBe(1);
+    });
+
+    it('is one harder against a miniboss, never above 7', () => {
+        expect(getChallengeDifficulty({ level: 10, difficulty: 2 })).toBe(3);
+        expect(getChallengeDifficulty({ level: 130, difficulty: 7 })).toBe(7);
     });
 });
