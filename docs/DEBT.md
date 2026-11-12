@@ -171,7 +171,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D47 | Tests that mount the whole App take 4 to 8 s each; under parallel coverage the slowest exceed 20 s, so the timeout was raised to 30 s | `src/App.*.test.jsx`, `vite.config.js` (`testTimeout`) | slow tests | 3 | 3 | 9 | M | P2 | Identified |
 | D52 | Side effects inside state updates: in development (`StrictMode`) React runs them twice, so one victory counts two defeated mobs and one death counts two deaths and costs two levels | `App.jsx` (`handleSuccessHit`: `setStats`, sounds and timers inside `setSkills` and `setPlayerHealth`) | tight coupling | 3 | 5 | 15 | S | P1 | Done (049) |
 | D53 | A profile never played shows "LV. 0" in the settings while a new game is at total level 6 | `App.jsx` (`getProfileStats` returns `null` without a save), `ProfileCard.jsx:144` | hardcoded value | 2 | 5 | 10 | S | P2 | Done (050) |
-| D54 | Accessibility: 6 icon buttons without a name, 181 images without `alt`, 2 inputs without a label, Escape does not close the drawers | `App.jsx` (top bar), `SafeImage.jsx`, drawers | other | 3 | 5 | 15 | M | P1 | Identified |
+| D54 | Accessibility: 6 icon buttons without a name, 181 images without `alt`, 2 inputs without a label, Escape does not close the drawers | `App.jsx` (top bar), `SafeImage.jsx`, drawers | other | 3 | 5 | 15 | M | P1 | Done (052) |
 | D55 | The browser tab is titled `eliott-rpg-game`, the package name, not the name of the game | `index.html` | hardcoded value | 1 | 5 | 5 | S | P3 | Done (051) |
 
 ### Phase 4: features and their debt

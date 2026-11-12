@@ -550,6 +550,17 @@ const App = () => {
     };
 
     useEffect(() => {
+        const closeDrawersOnEscape = (event) => {
+            if (event.key !== 'Escape') return;
+            setIsSettingsOpen(false);
+            setIsCosmeticsOpen(false);
+            setIsMenuOpen(false);
+        };
+        document.addEventListener('keydown', closeDrawersOnEscape);
+        return () => document.removeEventListener('keydown', closeDrawersOnEscape);
+    }, []);
+
+    useEffect(() => {
         battlingSkillIdRef.current = battlingSkillId;
     }, [battlingSkillId]);
 
@@ -863,6 +874,7 @@ const App = () => {
             {/* Top Left Buttons */}
             {/* Button dimensions: p-3 (12px) + icon(48px) + p-3 (12px) + border-2*2 (4px) = 76px + 8px gap = 84px spacing */}
             <button
+                aria-label="Open settings"
                 onClick={() => {
                     setIsMenuOpen(false);
                     setIsCosmeticsOpen(false);
@@ -875,6 +887,7 @@ const App = () => {
                 <Settings size={48} className="text-slate-400" />
             </button>
             <button
+                aria-label="Open cosmetics"
                 onClick={() => {
                     setIsMenuOpen(false);
                     setIsSettingsOpen(false);
@@ -962,6 +975,7 @@ const App = () => {
                 {isFullscreen ? <Minimize size={48} /> : <Maximize size={48} />}
             </button>
             <button
+                aria-label="Open achievements"
                 onClick={() => {
                     setIsSettingsOpen(false);
                     setIsCosmeticsOpen(false);
@@ -988,6 +1002,7 @@ const App = () => {
 
             {/* Bottom Right Bug Report Button */}
             <button
+                aria-label="Report a bug"
                 onClick={() => {
                     setIsMenuOpen(false);
                     setIsCosmeticsOpen(false);
@@ -1035,6 +1050,7 @@ const App = () => {
 
                 {/* Left Chevron - Parenthesis style with gradient fade */}
                 <button
+                    aria-label="Previous skill"
                     onClick={() => {
                         setSelectedIndex((p) => p - 1);
                         playActionCardLeft();
@@ -1065,6 +1081,7 @@ const App = () => {
 
                 {/* Right Chevron - Parenthesis style with gradient fade */}
                 <button
+                    aria-label="Next skill"
                     onClick={() => {
                         setSelectedIndex((p) => p + 1);
                         playActionCardRight();

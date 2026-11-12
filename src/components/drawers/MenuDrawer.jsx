@@ -37,6 +37,10 @@ const MenuDrawer = ({ isOpen, skills, stats }) => {
 
     return (
         <div
+            role="dialog"
+            aria-label="Achievements"
+            aria-hidden={!isOpen}
+            inert={!isOpen}
             className={`fixed h-full w-[75%] md:w-[60%] bg-[#1a1a1a]/95 backdrop-blur-md z-50 border-l-4 border-stone-600 shadow-2xl transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
             style={{ top: 0, right: 0 }}
         >

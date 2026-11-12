@@ -716,6 +716,7 @@ const SkillCard = ({
                                             <div className="relative w-full flex justify-center">
                                                 <input
                                                     ref={inputRef}
+                                                    aria-label="Your answer"
                                                     type="text"
                                                     inputMode="numeric"
                                                     pattern="[0-9]*"
@@ -760,6 +761,7 @@ const SkillCard = ({
                                             <div className="relative w-full flex justify-center">
                                                 <input
                                                     ref={inputRef}
+                                                    aria-label="Your spelling"
                                                     type="text"
                                                     value={mathInput}
                                                     onChange={(e) => {

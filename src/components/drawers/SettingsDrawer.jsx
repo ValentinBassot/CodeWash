@@ -19,6 +19,10 @@ const SettingsDrawer = ({
     currentSkills,
 }) => (
     <div
+        role="dialog"
+        aria-label="Settings"
+        aria-hidden={!isOpen}
+        inert={!isOpen}
         className={`fixed h-full w-[85%] md:w-[60%] bg-[#0f172a]/95 backdrop-blur-xl z-50 border-r-4 border-slate-700 shadow-2xl transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
         style={{ top: 0, left: 0 }}
     >
@@ -74,6 +78,7 @@ const SettingsDrawer = ({
                                     min="0"
                                     max="1"
                                     step="0.05"
+                                    aria-label="Music volume"
                                     value={bgmVol}
                                     onChange={(e) => setBgmVol(parseFloat(e.target.value))}
                                     className="h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-yellow-400"
@@ -89,6 +94,7 @@ const SettingsDrawer = ({
                                     min="0"
                                     max="1"
                                     step="0.05"
+                                    aria-label="SFX volume"
                                     value={sfxVol}
                                     onChange={(e) => setSfxVol(parseFloat(e.target.value))}
                                     className="h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-yellow-400"

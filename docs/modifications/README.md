@@ -60,3 +60,4 @@ Every change to the project has its own short note in this folder, written in th
 | 049 | 2026-11-12 | [A victory and a death count once in development](049-pure-state-updates.md) |
 | 050 | 2026-11-12 | [A profile never played shows the level of a new game](050-level-of-unplayed-profile.md) |
 | 051 | 2026-11-12 | [The browser tab shows the name of the game](051-tab-title.md) |
+| 052 | 2026-11-12 | [Buttons, images, inputs and drawers are usable without seeing them](052-accessible-names.md) |
