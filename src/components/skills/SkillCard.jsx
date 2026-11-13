@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { Mic, Plus, Minus } from 'lucide-react';
 import SafeImage from '../ui/SafeImage';
 import MemoryGame from './games/MemoryGame';
 import TypedAnswer from './games/TypedAnswer';
 import ChallengePrompt from './games/ChallengePrompt';
 import MicButton from './games/MicButton';
+import DifficultyPicker from './card/DifficultyPicker';
+import XpBar from './card/XpBar';
+import BattleInfoPanel from './card/BattleInfoPanel';
 import PatternsGame from './games/PatternsGame';
 import MobWithAura from '../ui/MobWithAura';
 import ParentalVerificationModal from '../ui/ParentalVerificationModal';
@@ -16,10 +18,8 @@ import {
     CHEST_BLOCKS,
     BOSS_MOBS,
     MINIBOSS_MOBS,
-    DIFFICULTY_IMAGES,
     DIFFICULTY_CONTENT,
 } from '../../constants/gameData';
-import { calculateXPToLevel } from '../../utils/gameUtils';
 import { AURA_ADJECTIVES } from '../../utils/mobDisplayUtils';
 
 const PRESTIGE_LEVEL_THRESHOLD = 20;
@@ -363,27 +363,7 @@ const SkillCard = ({
                                 )}
                             </div>
                         )}
-                        {/* Current XP indicator - visible during battle */}
-                        {(() => {
-                            const xpToLevel = calculateXPToLevel(difficulty, data.level);
-                            const xpPercent = Math.min(100, (data.xp / xpToLevel) * 100);
-                            return (
-                                <div className="mt-2 bg-[#1a1a1a] p-2 rounded border border-[#333]">
-                                    <div className="flex justify-between text-gray-400 text-xs mb-1 uppercase">
-                                        <span>XP</span>
-                                        <span>
-                                            {data.xp} / {xpToLevel}
-                                        </span>
-                                    </div>
-                                    <div className="w-full h-4 bg-[#333] rounded-full overflow-hidden border border-[#555] relative">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-green-600 to-green-400 transition-all duration-300"
-                                            style={{ width: `${xpPercent}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            );
-                        })()}
+                        <XpBar xp={data.xp} level={data.level} difficulty={difficulty} />
                     </div>
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center">
@@ -416,101 +396,15 @@ const SkillCard = ({
                             >
                                 {cardContent}
                             </div>
-                            {/* Battle Info Side Panel - Offset to the right with gap */}
-                            {/* Positioning: 50% (center) + 225px (half of scaled card 450px) + 30px (gap) */}
                             {!['memory', 'cleaning'].includes(config.id) && (
-                                <div
-                                    className="absolute left-[calc(50%+225px+30px)] top-0"
-                                    style={{
-                                        transform: 'scale(1.5)',
-                                        transformOrigin: 'left top',
-                                    }}
-                                >
-                                    <div
-                                        className="relative w-[175px] bg-gradient-to-br from-amber-100 via-yellow-50 to-amber-50 border-4 border-amber-800 rounded-lg overflow-hidden"
-                                        style={{
-                                            boxShadow: '0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(251,191,36,0.3)',
-                                        }}
-                                    >
-                                        {/* Decorative corner accents */}
-                                        <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-red-700"></div>
-                                        <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-red-700"></div>
-                                        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-red-700"></div>
-                                        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-red-700"></div>
-
-                                        {/* "WANTED" poster style header */}
-                                        <div className="bg-gradient-to-b from-red-700 to-red-800 p-2 border-b-4 border-amber-900 relative">
-                                            <div
-                                                className="text-yellow-300 text-sm font-black uppercase tracking-wider text-center"
-                                                style={{
-                                                    textShadow:
-                                                        '2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000',
-                                                }}
-                                            >
-                                                ⚔ BATTLE ⚔
-                                            </div>
-                                            {/* Decorative rivets */}
-                                            <div className="absolute top-1 left-2 w-2 h-2 bg-amber-900 rounded-full border border-amber-950"></div>
-                                            <div className="absolute top-1 right-2 w-2 h-2 bg-amber-900 rounded-full border border-amber-950"></div>
-                                        </div>
-
-                                        {/* Info sections with vintage styling */}
-                                        <div className="p-2 space-y-1.5">
-                                            {/* Enemy Name */}
-                                            <div className="bg-amber-900/20 border-2 border-amber-900/40 rounded p-1.5">
-                                                <div className="text-[8px] text-amber-900 uppercase font-bold tracking-wide">
-                                                    Target
-                                                </div>
-                                                <div className="text-stone-900 font-black text-sm leading-tight">
-                                                    {displayMobNameWithAura}
-                                                </div>
-                                            </div>
-
-                                            {/* Skill and Level in a row */}
-                                            <div className="flex gap-1.5">
-                                                <div className="flex-1 bg-amber-900/20 border-2 border-amber-900/40 rounded p-1.5">
-                                                    <div className="text-[8px] text-amber-900 uppercase font-bold">
-                                                        Skill
-                                                    </div>
-                                                    <div className="text-stone-900 font-bold text-xs leading-tight">
-                                                        {skillName}
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 bg-amber-900/20 border-2 border-amber-900/40 rounded p-1.5">
-                                                    <div className="text-[8px] text-amber-900 uppercase font-bold">
-                                                        Level
-                                                    </div>
-                                                    <div
-                                                        className={`font-black text-base leading-tight ${levelTextColor}`}
-                                                        style={{
-                                                            WebkitTextStroke: '0.5px rgba(0,0,0,0.5)',
-                                                            filter: 'drop-shadow(1px 1px 0 rgba(0,0,0,0.3))',
-                                                        }}
-                                                    >
-                                                        {data.level}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Quest/Task */}
-                                            <div className="bg-amber-900/20 border-2 border-amber-900/40 rounded p-1.5">
-                                                <div className="text-[8px] text-amber-900 uppercase font-bold mb-0.5">
-                                                    Quest
-                                                </div>
-                                                <div className="text-stone-800 text-[10px] leading-snug italic font-medium">
-                                                    {config.taskDescription}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Bottom stamp/seal effect */}
-                                        <div className="bg-gradient-to-t from-amber-900 to-amber-800 p-1 border-t-4 border-amber-950">
-                                            <div className="text-center text-yellow-200 text-[8px] font-bold uppercase tracking-widest">
-                                                {config.fantasyName}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <BattleInfoPanel
+                                    targetName={displayMobNameWithAura}
+                                    skillName={skillName}
+                                    level={data.level}
+                                    levelClassName={levelTextColor}
+                                    taskDescription={config.taskDescription}
+                                    fantasyName={config.fantasyName}
+                                />
                             )}
                         </div>
                     </div>,
@@ -529,31 +423,11 @@ const SkillCard = ({
         <div className="relative">
             {/* Difficulty adjuster positioned above the card - hidden for cleaning skill and until difficulty 2 is unlocked */}
             {(!isBattling || config.id !== 'memory') && config.id !== 'cleaning' && unlockedDifficulty > 1 && (
-                <div className="absolute -top-10 left-0 flex items-center gap-2 z-20">
-                    <button
-                        onClick={() => setDifficulty(Math.max(1, difficulty - 1))}
-                        className="bg-stone-700 text-white rounded p-1 border border-stone-500 hover:bg-stone-600"
-                    >
-                        <Minus size={16} />
-                    </button>
-                    <div className="relative">
-                        <SafeImage
-                            src={DIFFICULTY_IMAGES[difficulty] || DIFFICULTY_IMAGES[1]}
-                            alt={`Difficulty ${difficulty}`}
-                            className="w-8 h-8 object-contain"
-                        />
-                        {/* Difficulty level number indicator in bottom-right corner */}
-                        <span className="absolute -bottom-1 -right-1 bg-black/90 text-yellow-400 text-xs font-bold px-1 rounded border border-yellow-500/50 min-w-[16px] text-center">
-                            {difficulty}
-                        </span>
-                    </div>
-                    <button
-                        onClick={() => setDifficulty(Math.min(unlockedDifficulty, difficulty + 1))}
-                        className="bg-stone-700 text-white rounded p-1 border border-stone-500 hover:bg-stone-600"
-                    >
-                        <Plus size={16} />
-                    </button>
-                </div>
+                <DifficultyPicker
+                    difficulty={difficulty}
+                    unlockedDifficulty={unlockedDifficulty}
+                    onChange={setDifficulty}
+                />
             )}
             {cardContent}
             <ParentalVerificationModal
