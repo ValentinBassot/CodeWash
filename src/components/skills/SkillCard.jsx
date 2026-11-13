@@ -11,15 +11,8 @@ import BattleInfoPanel from './card/BattleInfoPanel';
 import PatternsGame from './games/PatternsGame';
 import MobWithAura from '../ui/MobWithAura';
 import ParentalVerificationModal from '../ui/ParentalVerificationModal';
-import {
-    BASE_ASSETS,
-    FRIENDLY_MOBS,
-    HOSTILE_MOBS,
-    CHEST_BLOCKS,
-    BOSS_MOBS,
-    MINIBOSS_MOBS,
-    DIFFICULTY_CONTENT,
-} from '../../constants/gameData';
+import { DIFFICULTY_CONTENT } from '../../constants/gameData';
+import { getLevelStyle, getBorderEffect, getButtonStyle, resolveMob } from './card/cardStyle';
 import { AURA_ADJECTIVES } from '../../utils/mobDisplayUtils';
 
 const PRESTIGE_LEVEL_THRESHOLD = 20;
@@ -64,92 +57,17 @@ const SkillCard = ({
     const mobMaxHealth = data.mobMaxHealth || 100;
     const hpPercent = Math.round((mobHealth / mobMaxHealth) * 100);
 
-    let borderClass = 'border-stone-500';
-    let levelTextColor = 'text-white';
-    if (data.level >= 20) {
-        levelTextColor = 'text-amber-700';
-        borderClass = 'border-wood';
-    }
-    if (data.level >= 40) {
-        levelTextColor = 'text-stone-400';
-        borderClass = 'border-stone';
-    }
-    if (data.level >= 60) {
-        levelTextColor = 'text-yellow-400';
-        borderClass = 'border-gold';
-    }
-    if (data.level >= 80) {
-        levelTextColor = 'text-gray-200';
-        borderClass = 'border-iron';
-    }
-    if (data.level >= 100) {
-        levelTextColor = 'text-emerald-400';
-        borderClass = 'border-emerald';
-    }
-    if (data.level >= 120) {
-        levelTextColor = 'text-cyan-300';
-        borderClass = 'border-diamond';
-    }
-    if (data.level >= 140) {
-        levelTextColor = 'text-gray-500';
-        borderClass = 'border-netherite';
-    }
-    if (data.level >= 160) {
-        levelTextColor = 'text-rainbow';
-        borderClass = 'border-netherite';
-    }
+    const { textColor: levelTextColor, borderClass } = getLevelStyle(data.level);
 
-    // Apply selected border effect if this is the center card
-    let appliedBorderEffect = '';
-    let borderStyle = {};
-    if (isCenter && selectedBorder) {
-        if (selectedBorder === 'solid' || selectedBorder === 'solid-picker') {
-            appliedBorderEffect = '';
-            // For 'solid', use locked yellow color; for 'solid-picker', use custom color
-            const effectiveColor = selectedBorder === 'solid' ? '#FFD700' : borderColor || '#FFD700';
-            borderStyle = {
-                borderColor: effectiveColor,
-                boxShadow: `0 0 20px ${effectiveColor}, 0 0 40px ${effectiveColor}`,
-            };
-        } else {
-            appliedBorderEffect = `border-effect-${selectedBorder}`;
-            if (selectedBorder === 'gradient' || selectedBorder === 'sparkle') {
-                borderStyle = { '--border-color': borderColor || '#FFD700' };
-            }
-        }
-    }
+    const { className: appliedBorderEffect, style: effectStyle } = isCenter
+        ? getBorderEffect(selectedBorder, borderColor)
+        : { className: '', style: {} };
+    const borderStyle = effectStyle;
 
     const skillThemeConfig = themeData.skills[config.id] || {};
     const skillName = skillThemeConfig.name || config.name;
 
-    // Determine valid mob source and display name based on skill type
-    let mobSrc;
-    let displayMobName = mobName;
-
-    if (config.id === 'memory') {
-        mobSrc = 'assets/skills/farm_icon.png';
-    } else if (config.id === 'cleaning') {
-        mobSrc = CHEST_BLOCKS[mobName] || themeData.assets.mobs[mobName] || BASE_ASSETS.axolotls.Pink;
-    } else if (config.id === 'patterns') {
-        // Patterns skill uses hostile mobs like other combat skills
-        mobSrc =
-            HOSTILE_MOBS[mobName] || BOSS_MOBS[mobName] || MINIBOSS_MOBS[mobName] || themeData.assets.mobs[mobName];
-        if (!mobSrc) {
-            // Fallback to Zombie if the provided name is invalid (should not happen with proper state management)
-            displayMobName = 'Zombie';
-            mobSrc = HOSTILE_MOBS[displayMobName] || BASE_ASSETS.axolotls.Pink;
-        }
-    } else {
-        // Combat skills (reading, writing, math) - validate mob exists
-        // Check hostile mobs, boss mobs, and miniboss mobs
-        mobSrc =
-            HOSTILE_MOBS[mobName] || BOSS_MOBS[mobName] || MINIBOSS_MOBS[mobName] || themeData.assets.mobs[mobName];
-        if (!mobSrc) {
-            // Fallback to Zombie if the provided name is invalid (should not happen with proper state management)
-            displayMobName = 'Zombie';
-            mobSrc = HOSTILE_MOBS[displayMobName] || BASE_ASSETS.axolotls.Pink;
-        }
-    }
+    const { src: mobSrc, name: displayMobName } = resolveMob(config.id, mobName, themeData.assets.mobs);
 
     // Add aura adjective to mob name when battling
     const displayMobNameWithAura =
@@ -163,34 +81,7 @@ const SkillCard = ({
 
     const gemStyle = {};
 
-    // Extract button colors from config.colorStyle to match card background
-    const getButtonStyle = () => {
-        const gradientMatch = config.colorStyle?.background?.match(/#([a-fA-F0-9]{6})/g);
-        if (gradientMatch && gradientMatch.length >= 2) {
-            const fromColor = gradientMatch[0];
-            const toColor = gradientMatch[1];
-            // Create a darker shadow color from the 'to' color
-            const darkenColor = (hex) => {
-                const r = Math.max(0, parseInt(hex.slice(1, 3), 16) - 40);
-                const g = Math.max(0, parseInt(hex.slice(3, 5), 16) - 40);
-                const b = Math.max(0, parseInt(hex.slice(5, 7), 16) - 40);
-                return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-            };
-            const shadowColor = darkenColor(toColor);
-            return {
-                background: `linear-gradient(to bottom, ${fromColor}, ${toColor})`,
-                boxShadow: `0 6px 0 ${shadowColor}`,
-                borderColor: fromColor,
-            };
-        }
-        return {
-            background: 'linear-gradient(to bottom, #7e22ce, #581c87)',
-            boxShadow: '0 6px 0 #581c87',
-            borderColor: '#a855f7',
-        };
-    };
-
-    const buttonStyle = getButtonStyle();
+    const buttonStyle = getButtonStyle(config.colorStyle);
 
     // Memory game config based on difficulty
     const memoryConfig = DIFFICULTY_CONTENT.memory[difficulty] || DIFFICULTY_CONTENT.memory[1];
