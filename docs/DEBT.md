@@ -180,6 +180,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D60 | In development (`StrictMode`), a new achievement is announced twice: its check was scheduled from inside a `setStats` update, in five places | `App.jsx` (death, defeat, theme change, border change, phantom caught) | duplication | 2 | 5 | 10 | S | P2 | Done (061) |
 | D61 | `recoveryDifficulty` is computed at each death, saved in every skill and reset at each victory, but nothing ever reads it | `App.jsx` (death), `domain/battle.js`, `persistence/profileSave.js` | dead code | 1 | 5 | 5 | S | P3 | Identified |
 | D62 | The "Perfectionist" achievement (a memory game without any mismatch) can never be unlocked: nothing ever counts `perfectMemoryGames` | `achievements.js:280`, memory game (`MemoryGame.jsx`) | missing feature | 2 | 5 | 10 | S | P2 | Done (065) |
+| D63 | Found by an independent review: after a death at a boss level (21 to 20) the difficulty stayed above what the level unlocks and the picker vanished; two achievements announced in the same tick overwrote each other; a toast timer was never cleared; the memory game could credit a win after the player left | `App.jsx` (death, `recordStats`), `useAchievementToast.js`, `MemoryGame.jsx` | other | 3 | 3 | 9 | S | P2 | Done (066) |
 
 ### Phase 4: features and their debt
 

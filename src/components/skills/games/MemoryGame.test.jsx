@@ -79,6 +79,19 @@ describe('MemoryGame', () => {
         expect(onWin).toHaveBeenCalledWith({ perfect: true });
     });
 
+    it('leaving the game before the win is announced cancels it', () => {
+        const onWin = vi.fn();
+        const { unmount } = render(<MemoryGame pairs={2} gridCols={2} cardBack="back.png" onWin={onWin} />);
+        for (const [a, b] of pairs()) {
+            fireEvent.click(a);
+            fireEvent.click(b);
+            wait(300);
+        }
+        unmount();
+        wait(2000);
+        expect(onWin).not.toHaveBeenCalled();
+    });
+
     it('a win after a mismatch is not perfect', () => {
         const onWin = play();
         const [[a], [b]] = pairs();

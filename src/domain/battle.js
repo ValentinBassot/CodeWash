@@ -5,6 +5,7 @@ import {
     calculateXPReward,
     calculateXPToLevel,
     getEncounterType,
+    getExpectedDifficulty,
     getRandomBoss,
     getRandomFriendlyMob,
     getRandomMiniboss,
@@ -188,4 +189,16 @@ export const withDifficulty = (skill, difficulty) => ({
 export const getChallengeDifficulty = (skill) => {
     const difficulty = skill.difficulty || 1;
     return getEncounterType(skill.level) === 'miniboss' ? Math.min(MAX_DIFFICULTY, difficulty + 1) : difficulty;
+};
+
+export const afterDeath = (skill) => {
+    const level = Math.max(1, skill.level - 1);
+    const lost = {
+        ...skill,
+        level,
+        lostLevel: skill.level > 1,
+        recoveryDifficulty: Math.max(1, (skill.difficulty || 1) - 1),
+    };
+    const allowed = getExpectedDifficulty(level);
+    return (skill.difficulty || 1) > allowed ? withDifficulty(lost, allowed) : lost;
 };

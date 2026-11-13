@@ -49,6 +49,32 @@ describe('useAchievementToast', () => {
         expect(play).not.toHaveBeenCalled();
     });
 
+    it('shows two achievements announced together one after the other, each for 6 seconds', () => {
+        const { result } = renderHook(() => useAchievementToast());
+        act(() => {
+            result.current.announce(stats(), stats({ totalDeaths: 1 }), SKILLS, SKILLS);
+            result.current.announce(stats(), stats({ totalMobsDefeated: 1 }), SKILLS, SKILLS);
+        });
+        expect(result.current.toast.achievementId).toBe('ouch');
+        act(() => vi.advanceTimersByTime(6000));
+        expect(result.current.toast.achievementId).toBe('first_steps');
+        act(() => vi.advanceTimersByTime(5999));
+        expect(result.current.toast.achievementId).toBe('first_steps');
+        act(() => vi.advanceTimersByTime(1));
+        expect(result.current.toast).toBeNull();
+    });
+
+    it('a toast announced while another is shown still gets its full 6 seconds', () => {
+        const { result } = renderHook(() => useAchievementToast());
+        act(() => result.current.announce(stats(), stats({ totalDeaths: 1 }), SKILLS, SKILLS));
+        act(() => vi.advanceTimersByTime(4000));
+        act(() => result.current.announce(stats(), stats({ totalMobsDefeated: 1 }), SKILLS, SKILLS));
+        act(() => vi.advanceTimersByTime(2000));
+        expect(result.current.toast.achievementId).toBe('first_steps');
+        act(() => vi.advanceTimersByTime(5999));
+        expect(result.current.toast.achievementId).toBe('first_steps');
+    });
+
     it('shows the new achievement with a sound, then hides it after 6 seconds', () => {
         const { result } = renderHook(() => useAchievementToast());
         act(() => result.current.announce(stats(), stats({ totalDeaths: 1 }), SKILLS, SKILLS));
