@@ -4,6 +4,8 @@ import { Mic, Plus, Minus } from 'lucide-react';
 import SafeImage from '../ui/SafeImage';
 import MemoryGame from './games/MemoryGame';
 import TypedAnswer from './games/TypedAnswer';
+import ChallengePrompt from './games/ChallengePrompt';
+import MicButton from './games/MicButton';
 import PatternsGame from './games/PatternsGame';
 import MobWithAura from '../ui/MobWithAura';
 import ParentalVerificationModal from '../ui/ParentalVerificationModal';
@@ -17,7 +19,6 @@ import {
     DIFFICULTY_IMAGES,
     DIFFICULTY_CONTENT,
 } from '../../constants/gameData';
-import { judgeSpokenWord } from '../../domain/reading';
 import { calculateXPToLevel } from '../../utils/gameUtils';
 import { AURA_ADJECTIVES } from '../../utils/mobDisplayUtils';
 
@@ -48,10 +49,7 @@ const SkillCard = ({
     bossHealing,
 }) => {
     const [isHit, setIsHit] = useState(false);
-    const [isReadingWrong, setIsReadingWrong] = useState(false);
     const prevDamageCount = useRef(0);
-    const readingWordRef = useRef(null);
-    const prevSpokenTextRef = useRef('');
 
     const [showParentalModal, setShowParentalModal] = useState(false);
 
@@ -207,29 +205,6 @@ const SkillCard = ({
         prevDamageCount.current = damageNumbers.length;
     }, [damageNumbers]);
 
-    // Detect wrong reading answer based on spoken text changes
-    useEffect(() => {
-        if (
-            config.challengeType === 'reading' &&
-            isBattling &&
-            spokenText &&
-            spokenText !== 'Listening...' &&
-            spokenText !== 'Mic Off'
-        ) {
-            // Check if spoken text changed
-            if (spokenText !== prevSpokenTextRef.current) {
-                if (challenge?.answer) {
-                    if (judgeSpokenWord(spokenText, challenge.answer) === 'wrong') {
-                        // Trigger wrong animation
-                        setIsReadingWrong(true);
-                        setTimeout(() => setIsReadingWrong(false), 500);
-                    }
-                }
-                prevSpokenTextRef.current = spokenText;
-            }
-        }
-    }, [spokenText, config.challengeType, isBattling, challenge?.answer]);
-
     const showMob = !isBattling || config.id !== 'memory';
     const topSectionBaseClass =
         config.id === 'memory' && isBattling
@@ -349,56 +324,12 @@ const SkillCard = ({
                                     <PatternsGame difficulty={difficulty} onRoundWon={() => onMathSubmit('WIN')} />
                                 ) : (
                                     <>
-                                        <div
-                                            className={`flex-1 bg-black/40 rounded border-2 flex items-center justify-center mb-3 p-2 relative overflow-hidden w-full ${isReadingWrong ? 'border-red-500 bg-red-900/30 animate-shake' : 'border-[#555]'}`}
-                                        >
-                                            {config.challengeType === 'writing' ? (
-                                                // Display single or multiple item images for writing challenge
-                                                <div className="flex items-center justify-center gap-2">
-                                                    {challenge?.images?.map((img, idx) => (
-                                                        <React.Fragment key={idx}>
-                                                            {idx > 0 && (
-                                                                <span className="text-3xl text-yellow-400 font-bold">
-                                                                    +
-                                                                </span>
-                                                            )}
-                                                            <SafeImage
-                                                                src={img}
-                                                                className="w-24 h-24 object-contain animate-bob"
-                                                            />
-                                                        </React.Fragment>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                (() => {
-                                                    const word = challenge?.question.replace('Write: ', '') || '';
-                                                    // Use dynamic sizing that always fits the container
-                                                    // Start with a base size and let CSS handle the overflow
-                                                    return (
-                                                        <span
-                                                            ref={readingWordRef}
-                                                            className="text-white font-bold tracking-wider px-2"
-                                                            style={{
-                                                                fontSize: 'clamp(1rem, 8vw, 2.5rem)',
-                                                                maxWidth: '100%',
-                                                                wordBreak: 'break-word',
-                                                                textAlign: 'center',
-                                                                lineHeight: '1.2',
-                                                            }}
-                                                        >
-                                                            {word}
-                                                        </span>
-                                                    );
-                                                })()
-                                            )}
-                                            {config.challengeType === 'reading' && (
-                                                <div
-                                                    className={`absolute bottom-1 text-xs ${isReadingWrong ? 'text-red-400' : 'text-gray-400'}`}
-                                                >
-                                                    {spokenText || (isListening ? 'Listening...' : 'Mic Off')}
-                                                </div>
-                                            )}
-                                        </div>
+                                        <ChallengePrompt
+                                            type={config.challengeType}
+                                            challenge={challenge}
+                                            spokenText={spokenText}
+                                            isListening={isListening}
+                                        />
                                         {(config.challengeType === 'math' || config.challengeType === 'writing') && (
                                             <TypedAnswer
                                                 kind={config.challengeType}
@@ -408,21 +339,7 @@ const SkillCard = ({
                                             />
                                         )}
                                         {config.challengeType === 'reading' && (
-                                            <button
-                                                onClick={onMicClick}
-                                                className={`w-full text-center p-2 rounded border-2 transition-colors flex items-center justify-center gap-2 ${isListening ? 'border-red-500 bg-red-900/20' : 'border-gray-600 hover:bg-white/10'}`}
-                                            >
-                                                {isListening ? (
-                                                    <Mic className="inline animate-pulse text-red-500" />
-                                                ) : (
-                                                    <>
-                                                        <Mic className="inline text-gray-500" />
-                                                        <span className="text-xs uppercase font-bold text-stone-400">
-                                                            Tap to Speak
-                                                        </span>
-                                                    </>
-                                                )}
-                                            </button>
+                                            <MicButton isListening={isListening} onClick={onMicClick} />
                                         )}
                                         {config.challengeType === 'cleaning' && (
                                             <button
