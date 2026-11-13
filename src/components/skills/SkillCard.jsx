@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { Mic, Plus, Minus } from 'lucide-react';
 import SafeImage from '../ui/SafeImage';
 import MemoryGame from './games/MemoryGame';
+import PatternsGame from './games/PatternsGame';
 import MobWithAura from '../ui/MobWithAura';
 import ParentalVerificationModal from '../ui/ParentalVerificationModal';
 import {
@@ -15,52 +16,12 @@ import {
     DIFFICULTY_IMAGES,
     DIFFICULTY_CONTENT,
 } from '../../constants/gameData';
-import { playAxolotlNote, playMatch, playMismatch } from '../../utils/soundManager';
+import { playMismatch } from '../../utils/soundManager';
 import { judgeSpokenWord } from '../../domain/reading';
 import { calculateXPToLevel } from '../../utils/gameUtils';
 import { AURA_ADJECTIVES } from '../../utils/mobDisplayUtils';
-import { random } from '../../domain/random';
 
 const PRESTIGE_LEVEL_THRESHOLD = 20;
-
-// Voice recognition constants
-// Tempo constants for pattern recognition
-const MAX_TEMPO_DELAY = 800; // Slowest tempo (difficulty 1, round 1)
-const MIN_TEMPO_DELAY = 200; // Fastest tempo (difficulty 7, always)
-
-// Map axolotl colors to specific note files for consistent sound feedback
-// Helper: clamp a value between min and max
-const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-
-// Helper: linearly interpolate between two values
-const lerp = (start, end, t) => start + (end - start) * clamp(t, 0, 1);
-
-// Calculate tempo delays based on completed rounds and difficulty
-// Difficulty scales both the starting delay and the acceleration runway
-const getTempoDelays = (completedRounds, currentDifficulty) => {
-    // Use 1-based round number
-    const round = completedRounds + 1;
-
-    // Calculate starting delay based on difficulty
-    // Difficulty 1: 800ms, Difficulty 7: 200ms
-    const startingDelay = lerp(MAX_TEMPO_DELAY, MIN_TEMPO_DELAY, (currentDifficulty - 1) / 6);
-
-    // Calculate acceleration runway based on difficulty
-    // Difficulty 1: ~10 rounds, Difficulty 7: 1 round (essentially no acceleration)
-    const maxRunwayRounds = lerp(10, 1, (currentDifficulty - 1) / 6);
-
-    // Calculate current tempo with acceleration
-    // Progress through the runway: 0 at round 1, 1 at maxRunwayRounds
-    // Handle edge case where maxRunwayRounds is 1 (no acceleration)
-    const runwayProgress = maxRunwayRounds > 1 ? (round - 1) / (maxRunwayRounds - 1) : 1;
-    const rawOnDelay = lerp(startingDelay, MIN_TEMPO_DELAY, runwayProgress);
-    const onDelay = clamp(rawOnDelay, MIN_TEMPO_DELAY, MAX_TEMPO_DELAY);
-
-    // offDelay scaled to ~35% of onDelay with a 100ms floor
-    const offDelay = Math.max(100, Math.round(onDelay * 0.35));
-
-    return { onDelay, offDelay };
-};
 
 const SkillCard = ({
     config,
@@ -95,19 +56,7 @@ const SkillCard = ({
     const readingWordRef = useRef(null);
     const prevSpokenTextRef = useRef('');
 
-    // Simon Says state for Pattern Recognition
-    const [simonSequence, setSimonSequence] = useState([]);
-    const [playerIndex, setPlayerIndex] = useState(0);
-    const [isShowingSequence, setIsShowingSequence] = useState(false);
-
-    // Parental verification modal state for Cleaning skill
     const [showParentalModal, setShowParentalModal] = useState(false);
-    const [completedRounds, setCompletedRounds] = useState(0);
-    const [litAxolotl, setLitAxolotl] = useState(null);
-    const [simonGameActive, setSimonGameActive] = useState(false);
-
-    // Ref to track if patterns game session was initialized for the current battle
-    const simonSessionStartedRef = useRef(false);
 
     // Handler for when parental verification succeeds for Cleaning skill
     const handleParentalVerified = useCallback(() => {
@@ -289,117 +238,6 @@ const SkillCard = ({
         }
     }, [spokenText, config.challengeType, isBattling, challenge?.answer]);
 
-    // Pattern config based on difficulty
-    const patternConfig = DIFFICULTY_CONTENT.patterns[difficulty] || DIFFICULTY_CONTENT.patterns[1];
-    const axolotlCount = patternConfig.axolotlCount || 2;
-    const shouldResetSequence = patternConfig.resetSequence || false;
-
-    // Simon Says initialization and sequence playback
-    // Only use the number of axolotls specified by difficulty
-    // Memoize axolotlColors to prevent infinite loop in startSimonGame callback
-    const axolotlColors = useMemo(() => {
-        const allAxolotlColors = Object.keys(BASE_ASSETS.axolotls);
-        return allAxolotlColors.slice(0, Math.min(axolotlCount, allAxolotlColors.length));
-    }, [axolotlCount]);
-
-    const playSequence = useCallback(
-        (sequence) => {
-            setIsShowingSequence(true);
-            setPlayerIndex(0);
-            let i = 0;
-            const { onDelay, offDelay } = getTempoDelays(completedRounds, difficulty);
-
-            const playNext = () => {
-                if (i < sequence.length) {
-                    setLitAxolotl(sequence[i]);
-                    playAxolotlNote(sequence[i]);
-                    setTimeout(() => {
-                        setLitAxolotl(null);
-                        i++;
-                        setTimeout(playNext, offDelay);
-                    }, onDelay);
-                } else {
-                    setIsShowingSequence(false);
-                }
-            };
-            setTimeout(playNext, 500);
-        },
-        [completedRounds, difficulty],
-    );
-
-    const startSimonGame = useCallback(() => {
-        const firstColor = axolotlColors[Math.floor(random() * axolotlColors.length)];
-        const newSequence = [firstColor];
-        setSimonSequence(newSequence);
-        setPlayerIndex(0);
-        setCompletedRounds(0);
-        setSimonGameActive(true);
-        playSequence(newSequence);
-    }, [axolotlColors, playSequence]);
-
-    const handleAxolotlClick = (color) => {
-        if (isShowingSequence || !simonGameActive) return;
-
-        playAxolotlNote(color);
-
-        if (color === simonSequence[playerIndex]) {
-            // Correct click
-            if (playerIndex === simonSequence.length - 1) {
-                // Completed the sequence
-                playMatch();
-                const newRounds = completedRounds + 1;
-                setCompletedRounds(newRounds);
-
-                setTimeout(() => {
-                    onMathSubmit('WIN');
-                }, 300);
-
-                // For difficulty 7, reset sequence each round instead of building
-                let newSequence;
-                if (shouldResetSequence) {
-                    // Generate completely new sequence of same length + 1
-                    newSequence = [];
-                    for (let i = 0; i < simonSequence.length + 1; i++) {
-                        newSequence.push(axolotlColors[Math.floor(random() * axolotlColors.length)]);
-                    }
-                } else {
-                    // Normal mode: Add new random axolotl to sequence
-                    const nextColor = axolotlColors[Math.floor(random() * axolotlColors.length)];
-                    newSequence = [...simonSequence, nextColor];
-                }
-
-                setSimonSequence(newSequence);
-                setPlayerIndex(0);
-                setTimeout(() => playSequence(newSequence), 800);
-            } else {
-                // Move to next in sequence
-                setPlayerIndex(playerIndex + 1);
-            }
-        } else {
-            // Wrong click - game over
-            playMismatch();
-            setSimonGameActive(false);
-            // No damage on failure since damage was already applied during successful rounds
-        }
-    };
-
-    useEffect(() => {
-        if (isBattling && config.id === 'patterns' && !simonSessionStartedRef.current) {
-            // Only start a new game when entering battle if no session started yet
-            simonSessionStartedRef.current = true;
-            startSimonGame();
-        } else if (!isBattling && config.id === 'patterns') {
-            // Reset Simon Says state and session ref when not battling
-            simonSessionStartedRef.current = false;
-            setSimonSequence([]);
-            setPlayerIndex(0);
-            setIsShowingSequence(false);
-            setCompletedRounds(0);
-            setLitAxolotl(null);
-            setSimonGameActive(false);
-        }
-    }, [isBattling, config.id, startSimonGame]);
-
     const showMob = !isBattling || config.id !== 'memory';
     const topSectionBaseClass =
         config.id === 'memory' && isBattling
@@ -516,60 +354,7 @@ const SkillCard = ({
                         ) : (
                             <div className="flex-1 flex flex-col items-center justify-center">
                                 {config.id === 'patterns' ? (
-                                    <div className="w-full flex flex-col items-center gap-1">
-                                        {/* Round counter */}
-                                        <div className="text-white text-lg font-bold py-1">
-                                            Round: {completedRounds}{' '}
-                                            {isShowingSequence && (
-                                                <span className="text-yellow-400 animate-pulse">Watch!</span>
-                                            )}
-                                            {!isShowingSequence && simonGameActive && (
-                                                <span className="text-green-400">Your turn!</span>
-                                            )}
-                                        </div>
-                                        {/* Dynamic axolotl formation based on difficulty */}
-                                        <div className="relative w-[240px] h-[240px]">
-                                            {axolotlColors.map((color, index) => {
-                                                // Calculate angle based on number of axolotls (evenly distributed around circle)
-                                                const anglePerAxolotl = 360 / axolotlColors.length;
-                                                const angle = (index * anglePerAxolotl - 90) * (Math.PI / 180);
-                                                const radius = 85;
-                                                const x = 120 + radius * Math.cos(angle) - 40;
-                                                const y = 120 + radius * Math.sin(angle) - 40;
-                                                const isLit = litAxolotl === color;
-                                                return (
-                                                    <div
-                                                        key={color}
-                                                        onClick={() => handleAxolotlClick(color)}
-                                                        className={`absolute w-[80px] h-[80px] cursor-pointer transition-all duration-200 rounded-full p-1 ${isLit ? 'scale-125 ring-4 ring-yellow-400 brightness-150 z-10' : 'hover:scale-110'} ${isShowingSequence ? 'pointer-events-none' : ''}`}
-                                                        style={{ left: x, top: y }}
-                                                    >
-                                                        <SafeImage
-                                                            src={BASE_ASSETS.axolotls[color]}
-                                                            alt={color}
-                                                            className="w-full h-full object-contain drop-shadow-lg"
-                                                        />
-                                                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] text-white bg-black/60 px-1 rounded">
-                                                            {color}
-                                                        </span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                        {!simonGameActive && completedRounds > 0 && (
-                                            <div className="flex flex-col items-center gap-3">
-                                                <div className="text-red-400 text-lg font-bold animate-pulse">
-                                                    Game Over! Rounds: {completedRounds}
-                                                </div>
-                                                <button
-                                                    onClick={startSimonGame}
-                                                    className="bg-blue-600 hover:bg-blue-500 text-white text-xl font-bold py-3 px-6 rounded shadow-[0_4px_0_#1e40af] active:shadow-none active:translate-y-[4px] transition-all"
-                                                >
-                                                    Retry
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
+                                    <PatternsGame difficulty={difficulty} onRoundWon={() => onMathSubmit('WIN')} />
                                 ) : (
                                     <>
                                         <div
