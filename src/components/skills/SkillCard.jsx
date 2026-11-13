@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import SafeImage from '../ui/SafeImage';
 import MemoryGame from './games/MemoryGame';
@@ -12,6 +12,7 @@ import PatternsGame from './games/PatternsGame';
 import MobWithAura from '../ui/MobWithAura';
 import ParentalVerificationModal from '../ui/ParentalVerificationModal';
 import { DIFFICULTY_CONTENT } from '../../constants/gameData';
+import { useHitFlash } from '../../hooks/useHitFlash';
 import { getLevelStyle, getBorderEffect, getButtonStyle, resolveMob } from './card/cardStyle';
 import { AURA_ADJECTIVES } from '../../utils/mobDisplayUtils';
 
@@ -41,8 +42,7 @@ const SkillCard = ({
     borderColor,
     bossHealing,
 }) => {
-    const [isHit, setIsHit] = useState(false);
-    const prevDamageCount = useRef(0);
+    const isHit = useHitFlash(damageNumbers.length);
 
     const [showParentalModal, setShowParentalModal] = useState(false);
 
@@ -87,14 +87,6 @@ const SkillCard = ({
     const memoryConfig = DIFFICULTY_CONTENT.memory[difficulty] || DIFFICULTY_CONTENT.memory[1];
     const memoryPairs = memoryConfig.pairs || 3;
     const memoryGridCols = memoryConfig.gridCols || 4;
-
-    useEffect(() => {
-        if (damageNumbers.length > prevDamageCount.current) {
-            setIsHit(true);
-            setTimeout(() => setIsHit(false), 400);
-        }
-        prevDamageCount.current = damageNumbers.length;
-    }, [damageNumbers]);
 
     const showMob = !isBattling || config.id !== 'memory';
     const topSectionBaseClass =

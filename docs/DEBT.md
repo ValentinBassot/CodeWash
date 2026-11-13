@@ -165,7 +165,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | ID | Item | Location | Smell | I | L | Risk | Effort | Prio | Status |
 |---|---|---|---|---|---|---|---|---|---|
 | D26 | God component: `App` is one 1172-line function with 31 `useState` | `App.jsx:49` (also complexity 31 at `:94`, 24 at `:569`) | tight coupling | 5 | 4 | 20 | XL | P1 | In progress (048, 055, 057, 058, 059, 060, 061, 062) |
-| D27 | `SkillCard`: 611-line function, complexity 107, every mini-game inside | `SkillCard.jsx:65` | complexity | 5 | 4 | 20 | XL | P1 | In progress (064, 067, 068, 069, 070, 071) |
+| D27 | `SkillCard`: 611-line function, complexity 107, every mini-game inside | `SkillCard.jsx:65` | complexity | 5 | 4 | 20 | XL | P1 | In progress (064, 067, 068, 069, 070, 071, 072) |
 | D28 | Errors swallowed (`console.warn`, empty `.play().catch`) | `App.jsx:168,180,197,237`, `soundManager.js:127,136,185,255,269,283` | silent error | 3 | 3 | 9 | S | P2 | In progress (043) |
 | D29 | 1217 lines of CSS inside a component | `GlobalStyles.jsx:3` | large file | 3 | 3 | 9 | M | P3 | Identified |
 | D47 | Tests that mount the whole App take 4 to 8 s each; under parallel coverage the slowest exceed 20 s, so the timeout was raised to 30 s | `src/App.*.test.jsx`, `vite.config.js` (`testTimeout`) | slow tests | 3 | 3 | 9 | M | P2 | Identified |
@@ -181,7 +181,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D61 | `recoveryDifficulty` is computed at each death, saved in every skill and reset at each victory, but nothing ever reads it | `App.jsx` (death), `domain/battle.js`, `persistence/profileSave.js` | dead code | 1 | 5 | 5 | S | P3 | Identified |
 | D62 | The "Perfectionist" achievement (a memory game without any mismatch) can never be unlocked: nothing ever counts `perfectMemoryGames` | `achievements.js:280`, memory game (`MemoryGame.jsx`) | missing feature | 2 | 5 | 10 | S | P2 | Done (065) |
 | D63 | Found by an independent review: after a death at a boss level (21 to 20) the difficulty stayed above what the level unlocks and the picker vanished; two achievements announced in the same tick overwrote each other; a toast timer was never cleared; the memory game could credit a win after the player left | `App.jsx` (death, `recordStats`), `useAchievementToast.js`, `MemoryGame.jsx` | other | 3 | 3 | 9 | S | P2 | Done (066) |
-| D64 | Three effects of `SkillCard` copy a prop into state after it changes (the typed answer, the hit flash, the wrong-word flash); the lint rule `react-hooks/set-state-in-effect` is switched off for this file until `SkillCard` is split | `SkillCard.jsx`, `eslint.config.js` | complexity | 2 | 3 | 6 | S | P3 | Identified |
+| D64 | Three effects of `SkillCard` copy a prop into state after it changes (the typed answer, the hit flash, the wrong-word flash); the lint rule `react-hooks/set-state-in-effect` was switched off for this file | `SkillCard.jsx`, `eslint.config.js` | complexity | 2 | 3 | 6 | S | P3 | Done (072) |
 
 ### Phase 4: features and their debt
 

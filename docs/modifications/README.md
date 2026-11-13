@@ -80,3 +80,4 @@ Every change to the project has its own short note in this folder, written in th
 | 069 | 2026-11-13 | [The challenge box and the microphone button are components](069-challenge-prompt-and-mic-button.md) |
 | 070 | 2026-11-13 | [The difficulty picker, the XP bar and the battle panel are components](070-skillcard-panels.md) |
 | 071 | 2026-11-13 | [The look of a card is computed by pure functions](071-skillcard-style-helpers.md) |
+| 072 | 2026-11-13 | [The hit flash of a mob lives in a hook](072-hit-flash-hook.md) |

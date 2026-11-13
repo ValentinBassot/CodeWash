@@ -62,10 +62,6 @@ export default defineConfig([
         },
     },
     {
-        files: ['src/components/skills/SkillCard.jsx'],
-        rules: { 'react-hooks/set-state-in-effect': 'off' },
-    },
-    {
         files: ['src/utils/soundManager.js'],
         rules: {
             'no-restricted-syntax': [
