@@ -77,3 +77,4 @@ Every change to the project has its own short note in this folder, written in th
 | 066 | 2026-11-13 | [Fixes found by an independent review of the unmerged work](066-review-findings.md) |
 | 067 | 2026-11-13 | [The patterns game is its own component](067-patterns-game-component.md) |
 | 068 | 2026-11-13 | [The typed answer of the math and writing games is one component](068-typed-answer-component.md) |
+| 069 | 2026-11-13 | [The challenge box and the microphone button are components](069-challenge-prompt-and-mic-button.md) |
