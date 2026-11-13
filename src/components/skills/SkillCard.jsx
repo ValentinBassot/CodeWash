@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { Mic, Plus, Minus } from 'lucide-react';
 import SafeImage from '../ui/SafeImage';
 import MemoryGame from './games/MemoryGame';
+import TypedAnswer from './games/TypedAnswer';
 import PatternsGame from './games/PatternsGame';
 import MobWithAura from '../ui/MobWithAura';
 import ParentalVerificationModal from '../ui/ParentalVerificationModal';
@@ -16,7 +17,6 @@ import {
     DIFFICULTY_IMAGES,
     DIFFICULTY_CONTENT,
 } from '../../constants/gameData';
-import { playMismatch } from '../../utils/soundManager';
 import { judgeSpokenWord } from '../../domain/reading';
 import { calculateXPToLevel } from '../../utils/gameUtils';
 import { AURA_ADJECTIVES } from '../../utils/mobDisplayUtils';
@@ -47,12 +47,9 @@ const SkillCard = ({
     borderColor,
     bossHealing,
 }) => {
-    const [mathInput, setMathInput] = useState('');
     const [isHit, setIsHit] = useState(false);
-    const [isWrong, setIsWrong] = useState(false);
     const [isReadingWrong, setIsReadingWrong] = useState(false);
     const prevDamageCount = useRef(0);
-    const inputRef = useRef(null);
     const readingWordRef = useRef(null);
     const prevSpokenTextRef = useRef('');
 
@@ -196,11 +193,6 @@ const SkillCard = ({
     };
 
     const buttonStyle = getButtonStyle();
-
-    // Helper function to play mismatch sound with proper volume
-    useEffect(() => {
-        setMathInput('');
-    }, [challenge]);
 
     // Memory game config based on difficulty
     const memoryConfig = DIFFICULTY_CONTENT.memory[difficulty] || DIFFICULTY_CONTENT.memory[1];
@@ -407,115 +399,13 @@ const SkillCard = ({
                                                 </div>
                                             )}
                                         </div>
-                                        {config.challengeType === 'math' && (
-                                            <div className="relative w-full flex justify-center">
-                                                <input
-                                                    ref={inputRef}
-                                                    aria-label="Your answer"
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    pattern="[0-9]*"
-                                                    value={mathInput}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value.replace(/[^0-9-]/g, '');
-                                                        setMathInput(val);
-                                                        if (val === String(challenge?.answer)) {
-                                                            onMathSubmit(val);
-                                                            setMathInput('');
-                                                        } else if (val.length === String(challenge?.answer).length) {
-                                                            setIsWrong(true);
-                                                            playMismatch();
-                                                            onMathSubmit('WRONG');
-                                                            setTimeout(() => {
-                                                                setIsWrong(false);
-                                                                setMathInput('');
-                                                                setTimeout(() => inputRef.current?.focus(), 10);
-                                                            }, 500);
-                                                        }
-                                                    }}
-                                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                                    autoFocus
-                                                    maxLength={String(challenge?.answer).length}
-                                                    disabled={isWrong}
-                                                />
-                                                <div className={`flex gap-2 ${isWrong ? 'animate-shake' : ''}`}>
-                                                    {String(challenge?.answer)
-                                                        .split('')
-                                                        .map((char, i) => (
-                                                            <div
-                                                                key={i}
-                                                                className={`w-10 h-12 border-b-4 flex items-center justify-center text-2xl font-mono font-bold text-white bg-black/20 rounded-t ${isWrong ? 'border-red-500 bg-red-900/30' : i < mathInput.length ? 'border-green-500' : 'border-gray-600'}`}
-                                                            >
-                                                                {mathInput[i] || ''}
-                                                            </div>
-                                                        ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                        {config.challengeType === 'writing' && (
-                                            <div className="relative w-full flex justify-center">
-                                                <input
-                                                    ref={inputRef}
-                                                    aria-label="Your spelling"
-                                                    type="text"
-                                                    value={mathInput}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value.toUpperCase().replace(/\s/g, '');
-                                                        setMathInput(val);
-                                                        const answerNoSpaces = challenge?.answer.replace(/\s/g, '');
-                                                        if (val === answerNoSpaces) {
-                                                            onMathSubmit(val);
-                                                            setMathInput('');
-                                                        } else if (val.length === answerNoSpaces.length) {
-                                                            setIsWrong(true);
-                                                            playMismatch();
-                                                            onMathSubmit('WRONG');
-                                                            setTimeout(() => {
-                                                                setIsWrong(false);
-                                                                setMathInput('');
-                                                                setTimeout(() => inputRef.current?.focus(), 10);
-                                                            }, 500);
-                                                        }
-                                                    }}
-                                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                                    autoFocus
-                                                    maxLength={challenge?.answer.replace(/\s/g, '').length}
-                                                    disabled={isWrong}
-                                                />
-                                                <div
-                                                    className={`flex gap-1 flex-wrap justify-center ${isWrong ? 'animate-shake' : ''}`}
-                                                >
-                                                    {(() => {
-                                                        const answerNoSpaces = challenge?.answer.replace(/\s/g, '');
-                                                        const answerLength = answerNoSpaces.length;
-                                                        return challenge?.answer.split('').map((char, i) => {
-                                                            if (char === ' ') {
-                                                                return (
-                                                                    <div
-                                                                        key={i}
-                                                                        className={`${answerLength > 6 ? 'w-7' : 'w-10'}`}
-                                                                    ></div>
-                                                                );
-                                                            }
-                                                            // Calculate input index by counting non-space characters before this position
-                                                            let inputIndex = 0;
-                                                            for (let j = 0; j < i; j++) {
-                                                                if (challenge?.answer[j] !== ' ') {
-                                                                    inputIndex++;
-                                                                }
-                                                            }
-                                                            return (
-                                                                <div
-                                                                    key={i}
-                                                                    className={`${answerLength > 6 ? 'w-7 h-9 text-lg' : 'w-10 h-12 text-2xl'} border-b-4 flex items-center justify-center font-mono font-bold text-white bg-black/20 rounded-t ${isWrong ? 'border-red-500 bg-red-900/30' : inputIndex < mathInput.length ? 'border-green-500' : 'border-gray-600'}`}
-                                                                >
-                                                                    {mathInput[inputIndex] || ''}
-                                                                </div>
-                                                            );
-                                                        });
-                                                    })()}
-                                                </div>
-                                            </div>
+                                        {(config.challengeType === 'math' || config.challengeType === 'writing') && (
+                                            <TypedAnswer
+                                                kind={config.challengeType}
+                                                challenge={challenge}
+                                                onRight={onMathSubmit}
+                                                onWrong={() => onMathSubmit('WRONG')}
+                                            />
                                         )}
                                         {config.challengeType === 'reading' && (
                                             <button

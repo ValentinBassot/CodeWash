@@ -76,3 +76,4 @@ Every change to the project has its own short note in this folder, written in th
 | 065 | 2026-11-13 | [A memory game won without a mismatch counts as perfect](065-perfect-memory-game.md) |
 | 066 | 2026-11-13 | [Fixes found by an independent review of the unmerged work](066-review-findings.md) |
 | 067 | 2026-11-13 | [The patterns game is its own component](067-patterns-game-component.md) |
+| 068 | 2026-11-13 | [The typed answer of the math and writing games is one component](068-typed-answer-component.md) |
