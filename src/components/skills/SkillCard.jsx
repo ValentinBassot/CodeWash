@@ -1,16 +1,16 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 import SafeImage from '../ui/SafeImage';
 import MemoryGame from './games/MemoryGame';
 import TypedAnswer from './games/TypedAnswer';
 import ChallengePrompt from './games/ChallengePrompt';
 import MicButton from './games/MicButton';
+import CleaningChallenge from './games/CleaningChallenge';
 import DifficultyPicker from './card/DifficultyPicker';
 import XpBar from './card/XpBar';
 import BattleInfoPanel from './card/BattleInfoPanel';
 import PatternsGame from './games/PatternsGame';
 import MobWithAura from '../ui/MobWithAura';
-import ParentalVerificationModal from '../ui/ParentalVerificationModal';
 import { DIFFICULTY_CONTENT } from '../../constants/gameData';
 import { useHitFlash } from '../../hooks/useHitFlash';
 import { getLevelStyle, getBorderEffect, getButtonStyle, resolveMob } from './card/cardStyle';
@@ -43,14 +43,6 @@ const SkillCard = ({
     bossHealing,
 }) => {
     const isHit = useHitFlash(damageNumbers.length);
-
-    const [showParentalModal, setShowParentalModal] = useState(false);
-
-    // Handler for when parental verification succeeds for Cleaning skill
-    const handleParentalVerified = useCallback(() => {
-        setShowParentalModal(false);
-        onMathSubmit(challenge?.answer);
-    }, [onMathSubmit, challenge]);
 
     // Calculate HP percentage based on mobHealth/mobMaxHealth for HP bar display
     const mobHealth = data.mobHealth || 100;
@@ -225,12 +217,7 @@ const SkillCard = ({
                                             <MicButton isListening={isListening} onClick={onMicClick} />
                                         )}
                                         {config.challengeType === 'cleaning' && (
-                                            <button
-                                                onClick={() => setShowParentalModal(true)}
-                                                className="w-full bg-green-600 hover:bg-green-500 text-white text-3xl font-bold py-4 rounded shadow-[0_4px_0_#166534] active:shadow-none active:translate-y-[4px] transition-all"
-                                            >
-                                                Complete!
-                                            </button>
+                                            <CleaningChallenge onComplete={() => onMathSubmit(challenge?.answer)} />
                                         )}
                                         {config.challengeType !== 'cleaning' &&
                                             config.challengeType !== 'writing' &&
@@ -293,11 +280,6 @@ const SkillCard = ({
                     </div>,
                     document.body,
                 )}
-                <ParentalVerificationModal
-                    isOpen={showParentalModal}
-                    onClose={() => setShowParentalModal(false)}
-                    onVerified={handleParentalVerified}
-                />
             </>
         );
     }
@@ -313,11 +295,6 @@ const SkillCard = ({
                 />
             )}
             {cardContent}
-            <ParentalVerificationModal
-                isOpen={showParentalModal}
-                onClose={() => setShowParentalModal(false)}
-                onVerified={handleParentalVerified}
-            />
         </div>
     );
 };
