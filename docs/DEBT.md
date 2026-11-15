@@ -182,6 +182,8 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D62 | The "Perfectionist" achievement (a memory game without any mismatch) can never be unlocked: nothing ever counts `perfectMemoryGames` | `achievements.js:280`, memory game (`MemoryGame.jsx`) | missing feature | 2 | 5 | 10 | S | P2 | Done (065) |
 | D63 | Found by an independent review: after a death at a boss level (21 to 20) the difficulty stayed above what the level unlocks and the picker vanished; two achievements announced in the same tick overwrote each other; a toast timer was never cleared; the memory game could credit a win after the player left | `App.jsx` (death, `recordStats`), `useAchievementToast.js`, `MemoryGame.jsx` | other | 3 | 3 | 9 | S | P2 | Done (066) |
 | D64 | Three effects of `SkillCard` copy a prop into state after it changes (the typed answer, the hit flash, the wrong-word flash); the lint rule `react-hooks/set-state-in-effect` was switched off for this file | `SkillCard.jsx`, `eslint.config.js` | complexity | 2 | 3 | 6 | S | P3 | Done (072) |
+| D65 | Three `eslint-disable-next-line` remain although the team rule is to fix the configuration instead: two for `react-hooks/set-state-in-effect` (`SafeImage.jsx`, `ProfileCard.jsx`) and one for `react-hooks/exhaustive-deps` (`App.jsx`, the login date) | `SafeImage.jsx:6`, `ProfileCard.jsx:13`, `App.jsx` | lint exception | 2 | 3 | 6 | S | P3 | Identified |
+| D66 | About 315 comment lines remain in 20 source files although the team rule is no comments in the code (explanations go in `docs/` and in the PRs) | `App.jsx`, `soundManager.js`, `gameUtils.js`, drawers and others | comments | 1 | 5 | 5 | M | P3 | Identified |
 
 ### Phase 4: features and their debt
 
