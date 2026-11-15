@@ -21,7 +21,6 @@ export const createNewSkill = (skillId) => ({
     mobHealth: calculateMobHealth(1),
     mobMaxHealth: calculateMobHealth(1),
     lostLevel: false,
-    recoveryDifficulty: null,
     memoryMob: skillId === 'memory' ? getRandomFriendlyMob() : null,
     patternMob: skillId === 'patterns' ? getRandomMob(null) : null,
     currentMiniboss: getRandomMiniboss(),
@@ -54,7 +53,6 @@ const restoreSkill = (skillId, fresh, saved) => {
         skill.mobMaxHealth = calculateMobHealth(skill.difficulty);
     }
     if (typeof skill.lostLevel !== 'boolean') skill.lostLevel = false;
-    if (skill.recoveryDifficulty === undefined) skill.recoveryDifficulty = null;
     if (skillId === 'memory') fillMissing(skill, 'memoryMob', getRandomFriendlyMob);
     if (skillId === 'patterns') fillMissing(skill, 'patternMob', () => getRandomMob(null));
     if (skillId === 'reading') fillMissing(skill, 'readingMob', () => getRandomMob(null));

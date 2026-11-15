@@ -15,7 +15,6 @@ const STARTING = {
     mobHealth: 60,
     mobMaxHealth: 60,
     lostLevel: false,
-    recoveryDifficulty: null,
 };
 
 describe('createNewSkill', () => {
@@ -70,9 +69,9 @@ describe('buildSkills', () => {
     it('repairs a missing difficulty, badge list or death state', () => {
         expect(
             buildSkills({
-                reading: { difficulty: 'x', earnedBadges: 'x', lostLevel: 'x', recoveryDifficulty: undefined },
+                reading: { difficulty: 'x', earnedBadges: 'x', lostLevel: 'x' },
             }).reading,
-        ).toMatchObject({ difficulty: 1, earnedBadges: [], lostLevel: false, recoveryDifficulty: null });
+        ).toMatchObject({ difficulty: 1, earnedBadges: [], lostLevel: false });
     });
 
     it.each([
