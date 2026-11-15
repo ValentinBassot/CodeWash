@@ -1,23 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Menu, Sparkles, Gift, Maximize, Minimize, Settings, Bug } from 'lucide-react';
-import { random } from './domain/random';
 import { todayKey } from './domain/clock';
-import { judgeSpokenWord } from './domain/reading';
-import {
-    afterDeath,
-    PLAYER_MAX_HEALTH,
-    describeHit,
-    getAuraForSkill,
-    getChallengeDifficulty,
-    recordDefeat,
-    resolveMistake,
-    withPhantomLevel,
-    resolveHit,
-    withDifficulty,
-} from './domain/battle';
-import { generateChallenge } from './domain/challenge';
-import { isSpeechRecognitionAvailable } from './io/speechRecognition';
-import { useVoiceListener } from './hooks/useVoiceListener';
+import { PLAYER_MAX_HEALTH, getAuraForSkill, withDifficulty } from './domain/battle';
+import { useBattleSession } from './hooks/useBattleSession';
 import { useCarousel } from './hooks/useCarousel';
 import { summarizeSavedProfile } from './persistence/profiles';
 import { useProfiles } from './hooks/useProfiles';
@@ -50,18 +35,7 @@ import {
     BOSS_MOBS,
     MINIBOSS_MOBS,
 } from './constants/gameData';
-import {
-    getBGMManager,
-    setSfxVolume,
-    playClick,
-    playDeath,
-    playFail,
-    playLevelUp,
-    playNotification,
-    playSuccessfulHit,
-    playMobHurt,
-    playMobDeath,
-} from './utils/soundManager';
+import { getBGMManager, setSfxVolume, playClick } from './utils/soundManager';
 import { isAchievementUnlocked } from './utils/achievementUtils';
 
 // Parent verification privilege constants
@@ -89,7 +63,6 @@ const App = () => {
         borderColor,
         setBorderColor,
     } = profiles;
-    const [playerHealth, setPlayerHealth] = useState(PLAYER_MAX_HEALTH);
 
     const getProfileStats = (id, liveSkills = null) => {
         // Use live skills if provided (for current profile with pending state changes)
@@ -101,24 +74,12 @@ const App = () => {
     };
 
     const { toast: achievementToast, announce: checkAchievements } = useAchievementToast();
-    const [battlingSkillId, setBattlingSkillId] = useState(null);
-    const [battleDifficulty, setBattleDifficulty] = useState(null); // Track battle's starting difficulty for consistent challenge generation
-    const [challengeData, setChallengeData] = useState(null);
-    const [lootBox, setLootBox] = useState(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isCosmeticsOpen, setIsCosmeticsOpen] = useState(false);
     const [isResetOpen, setIsResetOpen] = useState(false);
     const [isBugReportOpen, setIsBugReportOpen] = useState(false);
-    const [damageNumbers, setDamageNumbers] = useState([]);
-    const [showDeathOverlay, setShowDeathOverlay] = useState(false);
-    const [showLevelRestored, setShowLevelRestored] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const [bossHealing, setBossHealing] = useState(null); // skillId of boss being healed
-    const battlingSkillIdRef = useRef(null);
-    const liveRef = useRef({ skills, stats, playerHealth });
-    const challengeDataRef = useRef(null);
-    const damageIdRef = useRef(0); // Counter for generating unique damage number IDs
     const loginTrackedRef = useRef(false); // Track if we've already recorded today's login
     const [bgmVol, setBgmVol] = useState(0.3);
     const [sfxVol, setSfxVolState] = useState(0.5);
@@ -171,11 +132,6 @@ const App = () => {
         setSfxVolume(sfxVol);
     }, [sfxVol]);
 
-    // Keep challengeDataRef in sync with challengeData state for voice listener
-    useEffect(() => {
-        challengeDataRef.current = challengeData;
-    }, [challengeData]);
-
     // Listen for fullscreen changes
     useEffect(() => {
         const handleFullscreenChange = () => {
@@ -196,6 +152,24 @@ const App = () => {
         }
     }, []);
 
+    const {
+        playerHealth,
+        battlingSkillId,
+        challengeData,
+        lootBox,
+        damageNumbers,
+        showDeathOverlay,
+        showLevelRestored,
+        bossHealing,
+        voice,
+        recordStats,
+        handleSuccessHit,
+        handlePhantomLevelAward,
+        startBattle,
+        endBattle,
+    } = useBattleSession({ skills, setSkills, stats, setStats, checkAchievements, startBGM });
+    const { isListening, spokenText } = voice;
+
     // Toggle fullscreen mode
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
@@ -215,121 +189,6 @@ const App = () => {
     // Removed problematic useEffect that was causing infinite loop
     // The startBattle function already sets battleDifficulty correctly
 
-    const recordStats = (update, skillsAfter) => {
-        const { skills, stats } = liveRef.current;
-        const statsAfter = update(stats);
-        liveRef.current = { ...liveRef.current, stats: statsAfter };
-        setStats(update);
-        setTimeout(
-            () => checkAchievements(stats, statsAfter, skills, skillsAfter || skills),
-            ACHIEVEMENT_CHECK_DELAY_MS,
-        );
-    };
-
-    const handleMistake = () => {
-        const { skills, playerHealth } = liveRef.current;
-        const battlingSkillId = battlingSkillIdRef.current;
-        const mistake = resolveMistake(battlingSkillId ? skills[battlingSkillId] : null, playerHealth);
-
-        if (mistake.kind === 'bossHeals') {
-            setSkills((prev) => ({
-                ...prev,
-                [battlingSkillId]: { ...prev[battlingSkillId], mobHealth: prev[battlingSkillId].mobMaxHealth },
-            }));
-            setBossHealing(battlingSkillId);
-            setTimeout(() => setBossHealing(null), BOSS_HEALING_ANIMATION_DURATION);
-            playFail();
-            return;
-        }
-
-        if (mistake.kind === 'hurt') {
-            playFail();
-            setPlayerHealth(mistake.playerHealth);
-            return;
-        }
-
-        playDeath();
-        setShowDeathOverlay(true);
-        recordStats((current) => ({ ...current, totalDeaths: (current.totalDeaths || 0) + 1 }));
-        if (battlingSkillId) {
-            setSkills((prev) => ({ ...prev, [battlingSkillId]: afterDeath(prev[battlingSkillId]) }));
-        }
-        setTimeout(() => {
-            setBattlingSkillId(null);
-            setShowDeathOverlay(false);
-        }, 2000);
-        setPlayerHealth(mistake.playerHealth);
-    };
-
-    const handleSuccessHit = (skillId, isWrong) => {
-        if (isWrong === 'WRONG') {
-            handleMistake();
-            return;
-        }
-        const { skills } = liveRef.current;
-        if (!skillId) return;
-        const skillConfig = SKILL_DATA.find((s) => s.id === skillId);
-        const currentSkillState = skills[skillId];
-        const skillDifficulty = currentSkillState.difficulty || 1;
-        const currentMobName = currentSkillState.currentMob;
-        const hit = describeHit(skillId, currentSkillState);
-
-        if (skillConfig.id !== 'memory') {
-            const id = ++damageIdRef.current;
-            setDamageNumbers((prev) => [
-                ...prev,
-                { id, skillId, val: hit.dealt, x: random() * 100 - 50, y: random() * 50 - 25 },
-            ]);
-            setTimeout(() => setDamageNumbers((prev) => prev.filter((n) => n.id !== id)), 800);
-
-            if (hit.defeatsMob) {
-                playMobDeath(currentMobName);
-            } else {
-                playMobHurt(currentMobName);
-            }
-
-            playSuccessfulHit();
-        }
-
-        const { skill: nextSkill, events } = resolveHit(skillId, currentSkillState);
-        setSkills((prev) => ({ ...prev, [skillId]: nextSkill }));
-
-        if (events.defeated) {
-            recordStats((current) => recordDefeat(current, events.defeated), { ...skills, [skillId]: nextSkill });
-        }
-        if (events.levelRestored) {
-            setShowLevelRestored(true);
-            setTimeout(() => setShowLevelRestored(false), 2000);
-            playNotification();
-        }
-        events.newBadgeLevels.forEach((level) => {
-            setLootBox({
-                level,
-                skillName: skillConfig.fantasyName,
-                item: 'New Rank!',
-                img: BASE_ASSETS.badges.Wood,
-            });
-            playNotification();
-        });
-        if (events.leveledUp) playLevelUp();
-
-        // Generate next challenge for continuous gameplay
-        if (skillConfig.hasChallenge && skillConfig.id !== 'memory') {
-            // Use the stored battle difficulty for consistent challenge generation throughout the battle
-            // This ensures bosses don't change difficulty mid-fight and miniboss difficulty+1 is maintained
-            const challengeDiff = battleDifficulty || skillDifficulty;
-            setChallengeData(generateChallenge(skillConfig.challengeType, challengeDiff));
-            // Clear spokenText for reading challenges to prevent stale text from triggering false damage
-            if (skillConfig.challengeType === 'reading') {
-                voice.clearSpokenText();
-            }
-        } else if (skillConfig.id === 'memory') {
-            setBattlingSkillId(null);
-            setBattleDifficulty(null);
-        }
-    };
-
-    // Helper function to set difficulty for a specific skill
     const setSkillDifficulty = (skillId, newDiff) => {
         setSkills((prev) => ({ ...prev, [skillId]: withDifficulty(prev[skillId], newDiff) }));
     };
@@ -346,28 +205,6 @@ const App = () => {
         recordStats((current) => ({ ...current, borderChanges: (current.borderChanges || 0) + 1 }));
     };
 
-    // Award a free level from phantom click
-    const handlePhantomLevelAward = (skillId) => {
-        if (!skillId) return;
-
-        // Play level up sound
-        playLevelUp();
-
-        setSkills((prev) => ({ ...prev, [skillId]: withPhantomLevel(prev[skillId]) }));
-
-        // Show celebration notification
-        const skillConfig = SKILL_DATA.find((s) => s.id === skillId);
-        if (skillConfig) {
-            setLootBox({
-                level: skills[skillId].level + 1,
-                skillName: skillConfig.fantasyName,
-                item: 'Phantom Bonus!',
-                img: HOSTILE_MOBS['Phantom'],
-            });
-            playNotification();
-        }
-    };
-
     useEffect(() => {
         const closeDrawersOnEscape = (event) => {
             if (event.key !== 'Escape') return;
@@ -378,33 +215,6 @@ const App = () => {
         document.addEventListener('keydown', closeDrawersOnEscape);
         return () => document.removeEventListener('keydown', closeDrawersOnEscape);
     }, []);
-
-    useEffect(() => {
-        battlingSkillIdRef.current = battlingSkillId;
-    }, [battlingSkillId]);
-
-    useEffect(() => {
-        liveRef.current = { skills, stats, playerHealth };
-    }, [skills, stats, playerHealth]);
-
-    const startBattle = (id) => {
-        const skill = SKILL_DATA.find((s) => s.id === id);
-        setBattlingSkillId(id);
-        const challengeDiff = getChallengeDifficulty(skills[id]);
-        setBattleDifficulty(challengeDiff);
-        setChallengeData(generateChallenge(skill.challengeType, challengeDiff));
-        playClick();
-        startBGM(); // Start BGM on first battle (user interaction)
-        if (skill.challengeType === 'reading' && isSpeechRecognitionAvailable()) voice.start(id);
-    };
-
-    const endBattle = () => {
-        setBattlingSkillId(null);
-        setBattleDifficulty(null);
-        setChallengeData(null);
-        voice.stop();
-        playClick();
-    };
 
     const handleSwitchProfile = (newId) => {
         if (newId === currentProfile) return;
@@ -423,22 +233,6 @@ const App = () => {
         profiles.resetCurrentProfile();
         window.location.reload();
     };
-
-    const voice = useVoiceListener({
-        keepListening: () => battlingSkillIdRef.current === 'reading',
-        onHeard: (text, targetId) => {
-            const currentChallenge = challengeDataRef.current;
-            if (!currentChallenge || currentChallenge.type !== 'reading') return;
-            const verdict = judgeSpokenWord(text, currentChallenge.answer);
-            if (verdict === 'correct') handleSuccessHit(targetId || battlingSkillId);
-            if (verdict === 'wrong') handleSuccessHit(targetId || battlingSkillId, 'WRONG');
-        },
-    });
-    const { isListening, spokenText } = voice;
-
-    useEffect(() => {
-        if (lootBox) setTimeout(() => setLootBox(null), 4000);
-    }, [lootBox]);
 
     // Track login date (once per day)
     useEffect(() => {
