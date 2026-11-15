@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import { getVisibleItems, useCarousel } from './useCarousel';
+import { CARDS_EACH_SIDE, VISIBLE_EACH_SIDE, getVisibleItems, useCarousel } from './useCarousel';
 
 const ITEMS = [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }];
 const ids = (visible) => visible.map((item) => item.id).join('');
@@ -9,16 +9,17 @@ const carousel = (locked = false) =>
     renderHook((props) => useCarousel(props), { initialProps: { items: ITEMS, locked } });
 
 describe('getVisibleItems', () => {
-    it('gives seven items around the selected one, wrapping at both ends', () => {
+    it('gives thirteen items around the selected one, wrapping at both ends, three of them on each side being shown', () => {
         const visible = getVisibleItems(ITEMS, 0);
-        expect(ids(visible)).toBe('bcdabcd');
-        expect(visible.map((item) => item.offset)).toEqual([-3, -2, -1, 0, 1, 2, 3]);
-        expect(visible.map((item) => item.key)).toEqual([-3, -2, -1, 0, 1, 2, 3]);
+        expect(ids(visible)).toBe('cdabcdabcdabc');
+        expect(visible.map((item) => item.offset)).toEqual([-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6]);
+        expect(visible.map((item) => item.key)).toEqual([-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6]);
+        expect(CARDS_EACH_SIDE).toBeGreaterThan(VISIBLE_EACH_SIDE);
     });
 
     it('wraps for any selected index, negative ones included', () => {
-        expect(ids(getVisibleItems(ITEMS, 5))).toBe('cdabcda');
-        expect(ids(getVisibleItems(ITEMS, -9))).toBe('abcdabc');
+        expect(ids(getVisibleItems(ITEMS, 5)).slice(3, 10)).toBe('cdabcda');
+        expect(ids(getVisibleItems(ITEMS, -9)).slice(3, 10)).toBe('abcdabc');
     });
 });
 

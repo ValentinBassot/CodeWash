@@ -15,7 +15,7 @@ import {
 import { generateChallenge } from './domain/challenge';
 import { isSpeechRecognitionAvailable } from './io/speechRecognition';
 import { useVoiceListener } from './hooks/useVoiceListener';
-import { useCarousel } from './hooks/useCarousel';
+import { VISIBLE_EACH_SIDE, useCarousel } from './hooks/useCarousel';
 import { useFitToViewport } from './hooks/useFitToViewport';
 import { summarizeSavedProfile } from './persistence/profiles';
 import { useProfiles } from './hooks/useProfiles';
@@ -739,37 +739,22 @@ const App = () => {
                         {carousel.visibleItems.map((item) => {
                             const isItemBattling = item.offset === 0 && battlingSkillId === item.id;
                             // Calculate curved positioning based on offset
-                            const getVerticalOffset = (offset) => {
-                                if (offset === 0) return -55; // Center card lowered by 5px (was -60)
-                                if (Math.abs(offset) === 1) return -30; // Adjacent cards at intermediate height
-                                if (Math.abs(offset) === 2) return 20; // Outer cards at lowest position
-                                return 75; // Hidden positions (±3) - off-screen, continuing the parabolic curve
-                            };
-                            const translateY = getVerticalOffset(item.offset);
-                            // Add subtle rotation for 3D effect - negative values warp outward
-                            const rotateX =
-                                Math.abs(item.offset) === 3
-                                    ? -12
-                                    : Math.abs(item.offset) === 2
-                                      ? -8
-                                      : Math.abs(item.offset) === 1
-                                        ? -4
-                                        : 0;
+                            const distance = Math.abs(item.offset);
+                            const translateY = [-55, -30, 20][distance] ?? 75;
+                            const rotateX = [0, -4, -8][distance] ?? -12;
+                            const opacity = [1, 0.6, 0.3][distance] ?? 0;
+                            const isHidden = distance > VISIBLE_EACH_SIDE;
 
                             return (
                                 <div
                                     key={item.key}
+                                    aria-hidden={isHidden}
+                                    inert={isHidden}
                                     className="absolute transition-all duration-500 ease-out"
                                     style={{
                                         transform: `translateX(${item.offset * 320}px) translateY(${translateY}px) rotateX(${rotateX}deg) scale(${item.offset === 0 ? 1.1 : 0.85})`,
-                                        opacity:
-                                            item.offset === 0
-                                                ? 1
-                                                : Math.abs(item.offset) === 3
-                                                  ? 0
-                                                  : Math.abs(item.offset) === 2
-                                                    ? 0.3
-                                                    : 0.6,
+                                        opacity,
+                                        pointerEvents: isHidden ? 'none' : 'auto',
                                         zIndex: isItemBattling
                                             ? 50
                                             : item.offset === 0

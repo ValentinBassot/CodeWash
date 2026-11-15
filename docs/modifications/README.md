@@ -85,3 +85,4 @@ Every change to the project has its own short note in this folder, written in th
 | 082 | 2026-11-15 | [The phone layout is checked in a real browser and finished](082-phone-layout-checked.md) |
 | 083 | 2026-11-15 | [The battle card fits the screen](083-battle-fits-the-screen.md) |
 | 084 | 2026-11-15 | [The cards fit the screen height with a safe margin](084-cards-fit-the-screen.md) |
+| 086 | 2026-11-16 | [Far cards slide instead of popping in](086-carousel-far-cards.md) |
