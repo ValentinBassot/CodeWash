@@ -1,17 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import SafeImage from '../ui/SafeImage';
-import MemoryGame from './games/MemoryGame';
-import TypedAnswer from './games/TypedAnswer';
-import ChallengePrompt from './games/ChallengePrompt';
-import MicButton from './games/MicButton';
-import CleaningChallenge from './games/CleaningChallenge';
 import DifficultyPicker from './card/DifficultyPicker';
-import XpBar from './card/XpBar';
 import BattleInfoPanel from './card/BattleInfoPanel';
-import PatternsGame from './games/PatternsGame';
+import BattleBody from './card/BattleBody';
 import MobWithAura from '../ui/MobWithAura';
-import { DIFFICULTY_CONTENT } from '../../constants/gameData';
 import { useHitFlash } from '../../hooks/useHitFlash';
 import { getLevelStyle, getBorderEffect, getButtonStyle, resolveMob } from './card/cardStyle';
 import { AURA_ADJECTIVES } from '../../utils/mobDisplayUtils';
@@ -74,11 +67,6 @@ const SkillCard = ({
     const gemStyle = {};
 
     const buttonStyle = getButtonStyle(config.colorStyle);
-
-    // Memory game config based on difficulty
-    const memoryConfig = DIFFICULTY_CONTENT.memory[difficulty] || DIFFICULTY_CONTENT.memory[1];
-    const memoryPairs = memoryConfig.pairs || 3;
-    const memoryGridCols = memoryConfig.gridCols || 4;
 
     const showMob = !isBattling || config.id !== 'memory';
     const topSectionBaseClass =
@@ -182,59 +170,18 @@ const SkillCard = ({
             )}
             <div className={bottomSectionClass}>
                 {isBattling ? (
-                    <div className="flex flex-col h-full animate-in slide-in-from-bottom-10 duration-300">
-                        {config.id === 'memory' ? (
-                            <MemoryGame
-                                pairs={memoryPairs}
-                                gridCols={memoryGridCols}
-                                cardBack={themeData.assets.cardBack}
-                                onWin={({ perfect }) => {
-                                    if (perfect) onPerfectMemoryGame();
-                                    onMathSubmit('WIN');
-                                }}
-                            />
-                        ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center">
-                                {config.id === 'patterns' ? (
-                                    <PatternsGame difficulty={difficulty} onRoundWon={() => onMathSubmit('WIN')} />
-                                ) : (
-                                    <>
-                                        <ChallengePrompt
-                                            type={config.challengeType}
-                                            challenge={challenge}
-                                            spokenText={spokenText}
-                                            isListening={isListening}
-                                        />
-                                        {(config.challengeType === 'math' || config.challengeType === 'writing') && (
-                                            <TypedAnswer
-                                                kind={config.challengeType}
-                                                challenge={challenge}
-                                                onRight={onMathSubmit}
-                                                onWrong={() => onMathSubmit('WRONG')}
-                                            />
-                                        )}
-                                        {config.challengeType === 'reading' && (
-                                            <MicButton isListening={isListening} onClick={onMicClick} />
-                                        )}
-                                        {config.challengeType === 'cleaning' && (
-                                            <CleaningChallenge onComplete={() => onMathSubmit(challenge?.answer)} />
-                                        )}
-                                        {config.challengeType !== 'cleaning' &&
-                                            config.challengeType !== 'writing' &&
-                                            config.challengeType !== 'math' && (
-                                                <button
-                                                    onClick={() => onMathSubmit(challenge?.answer)}
-                                                    className="mt-auto text-xs text-gray-500 underline hover:text-white self-center"
-                                                >
-                                                    Skip / Manual Success
-                                                </button>
-                                            )}
-                                    </>
-                                )}
-                            </div>
-                        )}
-                        <XpBar xp={data.xp} level={data.level} difficulty={difficulty} />
-                    </div>
+                    <BattleBody
+                        config={config}
+                        data={data}
+                        difficulty={difficulty}
+                        challenge={challenge}
+                        spokenText={spokenText}
+                        isListening={isListening}
+                        cardBack={themeData.assets.cardBack}
+                        onAnswer={onMathSubmit}
+                        onPerfectMemoryGame={onPerfectMemoryGame}
+                        onMicClick={onMicClick}
+                    />
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center">
                         <p className="text-gray-400 text-center mb-4 px-2">{config.taskDescription}</p>
