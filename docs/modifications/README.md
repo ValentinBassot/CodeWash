@@ -82,3 +82,4 @@ Every change to the project has its own short note in this folder, written in th
 | 071 | 2026-11-13 | [The look of a card is computed by pure functions](071-skillcard-style-helpers.md) |
 | 072 | 2026-11-13 | [The hit flash of a mob lives in a hook](072-hit-flash-hook.md) |
 | 073 | 2026-11-15 | [What a wrong answer does is decided outside App](073-mistake-rules.md) |
+| 074 | 2026-11-15 | [The phantom bonus level is added by the domain](074-phantom-level.md) |

@@ -11,6 +11,7 @@ import {
     getChallengeDifficulty,
     recordDefeat,
     resolveMistake,
+    withPhantomLevel,
     resolveHit,
     withDifficulty,
 } from './domain/battle';
@@ -352,16 +353,7 @@ const App = () => {
         // Play level up sound
         playLevelUp();
 
-        setSkills((prev) => {
-            const current = prev[skillId];
-            return {
-                ...prev,
-                [skillId]: {
-                    ...current,
-                    level: current.level + 1,
-                },
-            };
-        });
+        setSkills((prev) => ({ ...prev, [skillId]: withPhantomLevel(prev[skillId]) }));
 
         // Show celebration notification
         const skillConfig = SKILL_DATA.find((s) => s.id === skillId);

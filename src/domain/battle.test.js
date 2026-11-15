@@ -9,6 +9,7 @@ import {
     resolveMistake,
     resolveHit,
     withDifficulty,
+    withPhantomLevel,
 } from './battle';
 import { createNewSkill } from '../persistence/profileSave';
 import { getDefaultStats } from '../utils/achievementUtils';
@@ -272,5 +273,18 @@ describe('resolveMistake', () => {
     it('works without a skill in battle', () => {
         expect(resolveMistake(null, 1)).toEqual({ kind: 'death', skill: null, playerHealth: PLAYER_MAX_HEALTH });
         expect(resolveMistake(null, 5)).toEqual({ kind: 'hurt', playerHealth: 4 });
+    });
+});
+
+describe('withPhantomLevel', () => {
+    it('adds one level and keeps the rest of the skill', () => {
+        const skill = skillOf('math', { level: 7, xp: 12 });
+        expect(withPhantomLevel(skill)).toEqual({ ...skill, level: 8 });
+    });
+
+    it('does not change the skill it receives', () => {
+        const skill = skillOf('math', { level: 7 });
+        withPhantomLevel(skill);
+        expect(skill.level).toBe(7);
     });
 });

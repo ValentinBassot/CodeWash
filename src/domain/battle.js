@@ -212,3 +212,5 @@ export const resolveMistake = (skill, playerHealth) => {
     if (playerHealth - 1 > 0) return { kind: 'hurt', playerHealth: playerHealth - 1 };
     return { kind: 'death', skill: skill ? afterDeath(skill) : null, playerHealth: PLAYER_MAX_HEALTH };
 };
+
+export const withPhantomLevel = (skill) => ({ ...skill, level: skill.level + 1 });
