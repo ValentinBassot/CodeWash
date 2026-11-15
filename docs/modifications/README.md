@@ -84,3 +84,4 @@ Every change to the project has its own short note in this folder, written in th
 | 081 | 2026-11-15 | [The top of the screen fits a phone width](081-phone-layout.md) |
 | 082 | 2026-11-15 | [The phone layout is checked in a real browser and finished](082-phone-layout-checked.md) |
 | 083 | 2026-11-15 | [The battle card fits the screen](083-battle-fits-the-screen.md) |
+| 084 | 2026-11-15 | [The cards fit the screen height with a safe margin](084-cards-fit-the-screen.md) |
