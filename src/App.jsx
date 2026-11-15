@@ -35,6 +35,7 @@ import MenuDrawer from './components/drawers/MenuDrawer';
 import SkillCard from './components/skills/SkillCard';
 import PhantomEvent from './components/PhantomEvent';
 import AchievementToast from './components/ui/AchievementToast';
+import SaveProblemNotice from './components/ui/SaveProblemNotice';
 
 // Utils & Constants
 import { getMobForSkill, getEncounterType, getExpectedDifficulty } from './utils/gameUtils';
@@ -85,6 +86,8 @@ const App = () => {
         setSelectedBorder,
         borderColor,
         setBorderColor,
+        saveProblem,
+        dismissSaveProblem,
     } = profiles;
     const [playerHealth, setPlayerHealth] = useState(10);
 
@@ -842,6 +845,7 @@ const App = () => {
             )}
 
             {/* Achievement Toast */}
+            <SaveProblemNotice problem={saveProblem} onDismiss={dismissSaveProblem} />
             {achievementToast && (
                 <AchievementToast
                     achievementId={achievementToast.achievementId}

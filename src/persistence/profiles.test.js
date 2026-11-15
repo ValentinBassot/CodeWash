@@ -4,7 +4,12 @@ import { getDefaultStats } from '../utils/achievementUtils';
 import { SKILL_DATA } from '../constants/gameData';
 import { createSeededRandom, resetRandomSource, setRandomSource } from '../domain/random';
 
-const storageWith = (entries) => ({ getItem: (key) => (key in entries ? entries[key] : null) });
+const storageWith = (entries) => ({
+    getItem: (key) => (key in entries ? entries[key] : null),
+    setItem: (key, value) => {
+        entries[key] = value;
+    },
+});
 const skillIds = SKILL_DATA.map((skill) => skill.id);
 
 let warn;
@@ -52,12 +57,25 @@ describe('loadProfile', () => {
         });
     });
 
-    it('KNOWN DEBT D28: a corrupted save gives a new game with one warning, the border is kept', () => {
+    it('a corrupted save gives a new game flagged as corrupted, the border is kept', () => {
         const profile = loadProfile(storageWith({ heroSkills_v23_p1: '{oops', borderEffect_p1: 'rainbow' }), 1);
         expect(profile.skills.math.level).toBe(1);
-        expect(profile).toMatchObject({ theme: 'minecraft', stats: getDefaultStats() });
+        expect(profile).toMatchObject({ theme: 'minecraft', stats: getDefaultStats(), problem: 'corrupted' });
         expect(profile.border.effect).toBe('rainbow');
-        expect(warn).toHaveBeenCalledTimes(1);
+    });
+
+    it('a corrupted save is kept as a backup and reported as an error', () => {
+        const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const entries = { heroSkills_v23_p2: '{oops' };
+        loadProfile(storageWith(entries), 2);
+        expect(entries.heroSkills_v23_p2_corrupted).toBe('{oops');
+        expect(error).toHaveBeenCalledTimes(1);
+    });
+
+    it('a readable save has no problem', () => {
+        const entries = { heroSkills_v23_p1: JSON.stringify({ skills: {}, theme: 'minecraft', stats: {} }) };
+        expect(loadProfile(storageWith(entries), 1).problem).toBeUndefined();
+        expect(entries.heroSkills_v23_p1_corrupted).toBeUndefined();
     });
 });
 

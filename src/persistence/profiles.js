@@ -1,6 +1,6 @@
 import { getDefaultStats } from '../utils/achievementUtils';
 import { NEW_GAME_SUMMARY, buildSkills, parseProfileSave, summarizeSkills } from './profileSave';
-import { readBorder, readProfileSave } from './profileStorage';
+import { backupCorruptedSave, readBorder, readProfileSave } from './profileStorage';
 
 const DEFAULT_THEME = 'minecraft';
 
@@ -10,8 +10,15 @@ export const loadProfile = (storage, profileId) => {
         const save = parseProfileSave(readProfileSave(storage, profileId));
         return { skills: buildSkills(save.skills), theme: save.theme, stats: save.stats, border };
     } catch (error) {
-        console.warn('Failed to parse saved skills:', error);
-        return { skills: buildSkills({}), theme: DEFAULT_THEME, stats: getDefaultStats(), border };
+        console.error('Saved profile unreadable, a backup was kept:', error);
+        backupCorruptedSave(storage, profileId, readProfileSave(storage, profileId));
+        return {
+            skills: buildSkills({}),
+            theme: DEFAULT_THEME,
+            stats: getDefaultStats(),
+            border,
+            problem: 'corrupted',
+        };
     }
 };
 

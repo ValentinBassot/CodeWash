@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import App from './App';
 import { SKILL_DATA } from './constants/gameData';
 import { getDefaultStats } from './utils/achievementUtils';
@@ -211,14 +211,19 @@ describe('known debt', () => {
         expect(saveOf(1).skills.writing).toMatchObject({ mobHealth: 100, mobMaxHealth: 180 });
     });
 
-    it('KNOWN DEBT D28: a corrupted skills save is silently replaced by a new game', () => {
+    it('a corrupted skills save starts a new game, keeps a backup and tells the player', () => {
+        const error = vi.spyOn(console, 'error').mockImplementation(() => {});
         localStorage.setItem('heroSkills_v23_p1', '{oops');
 
         render(<App />);
 
         expect(saveOf(1).skills.reading.level).toBe(1);
-        expect(warn).toHaveBeenCalledWith('Failed to parse saved skills:', expect.any(SyntaxError));
-        expect(warn).toHaveBeenCalledTimes(1);
+        expect(localStorage.getItem('heroSkills_v23_p1_corrupted')).toBe('{oops');
+        expect(screen.getByRole('alert').textContent).toContain('could not be read');
+        expect(error).toHaveBeenCalledWith('Saved profile unreadable, a backup was kept:', expect.any(SyntaxError));
+
+        fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+        expect(screen.queryByRole('alert')).toBeNull();
     });
 
     it('a new player starts without any warning', () => {
