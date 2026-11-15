@@ -485,7 +485,7 @@ const App = () => {
 
     return (
         <div
-            className="min-h-screen overflow-hidden relative flex flex-col bg-cover bg-center bg-no-repeat font-sans text-stone-100"
+            className="min-h-screen overflow-x-hidden overflow-y-auto md:overflow-y-hidden relative flex flex-col bg-cover bg-center bg-no-repeat font-sans text-stone-100"
             style={containerStyle}
         >
             <GlobalStyles />
@@ -587,12 +587,15 @@ const App = () => {
             {/* Button dimensions: p-3 (12px) + icon(48px) + p-3 (12px) + border-2*2 (4px) = 76px + 8px gap = 84px spacing */}
             <button
                 onClick={toggleFullscreen}
-                className="absolute z-40 bg-stone-800/90 text-white p-3 rounded-lg border-2 border-stone-600 hover:bg-stone-700 transition-all shadow-lg"
-                style={{ top: '24px', right: 'calc(24px + 76px + 12px)' }}
+                className="absolute z-40 bg-stone-800/90 text-white p-1.5 md:p-3 rounded-lg border-2 border-stone-600 hover:bg-stone-700 transition-all shadow-lg top-3 right-[68px] md:top-6 md:right-[112px]"
                 aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                 title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
             >
-                {isFullscreen ? <Minimize size={48} /> : <Maximize size={48} />}
+                {isFullscreen ? (
+                    <Minimize size={48} className="w-8 h-8 md:w-12 md:h-12" />
+                ) : (
+                    <Maximize size={48} className="w-8 h-8 md:w-12 md:h-12" />
+                )}
             </button>
             <button
                 aria-label="Open achievements"
@@ -602,10 +605,9 @@ const App = () => {
                     setIsMenuOpen(true);
                     playClick();
                 }}
-                className="absolute z-40 bg-stone-800/90 text-white p-3 rounded-lg border-2 border-stone-600 hover:bg-stone-700 transition-all shadow-lg"
-                style={{ top: '24px', right: '24px' }}
+                className="absolute z-40 bg-stone-800/90 text-white p-1.5 md:p-3 rounded-lg border-2 border-stone-600 hover:bg-stone-700 transition-all shadow-lg top-3 right-3 md:top-6 md:right-6"
             >
-                <Menu size={48} />
+                <Menu size={48} className="w-8 h-8 md:w-12 md:h-12" />
             </button>
 
             {/* Achievement drawer overlay - click to close */}
@@ -630,10 +632,9 @@ const App = () => {
                     setIsBugReportOpen(true);
                     playClick();
                 }}
-                className="absolute z-40 bg-stone-800/90 text-white p-3 rounded-lg border-2 border-stone-600 hover:bg-stone-700 transition-all shadow-lg"
-                style={{ bottom: '24px', right: '24px' }}
+                className="absolute z-40 bg-stone-800/90 text-white p-1.5 md:p-3 rounded-lg border-2 border-stone-600 hover:bg-stone-700 transition-all shadow-lg bottom-3 right-3 md:bottom-6 md:right-6"
             >
-                <Bug size={48} className="text-red-400" />
+                <Bug size={48} className="text-red-400 w-8 h-8 md:w-12 md:h-12" />
             </button>
 
             {/* Backdrop overlay when battling - click to exit */}
@@ -658,11 +659,11 @@ const App = () => {
                         src={currentThemeData.assets.logo}
                         fallbackSrc="https://placehold.co/800x300/333/FFD700?text=LOGO+PLACEHOLDER&font=monsterrat"
                         alt="Game Logo"
-                        className="w-[480px] md:w-[720px] lg:w-[960px] object-contain drop-shadow-2xl"
+                        className="w-[240px] sm:w-[480px] md:w-[720px] lg:w-[960px] object-contain drop-shadow-2xl"
                     />
                 </div>
                 <h1
-                    className="text-9xl text-yellow-400 tracking-widest uppercase mt-[-20px] mb-[95px] z-20 relative drop-shadow-[4px_4px_0_#000]"
+                    className="text-5xl sm:text-9xl text-yellow-400 tracking-widest uppercase mt-[-20px] mb-[40px] sm:mb-[95px] z-20 relative drop-shadow-[4px_4px_0_#000]"
                     style={{ textShadow: '6px 6px 0 #000' }}
                 >
                     Level Up!
