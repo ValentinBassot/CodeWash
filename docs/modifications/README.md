@@ -82,3 +82,4 @@ Every change to the project has its own short note in this folder, written in th
 | 071 | 2026-11-13 | [The look of a card is computed by pure functions](071-skillcard-style-helpers.md) |
 | 072 | 2026-11-13 | [The hit flash of a mob lives in a hook](072-hit-flash-hook.md) |
 | 081 | 2026-11-15 | [The top of the screen fits a phone width](081-phone-layout.md) |
+| 082 | 2026-11-15 | [The phone layout is checked in a real browser and finished](082-phone-layout-checked.md) |

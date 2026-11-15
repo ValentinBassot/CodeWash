@@ -501,10 +501,9 @@ const App = () => {
                     setIsSettingsOpen(true);
                     playClick();
                 }}
-                className="absolute z-40 bg-stone-800/90 text-white p-3 rounded-lg border-2 border-stone-600 hover:bg-stone-700 transition-all shadow-lg"
-                style={{ top: '24px', left: '24px' }}
+                className="absolute z-40 bg-stone-800/90 text-white p-1.5 md:p-3 rounded-lg border-2 border-stone-600 hover:bg-stone-700 transition-all shadow-lg top-3 left-3 md:top-6 md:left-6"
             >
-                <Settings size={48} className="text-slate-400" />
+                <Settings size={48} className="text-slate-400 w-8 h-8 md:w-12 md:h-12" />
             </button>
             <button
                 aria-label="Open cosmetics"
@@ -514,17 +513,13 @@ const App = () => {
                     setIsCosmeticsOpen(true);
                     playClick();
                 }}
-                className="absolute z-40 bg-stone-800/90 text-white p-3 rounded-lg border-2 border-stone-600 hover:bg-stone-700 transition-all shadow-lg"
-                style={{ top: '24px', left: 'calc(24px + 76px + 12px)' }}
+                className="absolute z-40 bg-stone-800/90 text-white p-1.5 md:p-3 rounded-lg border-2 border-stone-600 hover:bg-stone-700 transition-all shadow-lg top-3 left-[68px] md:top-6 md:left-[112px]"
             >
-                <Sparkles size={48} className="text-purple-400" />
+                <Sparkles size={48} className="text-purple-400 w-8 h-8 md:w-12 md:h-12" />
             </button>
 
             {/* Player Health Display - Centered */}
-            <div
-                className="absolute z-40 flex gap-1.5"
-                style={{ bottom: '20px', left: '50%', transform: 'translateX(-50%)' }}
-            >
+            <div className="absolute z-40 flex gap-0.5 md:gap-1.5 bottom-3 md:bottom-5 left-1/2 -translate-x-1/2 [&_svg]:w-6 [&_svg]:h-6 sm:[&_svg]:w-9 sm:[&_svg]:h-9 md:[&_svg]:w-12 md:[&_svg]:h-12">
                 {Array(10)
                     .fill(0)
                     .map((_, i) => (
@@ -653,7 +648,7 @@ const App = () => {
                     onClick={endBattle}
                 />
             )}
-            <main className="flex-1 relative flex flex-col items-center justify-center w-full">
+            <main className="flex-1 relative flex flex-col items-center justify-start pt-16 md:pt-0 md:justify-center w-full">
                 <div className="z-10 relative mb-[-30px] md:mb-[-50px] pointer-events-none opacity-90">
                     <SafeImage
                         src={currentThemeData.assets.logo}
@@ -663,7 +658,7 @@ const App = () => {
                     />
                 </div>
                 <h1
-                    className="text-5xl sm:text-9xl text-yellow-400 tracking-widest uppercase mt-[-20px] mb-[40px] sm:mb-[95px] z-20 relative drop-shadow-[4px_4px_0_#000]"
+                    className="text-5xl sm:text-9xl text-yellow-400 tracking-widest uppercase mt-[-20px] mb-[80px] sm:mb-[95px] z-20 relative drop-shadow-[4px_4px_0_#000]"
                     style={{ textShadow: '6px 6px 0 #000' }}
                 >
                     Level Up!
