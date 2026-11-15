@@ -5,10 +5,12 @@ import { todayKey } from './domain/clock';
 import { judgeSpokenWord } from './domain/reading';
 import {
     afterDeath,
+    PLAYER_MAX_HEALTH,
     describeHit,
     getAuraForSkill,
     getChallengeDifficulty,
     recordDefeat,
+    resolveMistake,
     resolveHit,
     withDifficulty,
 } from './domain/battle';
@@ -37,7 +39,7 @@ import PhantomEvent from './components/PhantomEvent';
 import AchievementToast from './components/ui/AchievementToast';
 
 // Utils & Constants
-import { getMobForSkill, getEncounterType, getExpectedDifficulty } from './utils/gameUtils';
+import { getMobForSkill, getExpectedDifficulty } from './utils/gameUtils';
 import {
     BASE_ASSETS,
     THEME_CONFIG,
@@ -86,7 +88,7 @@ const App = () => {
         borderColor,
         setBorderColor,
     } = profiles;
-    const [playerHealth, setPlayerHealth] = useState(10);
+    const [playerHealth, setPlayerHealth] = useState(PLAYER_MAX_HEALTH);
 
     const getProfileStats = (id, liveSkills = null) => {
         // Use live skills if provided (for current profile with pending state changes)
@@ -223,62 +225,47 @@ const App = () => {
         );
     };
 
-    const handleSuccessHit = (skillId, isWrong) => {
+    const handleMistake = () => {
         const { skills, playerHealth } = liveRef.current;
         const battlingSkillId = battlingSkillIdRef.current;
-        // Handle wrong answer
-        if (isWrong === 'WRONG') {
-            // Check if player is fighting a boss
-            if (battlingSkillId) {
-                const currentSkillState = skills[battlingSkillId];
-                const encounterType = getEncounterType(currentSkillState.level);
+        const mistake = resolveMistake(battlingSkillId ? skills[battlingSkillId] : null, playerHealth);
 
-                // Boss fights: heal the boss instead of damaging the player
-                if (encounterType === 'boss') {
-                    setSkills((prev) => {
-                        const current = prev[battlingSkillId];
-                        return {
-                            ...prev,
-                            [battlingSkillId]: {
-                                ...current,
-                                mobHealth: current.mobMaxHealth, // Fully heal the boss
-                            },
-                        };
-                    });
-
-                    // Trigger boss healing animation
-                    setBossHealing(battlingSkillId);
-                    setTimeout(() => setBossHealing(null), BOSS_HEALING_ANIMATION_DURATION);
-
-                    // Play fail sound to indicate mistake
-                    playFail();
-                    return;
-                }
-            }
-
-            const remainingHealth = playerHealth - 1;
-            if (remainingHealth > 0) {
-                playFail();
-                setPlayerHealth(remainingHealth);
-                return;
-            }
-
-            playDeath();
-            setShowDeathOverlay(true);
-            recordStats((current) => ({ ...current, totalDeaths: (current.totalDeaths || 0) + 1 }));
-
-            if (battlingSkillId) {
-                setSkills((prev) => ({ ...prev, [battlingSkillId]: afterDeath(prev[battlingSkillId]) }));
-            }
-
-            setTimeout(() => {
-                setBattlingSkillId(null);
-                setShowDeathOverlay(false);
-            }, 2000);
-            setPlayerHealth(10);
+        if (mistake.kind === 'bossHeals') {
+            setSkills((prev) => ({
+                ...prev,
+                [battlingSkillId]: { ...prev[battlingSkillId], mobHealth: prev[battlingSkillId].mobMaxHealth },
+            }));
+            setBossHealing(battlingSkillId);
+            setTimeout(() => setBossHealing(null), BOSS_HEALING_ANIMATION_DURATION);
+            playFail();
             return;
         }
 
+        if (mistake.kind === 'hurt') {
+            playFail();
+            setPlayerHealth(mistake.playerHealth);
+            return;
+        }
+
+        playDeath();
+        setShowDeathOverlay(true);
+        recordStats((current) => ({ ...current, totalDeaths: (current.totalDeaths || 0) + 1 }));
+        if (battlingSkillId) {
+            setSkills((prev) => ({ ...prev, [battlingSkillId]: afterDeath(prev[battlingSkillId]) }));
+        }
+        setTimeout(() => {
+            setBattlingSkillId(null);
+            setShowDeathOverlay(false);
+        }, 2000);
+        setPlayerHealth(mistake.playerHealth);
+    };
+
+    const handleSuccessHit = (skillId, isWrong) => {
+        if (isWrong === 'WRONG') {
+            handleMistake();
+            return;
+        }
+        const { skills } = liveRef.current;
         if (!skillId) return;
         const skillConfig = SKILL_DATA.find((s) => s.id === skillId);
         const currentSkillState = skills[skillId];

@@ -202,3 +202,13 @@ export const afterDeath = (skill) => {
     const allowed = getExpectedDifficulty(level);
     return (skill.difficulty || 1) > allowed ? withDifficulty(lost, allowed) : lost;
 };
+
+export const PLAYER_MAX_HEALTH = 10;
+
+export const resolveMistake = (skill, playerHealth) => {
+    if (skill && getEncounterType(skill.level) === 'boss') {
+        return { kind: 'bossHeals', skill: { ...skill, mobHealth: skill.mobMaxHealth } };
+    }
+    if (playerHealth - 1 > 0) return { kind: 'hurt', playerHealth: playerHealth - 1 };
+    return { kind: 'death', skill: skill ? afterDeath(skill) : null, playerHealth: PLAYER_MAX_HEALTH };
+};
