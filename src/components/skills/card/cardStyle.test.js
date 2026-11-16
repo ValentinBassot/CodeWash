@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getBorderEffect, getButtonStyle, getLevelStyle, resolveMob } from './cardStyle';
 import { BASE_ASSETS, BOSS_MOBS, CHEST_BLOCKS, HOSTILE_MOBS, MINIBOSS_MOBS } from '../../../constants/gameData';
+import { THEME_ROSTERS } from '../../../constants/themeRosters';
 
 describe('getLevelStyle', () => {
     it.each([
@@ -91,5 +92,39 @@ describe('resolveMob', () => {
 
     it('shows a zombie when the mob is unknown', () => {
         expect(resolveMob('reading', 'Nope', {})).toEqual({ src: HOSTILE_MOBS.Zombie, name: 'Zombie' });
+    });
+
+    describe('with the roster of a theme', () => {
+        const roster = THEME_ROSTERS.pokemon;
+        const hostiles = Object.keys(HOSTILE_MOBS);
+
+        it('replaces each kind of mob by the mob at the same place in the roster', () => {
+            expect(resolveMob('math', hostile, {}, roster)).toEqual(roster.hostile[0]);
+            expect(resolveMob('math', hostiles[3], {}, roster)).toEqual(roster.hostile[3]);
+            expect(resolveMob('math', boss, {}, roster)).toEqual(roster.boss[0]);
+            expect(resolveMob('math', miniboss, {}, roster)).toEqual(roster.miniboss[0]);
+            expect(resolveMob('cleaning', chest, {}, roster).src).toBe(CHEST_BLOCKS[chest]);
+        });
+
+        it('starts again from the first mob when the game has more mobs than the roster', () => {
+            const short = {
+                hostile: [
+                    { name: 'A', src: 'a.png' },
+                    { name: 'B', src: 'b.png' },
+                ],
+            };
+            expect(resolveMob('math', hostiles[2], {}, short)).toEqual({ name: 'A', src: 'a.png' });
+            expect(resolveMob('math', hostiles[3], {}, short)).toEqual({ name: 'B', src: 'b.png' });
+        });
+
+        it('keeps the original mob when the roster has none of that kind (the chests of cleaning) or no roster is given', () => {
+            expect(resolveMob('math', boss, {}, { hostile: roster.hostile }).src).toBe(BOSS_MOBS[boss]);
+            expect(resolveMob('math', hostile, {}, undefined).src).toBe(HOSTILE_MOBS[hostile]);
+        });
+
+        it('still shows the farm for memory and the zombie for an unknown mob', () => {
+            expect(resolveMob('memory', 'Cow', {}, roster).src).toBe('assets/skills/farm_icon.png');
+            expect(resolveMob('reading', 'Nope', {}, roster).name).toBe('Zombie');
+        });
     });
 });

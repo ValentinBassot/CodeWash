@@ -67,7 +67,12 @@ const SkillCard = ({
     const skillThemeConfig = themeData.skills[config.id] || {};
     const skillName = skillThemeConfig.name || config.name;
 
-    const { src: mobSrc, name: displayMobName } = resolveMob(config.id, mobName, themeData.assets.mobs);
+    const { src: mobSrc, name: displayMobName } = resolveMob(
+        config.id,
+        mobName,
+        themeData.assets.mobs,
+        themeData.assets.roster,
+    );
 
     // Add aura adjective to mob name when battling
     const displayMobNameWithAura =

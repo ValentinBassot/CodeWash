@@ -56,8 +56,27 @@ export const getButtonStyle = (colorStyle) => {
     };
 };
 
-export const resolveMob = (skillId, mobName, themeMobs) => {
+const MOB_POOLS = [
+    ['hostile', HOSTILE_MOBS],
+    ['boss', BOSS_MOBS],
+    ['miniboss', MINIBOSS_MOBS],
+    ['chest', CHEST_BLOCKS],
+];
+
+const themedMob = (roster, mobName) => {
+    if (!roster) return null;
+    for (const [kind, pool] of MOB_POOLS) {
+        const index = Object.keys(pool).indexOf(mobName);
+        const mobs = roster[kind];
+        if (index >= 0 && mobs?.length) return mobs[index % mobs.length];
+    }
+    return null;
+};
+
+export const resolveMob = (skillId, mobName, themeMobs, roster) => {
     if (skillId === 'memory') return { src: 'assets/skills/farm_icon.png', name: mobName };
+    const themed = themedMob(roster, mobName);
+    if (themed) return { src: themed.src, name: themed.name };
     if (skillId === 'cleaning') {
         return { src: CHEST_BLOCKS[mobName] || themeMobs[mobName] || BASE_ASSETS.axolotls.Pink, name: mobName };
     }
