@@ -176,7 +176,7 @@ const CosmeticsDrawer = ({
                                             {/* Effect Preview with Info Icon */}
                                             <div className="flex items-center justify-center gap-2">
                                                 <div
-                                                    className={`w-24 h-24 rounded border-4 flex items-center justify-center ${
+                                                    className={`w-full max-w-24 min-w-0 aspect-square rounded border-4 flex items-center justify-center ${
                                                         !isSolid ? `border-effect-${effect.id}` : ''
                                                     }`}
                                                     style={
@@ -301,7 +301,7 @@ const CosmeticsDrawer = ({
                                             {/* Effect Preview with Info Icon */}
                                             <div className="flex items-center justify-center gap-2">
                                                 <div
-                                                    className={`w-24 h-24 rounded border-4 flex items-center justify-center border-effect-${effect.id}`}
+                                                    className={`w-full max-w-24 min-w-0 aspect-square rounded border-4 flex items-center justify-center border-effect-${effect.id}`}
                                                 >
                                                     <IconComponent
                                                         size={32}
