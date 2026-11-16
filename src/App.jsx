@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Menu, Sparkles, Gift, Maximize, Minimize, Settings, Bug } from 'lucide-react';
+import { Menu, Sparkles, Maximize, Minimize, Settings, Bug } from 'lucide-react';
 import { random } from './domain/random';
 import { todayKey } from './domain/clock';
 import { judgeSpokenWord } from './domain/reading';
@@ -36,6 +36,8 @@ import SkillCard from './components/skills/SkillCard';
 import PhantomEvent from './components/PhantomEvent';
 import AchievementToast from './components/ui/AchievementToast';
 import SaveProblemNotice from './components/ui/SaveProblemNotice';
+import NotificationStack from './components/ui/NotificationStack';
+import LevelToast from './components/ui/LevelToast';
 
 // Utils & Constants
 import { getMobForSkill, getEncounterType, getExpectedDifficulty } from './utils/gameUtils';
@@ -819,39 +821,16 @@ const App = () => {
                     })}
                 </div>
             </main>
-            {lootBox && (
-                <div className="fixed bottom-8 left-1/2 z-50 animate-toast w-full max-w-2xl pointer-events-none transform -translate-x-1/2">
-                    <div className="bg-black/80 border-4 border-yellow-500 rounded-full p-4 px-12 flex items-center justify-between shadow-[0_0_30px_rgba(255,215,0,0.6)] backdrop-blur-md mx-4">
-                        <div className="flex items-center gap-4">
-                            <div className="bg-yellow-500/20 p-3 rounded-full border-2 border-yellow-400">
-                                <Gift size={32} className="text-yellow-300 animate-bounce" />
-                            </div>
-                            <div className="text-left">
-                                <h2 className="text-2xl text-yellow-400 font-bold leading-none mb-1">
-                                    LEVEL {lootBox.level} REACHED!
-                                </h2>
-                                <p className="text-stone-300 text-sm">{lootBox.skillName}</p>
-                            </div>
-                        </div>
-                        <div className="text-right pl-8 border-l-2 border-stone-600 flex items-center gap-4">
-                            <SafeImage src={lootBox.img} alt="Badge" className="w-12 h-12 object-contain" />
-                            <div>
-                                <p className="text-stone-400 text-xs uppercase tracking-wider">Unlocked</p>
-                                <p className="text-2xl text-green-400 font-bold">{lootBox.item}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Achievement Toast */}
-            <SaveProblemNotice problem={saveProblem} onDismiss={dismissSaveProblem} />
-            {achievementToast && (
-                <AchievementToast
-                    achievementId={achievementToast.achievementId}
-                    tierIndex={achievementToast.tierIndex}
-                />
-            )}
+            <NotificationStack>
+                <SaveProblemNotice problem={saveProblem} onDismiss={dismissSaveProblem} />
+                {lootBox && <LevelToast {...lootBox} />}
+                {achievementToast && (
+                    <AchievementToast
+                        achievementId={achievementToast.achievementId}
+                        tierIndex={achievementToast.tierIndex}
+                    />
+                )}
+            </NotificationStack>
 
             {/* Death Overlay - Minecraft-style YOU DIED screen */}
             {showDeathOverlay && (

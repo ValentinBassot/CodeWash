@@ -28,9 +28,9 @@ const AchievementToast = ({ achievementId, tierIndex = null }) => {
     const bgColor = tierColor ? tierColor.bg : 'rgba(255, 215, 0, 0.1)';
 
     return (
-        <div className="fixed bottom-8 left-1/2 z-50 animate-achievement-toast w-full max-w-2xl pointer-events-none transform -translate-x-1/2">
+        <div className="animate-achievement-toast w-full">
             <div
-                className="bg-black/90 rounded-xl p-4 px-8 flex items-center justify-between backdrop-blur-md mx-4"
+                className="bg-black/90 rounded-xl p-3 md:p-4 px-4 md:px-8 flex flex-wrap items-center justify-between gap-3 backdrop-blur-md"
                 style={{
                     border: `4px solid ${borderColor}`,
                     boxShadow: `0 0 30px ${borderColor}80, 0 0 50px ${borderColor}40`,
@@ -50,7 +50,7 @@ const AchievementToast = ({ achievementId, tierIndex = null }) => {
 
                     {/* Text */}
                     <div className="text-left">
-                        <h2 className="text-2xl text-yellow-400 font-bold leading-none mb-1 uppercase tracking-wide">
+                        <h2 className="text-lg md:text-2xl text-yellow-400 font-bold leading-none mb-1 uppercase tracking-wide">
                             ACHIEVEMENT UNLOCKED!
                         </h2>
                         <p className="text-white text-lg font-bold">{displayName}</p>
@@ -59,7 +59,7 @@ const AchievementToast = ({ achievementId, tierIndex = null }) => {
                 </div>
 
                 {/* Trophy Icon */}
-                <div className="pl-6 border-l-2 border-stone-600">
+                <div className="pl-3 md:pl-6 border-l-2 border-stone-600">
                     <Trophy
                         size={48}
                         className="text-yellow-400 animate-pulse"

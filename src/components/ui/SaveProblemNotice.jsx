@@ -10,7 +10,7 @@ const SaveProblemNotice = ({ problem, onDismiss }) => {
     return (
         <div
             role="alert"
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-[70] max-w-md bg-red-900/95 text-white border-2 border-red-400 rounded-lg px-4 py-3 shadow-xl flex items-start gap-3"
+            className="w-full pointer-events-auto bg-red-900/95 text-white border-2 border-red-400 rounded-lg px-4 py-3 shadow-xl flex items-start gap-3"
         >
             <p className="text-lg leading-tight">{MESSAGES[problem]}</p>
             <button onClick={onDismiss} className="uppercase font-bold border border-white/60 rounded px-2 py-1">
