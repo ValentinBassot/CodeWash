@@ -30,33 +30,49 @@ afterEach(() => {
 });
 
 describe('skill carousel', () => {
-    it('shows seven cards around the first skill: cleaning twice at the edges', () => {
+    it('shows five cards around the first skill, the two farther ones being out of reach', () => {
         render(<App />);
-        expect(cardButtons('Organize!')).toHaveLength(2);
-        expect(cardButtons('Calculate!')).toHaveLength(1);
+        for (const action of ['Enchant!', 'Calculate!', 'Craft!', 'Solve!', 'Match!']) {
+            expect(cardButtons(action)).toHaveLength(1);
+        }
+        expect(cardButtons('Organize!')).toHaveLength(0);
+    });
+
+    it('the cards that are not shown cannot be reached nor clicked', () => {
+        render(<App />);
+        const hidden = [...document.querySelectorAll('div.perspective-1000 > div[aria-hidden="true"]')];
+        expect(hidden).toHaveLength(8);
+        for (const card of hidden) {
+            expect(card.hasAttribute('inert')).toBe(true);
+            expect(card.style.pointerEvents).toBe('none');
+            expect(card.style.opacity).toBe('0');
+        }
     });
 
     it('the right arrow moves to the next skill', () => {
         render(<App />);
         fireEvent.click(rightArrow());
-        expect(cardButtons('Match!')).toHaveLength(2);
         expect(cardButtons('Organize!')).toHaveLength(1);
+        expect(cardButtons('Match!')).toHaveLength(0);
+        expect(cardButtons('Calculate!')).toHaveLength(1);
     });
 
     it('the left arrow moves to the previous skill', () => {
         render(<App />);
         fireEvent.click(leftArrow());
-        expect(cardButtons('Craft!')).toHaveLength(2);
+        expect(cardButtons('Organize!')).toHaveLength(1);
+        expect(cardButtons('Craft!')).toHaveLength(0);
+        expect(cardButtons('Solve!')).toHaveLength(1);
     });
 
     it('a swipe of 100 pixels or more turns the carousel, a shorter one does not', () => {
         render(<App />);
         swipe(300, 250);
-        expect(cardButtons('Organize!')).toHaveLength(2);
+        expect(cardButtons('Organize!')).toHaveLength(0);
         swipe(300, 150);
-        expect(cardButtons('Match!')).toHaveLength(2);
+        expect(cardButtons('Organize!')).toHaveLength(1);
         swipe(100, 250);
-        expect(cardButtons('Organize!')).toHaveLength(2);
+        expect(cardButtons('Organize!')).toHaveLength(0);
     });
 });
 

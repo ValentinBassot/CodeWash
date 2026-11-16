@@ -9,7 +9,7 @@ const carousel = (locked = false) =>
     renderHook((props) => useCarousel(props), { initialProps: { items: ITEMS, locked } });
 
 describe('getVisibleItems', () => {
-    it('gives thirteen items around the selected one, wrapping at both ends, three of them on each side being shown', () => {
+    it('gives thirteen items around the selected one, wrapping at both ends, two of them on each side being shown', () => {
         const visible = getVisibleItems(ITEMS, 0);
         expect(ids(visible)).toBe('cdabcdabcdabc');
         expect(visible.map((item) => item.offset)).toEqual([-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6]);
