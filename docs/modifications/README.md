@@ -90,6 +90,8 @@ Every change to the project has its own short note in this folder, written in th
 | 079 | 2026-11-15 | [recoveryDifficulty is removed](079-remove-recovery-difficulty.md) |
 | 080 | 2026-11-15 | [The Jack of All Trades text shows real progress](080-jack-of-all-trades-text.md) |
 | 087 | 2026-11-16 | [A word said inside a sentence counts, and what is heard is shown](087-voice-phrase-match.md) |
+| 088 | 2026-11-16 | [The mobs follow the theme](088-themed-mobs.md) |
+| 089 | 2026-11-16 | [The K-Pop Demon Hunters theme has its mobs](089-kpop-mobs.md) |
 | 091 | 2026-11-16 | [The notifications stay inside the window, above the game](091-notifications-stack.md) |
 | 093 | 2026-11-16 | [The word can be typed when the speech does not work](093-type-the-word.md) |
 | 094 | 2026-11-16 | [The game asks for the microphone when it opens](094-microphone-permission.md) |

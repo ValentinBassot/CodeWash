@@ -1,3 +1,4 @@
+import { THEME_ROSTERS } from './themeRosters';
 export const BASE_ASSETS = {
     skillIcons: {
         Reading: 'assets/skills/reading_icon.gif',
@@ -267,6 +268,7 @@ export const THEME_CONFIG = {
         assets: {
             logo: 'assets/themes/kpop_logo.png',
             cardBack: 'assets/themes/kpop_memorycard.jpg',
+            roster: THEME_ROSTERS.kpop,
             mobs: {},
         },
         skills: {
@@ -288,6 +290,7 @@ export const THEME_CONFIG = {
         assets: {
             logo: 'assets/themes/pokemon_logo.png',
             cardBack: 'assets/themes/pokemon_memorycard.jpg',
+            roster: THEME_ROSTERS.pokemon,
             mobs: {},
         },
         skills: {
