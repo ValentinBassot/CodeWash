@@ -16,6 +16,7 @@ export const useVoiceListener = ({ keepListening, onHeard }) => {
     const [isListening, setIsListening] = useState(false);
     const [spokenText, setSpokenText] = useState('');
     const [isFinalSpeech, setIsFinalSpeech] = useState(false);
+    const [hasFailed, setHasFailed] = useState(false);
     const recognitionRef = useRef(null);
     const micRefusedRef = useRef(false);
     const callbacksRef = useRef({ keepListening, onHeard });
@@ -52,6 +53,7 @@ export const useVoiceListener = ({ keepListening, onHeard }) => {
         recognition.interimResults = true;
 
         recognition.onstart = () => {
+            setHasFailed(false);
             setIsListening(true);
             setSpokenText('Listening...');
         };
@@ -77,6 +79,7 @@ export const useVoiceListener = ({ keepListening, onHeard }) => {
             console.error('[Speech Recognition] Error:', event.error);
             if (!ERROR_TEXTS[event.error]) return;
             micRefusedRef.current = true;
+            setHasFailed(true);
             setSpokenText(ERROR_TEXTS[event.error]);
             setIsListening(false);
         };
@@ -113,6 +116,7 @@ export const useVoiceListener = ({ keepListening, onHeard }) => {
         isListening,
         spokenText,
         isFinalSpeech,
+        hasFailed,
         clearSpokenText: (onlyIf) =>
             setSpokenText((current) => (onlyIf === undefined || current === onlyIf ? '' : current)),
         markHandled: () => setIsFinalSpeech(false),

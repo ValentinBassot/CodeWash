@@ -4,6 +4,7 @@ import PatternsGame from '../games/PatternsGame';
 import TypedAnswer from '../games/TypedAnswer';
 import ChallengePrompt from '../games/ChallengePrompt';
 import MicButton from '../games/MicButton';
+import TypedWord from '../games/TypedWord';
 import CleaningChallenge from '../games/CleaningChallenge';
 import XpBar from './XpBar';
 import { DIFFICULTY_CONTENT } from '../../../constants/gameData';
@@ -20,6 +21,8 @@ const BattleBody = ({
     onAnswer,
     onPerfectMemoryGame,
     onMicClick,
+    speechFallback,
+    onTypeWord,
 }) => {
     const memoryConfig = DIFFICULTY_CONTENT.memory[difficulty] || DIFFICULTY_CONTENT.memory[1];
     const memoryPairs = memoryConfig.pairs || 3;
@@ -59,7 +62,10 @@ const BattleBody = ({
                                 />
                             )}
                             {config.challengeType === 'reading' && (
-                                <MicButton isListening={isListening} onClick={onMicClick} />
+                                <>
+                                    <MicButton isListening={isListening} onClick={onMicClick} />
+                                    {speechFallback && <TypedWord onSubmit={onTypeWord} />}
+                                </>
                             )}
                             {config.challengeType === 'cleaning' && (
                                 <CleaningChallenge onComplete={() => onAnswer(challenge?.answer)} />

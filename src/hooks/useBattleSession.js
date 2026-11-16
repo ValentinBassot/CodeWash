@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { random } from '../domain/random';
-import { judgeSpokenWord } from '../domain/reading';
+import { judgeSpokenWord, normalizeSpeech } from '../domain/reading';
 import {
     PLAYER_MAX_HEALTH,
     afterDeath,
@@ -189,6 +189,18 @@ export const useBattleSession = ({ skills, setSkills, stats, setStats, checkAchi
         },
     });
 
+    const speechFallback = !isSpeechRecognitionAvailable() || voice.hasFailed;
+
+    const answerByTyping = (typed) => {
+        const text = normalizeSpeech(typed);
+        const challenge = challengeDataRef.current;
+        if (!text || !challenge || challenge.type !== 'reading') return;
+        const verdict = judgeSpokenWord(text, challenge.answer);
+        const skillId = battlingSkillIdRef.current;
+        if (verdict === 'correct') handleSuccessHit(skillId);
+        if (verdict === 'wrong') handleSuccessHit(skillId, 'WRONG');
+    };
+
     const handlePhantomLevelAward = (skillId) => {
         if (!skillId) return;
         playLevelUp();
@@ -234,6 +246,8 @@ export const useBattleSession = ({ skills, setSkills, stats, setStats, checkAchi
         showLevelRestored,
         bossHealing,
         voice,
+        speechFallback,
+        answerByTyping,
         recordStats,
         handleSuccessHit,
         handlePhantomLevelAward,

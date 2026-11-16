@@ -114,6 +114,17 @@ describe('useVoiceListener', () => {
         vi.useRealTimers();
     });
 
+    it('says that the speech failed after an error of the service, and not any more once it listens again', () => {
+        const { result } = listen();
+        expect(result.current.hasFailed).toBe(false);
+        act(() => result.current.start('reading'));
+        act(() => last().onerror({ error: 'network' }));
+        expect(result.current.hasFailed).toBe(true);
+        act(() => last().onend());
+        act(() => result.current.start('reading'));
+        expect(result.current.hasFailed).toBe(false);
+    });
+
     it('a silence is not an error to show', () => {
         const { result } = listen();
         act(() => result.current.start('reading'));

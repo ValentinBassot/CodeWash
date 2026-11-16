@@ -162,6 +162,8 @@ const App = () => {
         showLevelRestored,
         bossHealing,
         voice,
+        speechFallback,
+        answerByTyping,
         recordStats,
         handleSuccessHit,
         handlePhantomLevelAward,
@@ -575,6 +577,8 @@ const App = () => {
                                         }))
                                     }
                                     onMicClick={() => voice.toggle(item.id)}
+                                    speechFallback={speechFallback}
+                                    onTypeWord={answerByTyping}
                                     difficulty={skills[item.id].difficulty || 1}
                                     setDifficulty={(newDiff) => setSkillDifficulty(item.id, newDiff)}
                                     unlockedDifficulty={Math.max(

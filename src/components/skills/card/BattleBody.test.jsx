@@ -56,6 +56,19 @@ describe('BattleBody', () => {
         expect(onAnswer).toHaveBeenCalledWith('42');
     });
 
+    it('lets the player type the word for reading only when the speech has no way to work', () => {
+        const onTypeWord = vi.fn();
+        setup('reading', { speechFallback: true, onTypeWord });
+        fireEvent.change(screen.getByLabelText('Type the word'), { target: { value: 'sun' } });
+        fireEvent.submit(screen.getByLabelText('Type the word').closest('form'));
+        expect(onTypeWord).toHaveBeenCalledWith('sun');
+    });
+
+    it('does not show the typing box while the speech works', () => {
+        setup('reading', { speechFallback: false });
+        expect(screen.queryByLabelText('Type the word')).toBeNull();
+    });
+
     it('shows the Complete! button for cleaning', () => {
         setup('cleaning');
         expect(screen.getByRole('button', { name: 'Complete!' })).toBeTruthy();

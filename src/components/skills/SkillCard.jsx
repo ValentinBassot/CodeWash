@@ -28,6 +28,8 @@ const SkillCard = ({
     onEndBattle,
     onMathSubmit,
     onMicClick,
+    speechFallback,
+    onTypeWord,
     difficulty,
     setDifficulty,
     unlockedDifficulty,
@@ -183,6 +185,8 @@ const SkillCard = ({
                         onAnswer={onMathSubmit}
                         onPerfectMemoryGame={onPerfectMemoryGame}
                         onMicClick={onMicClick}
+                        speechFallback={speechFallback}
+                        onTypeWord={onTypeWord}
                     />
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center">
