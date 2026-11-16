@@ -21,6 +21,8 @@ class FakeRecognition {
 }
 
 const last = () => FakeRecognition.instances.at(-1);
+const final = (transcript) => Object.assign([{ transcript }], { isFinal: true });
+const interim = (transcript) => Object.assign([{ transcript }], { isFinal: false });
 const listen = (options = {}) => {
     const onHeard = vi.fn();
     const state = { keep: options.keep ?? true };
@@ -73,11 +75,50 @@ describe('useVoiceListener', () => {
     it('gives what was heard, cleaned up, with the skill it listens for', () => {
         const { result, onHeard } = listen();
         act(() => result.current.start('reading'));
-        act(() => last().onresult({ results: [[{ transcript: 'ignored' }], [{ transcript: 'Cat.' }]] }));
+        act(() => last().onresult({ results: [final('ignored'), final('Cat.')] }));
         expect(onHeard).toHaveBeenCalledWith('CAT', 'reading');
         expect(result.current.spokenText).toBe('CAT');
         act(() => result.current.clearSpokenText());
         expect(result.current.spokenText).toBe('');
+    });
+
+    it('shows what is being said while it is said, and judges only the final text', () => {
+        const { result, onHeard } = listen();
+        act(() => result.current.start('reading'));
+        expect(last().interimResults).toBe(true);
+
+        act(() => last().onresult({ results: [interim('the')] }));
+        expect(result.current).toMatchObject({ spokenText: 'THE', isFinalSpeech: false });
+        expect(onHeard).not.toHaveBeenCalled();
+
+        act(() => last().onresult({ results: [final('the cat')] }));
+        expect(result.current).toMatchObject({ spokenText: 'THE CAT', isFinalSpeech: true });
+        expect(onHeard).toHaveBeenCalledWith('THE CAT', 'reading');
+    });
+
+    it.each([
+        ['service-not-allowed', 'Speech service not allowed'],
+        ['audio-capture', 'No microphone found'],
+        ['network', 'Speech service unreachable'],
+    ])('a %s error is shown and stops the restarts', (error, text) => {
+        vi.useFakeTimers();
+        const { result } = listen();
+        act(() => result.current.start('reading'));
+        act(() => {
+            last().onerror({ error });
+            last().onend();
+        });
+        expect(result.current).toMatchObject({ spokenText: text, isListening: false });
+        act(() => vi.advanceTimersByTime(1000));
+        expect(FakeRecognition.instances).toHaveLength(1);
+        vi.useRealTimers();
+    });
+
+    it('a silence is not an error to show', () => {
+        const { result } = listen();
+        act(() => result.current.start('reading'));
+        act(() => last().onerror({ error: 'no-speech' }));
+        expect(result.current.spokenText).toBe('Listening...');
     });
 
     it('stop ends the session and shows the microphone as off', () => {

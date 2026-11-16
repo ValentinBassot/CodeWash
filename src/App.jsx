@@ -168,7 +168,7 @@ const App = () => {
         startBattle,
         endBattle,
     } = useBattleSession({ skills, setSkills, stats, setStats, checkAchievements, startBGM });
-    const { isListening, spokenText } = voice;
+    const { isListening, spokenText, isFinalSpeech } = voice;
 
     // Toggle fullscreen mode
     const toggleFullscreen = () => {
@@ -563,6 +563,7 @@ const App = () => {
                                     challenge={challengeData}
                                     isListening={isListening}
                                     spokenText={spokenText}
+                                    isSpeechFinal={isFinalSpeech}
                                     damageNumbers={damageNumbers.filter((d) => d.skillId === item.id)}
                                     onStartBattle={() => startBattle(item.id)}
                                     onEndBattle={endBattle}

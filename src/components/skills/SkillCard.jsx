@@ -22,6 +22,7 @@ const SkillCard = ({
     challenge,
     isListening,
     spokenText,
+    isSpeechFinal,
     damageNumbers,
     onStartBattle,
     onEndBattle,
@@ -176,6 +177,7 @@ const SkillCard = ({
                         difficulty={difficulty}
                         challenge={challenge}
                         spokenText={spokenText}
+                        isSpeechFinal={isSpeechFinal}
                         isListening={isListening}
                         cardBack={themeData.assets.cardBack}
                         onAnswer={onMathSubmit}

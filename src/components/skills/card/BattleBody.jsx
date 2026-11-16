@@ -14,6 +14,7 @@ const BattleBody = ({
     difficulty,
     challenge,
     spokenText,
+    isSpeechFinal,
     isListening,
     cardBack,
     onAnswer,
@@ -46,6 +47,7 @@ const BattleBody = ({
                                 type={config.challengeType}
                                 challenge={challenge}
                                 spokenText={spokenText}
+                                isSpeechFinal={isSpeechFinal}
                                 isListening={isListening}
                             />
                             {(config.challengeType === 'math' || config.challengeType === 'writing') && (

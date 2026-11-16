@@ -19,8 +19,11 @@ class FakeRecognition {
         this.stops += 1;
         this.onend?.();
     }
+    say(text) {
+        act(() => this.onresult({ results: [Object.assign([{ transcript: text }], { isFinal: false })] }));
+    }
     hear(text) {
-        act(() => this.onresult({ results: [[{ transcript: text }]] }));
+        act(() => this.onresult({ results: [Object.assign([{ transcript: text }], { isFinal: true })] }));
     }
     endOnItsOwn() {
         act(() => this.onend());
@@ -94,6 +97,28 @@ describe('reading battle with speech recognition', () => {
         recognition().hear(` ${shownWord().toLowerCase()}`);
         expect(reading()).toMatchObject({ xp: 20, mobHealth: 48 });
         expect(save().stats.totalDeaths).toBe(0);
+    });
+
+    it('the word inside a sentence counts, and the sentence stays shown a moment', () => {
+        render(<App />);
+        startReadingBattle();
+        const word = shownWord();
+        recognition().hear(`I think it is ${word.toLowerCase()}`);
+        expect(reading().xp).toBe(20);
+        expect(screen.getByText(`I THINK IT IS ${word}`)).toBeTruthy();
+        expect(document.querySelector('.animate-shake')).toBeNull();
+
+        wait(2100);
+        expect(screen.queryByText(`I THINK IT IS ${word}`)).toBeNull();
+    });
+
+    it('what is being said is shown at once and does not count until it is final', () => {
+        render(<App />);
+        startReadingBattle();
+        recognition().say('hello th');
+        expect(screen.getByText('HELLO TH')).toBeTruthy();
+        expect(reading().xp).toBe(0);
+        expect(document.querySelector('.animate-shake')).toBeNull();
     });
 
     it('five words read aloud defeat the mob', () => {

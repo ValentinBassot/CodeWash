@@ -6,8 +6,14 @@ const READING = { type: 'reading', question: 'CAT', answer: 'CAT' };
 const box = () => document.querySelector('.border-2');
 const flashing = () => box().className.includes('animate-shake');
 const wait = (ms) => act(() => vi.advanceTimersByTime(ms));
-const reading = (spokenText, isListening = true, challenge = READING) => (
-    <ChallengePrompt type="reading" challenge={challenge} spokenText={spokenText} isListening={isListening} />
+const reading = (spokenText, isListening = true, challenge = READING, isSpeechFinal = true) => (
+    <ChallengePrompt
+        type="reading"
+        challenge={challenge}
+        spokenText={spokenText}
+        isSpeechFinal={isSpeechFinal}
+        isListening={isListening}
+    />
 );
 
 beforeEach(() => vi.useFakeTimers());

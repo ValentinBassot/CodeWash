@@ -29,6 +29,15 @@ describe('judgeSpokenWord', () => {
         expect(judgeSpokenWord('2', 'TO')).toBe('correct');
     });
 
+    it('the word inside a longer sentence is correct', () => {
+        expect(judgeSpokenWord('I THINK IT IS CAT', 'CAT')).toBe('correct');
+        expect(judgeSpokenWord('THE SEA IS BIG', 'SEE')).toBe('correct');
+    });
+
+    it('a word that only contains the answer is not the answer', () => {
+        expect(judgeSpokenWord('CATALOG', 'CAT')).toBe('wrong');
+    });
+
     it('another word of two letters or more is wrong', () => {
         expect(judgeSpokenWord('DOG', 'CAT')).toBe('wrong');
         expect(judgeSpokenWord('NO', 'CAT')).toBe('wrong');

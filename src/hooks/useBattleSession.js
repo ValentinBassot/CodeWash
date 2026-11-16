@@ -32,6 +32,7 @@ const DEATH_OVERLAY_DURATION_MS = 2000;
 const LEVEL_RESTORED_DURATION_MS = 2000;
 const DAMAGE_NUMBER_DURATION_MS = 800;
 const LOOT_BOX_DURATION_MS = 4000;
+const HEARD_TEXT_LINGER_MS = 2000;
 
 export const useBattleSession = ({ skills, setSkills, stats, setStats, checkAchievements, startBGM }) => {
     const [playerHealth, setPlayerHealth] = useState(PLAYER_MAX_HEALTH);
@@ -167,7 +168,7 @@ export const useBattleSession = ({ skills, setSkills, stats, setStats, checkAchi
         if (skillConfig.hasChallenge && skillConfig.id !== 'memory') {
             const challengeDiff = battleDifficulty || skillDifficulty;
             setChallengeData(generateChallenge(skillConfig.challengeType, challengeDiff));
-            if (skillConfig.challengeType === 'reading') voice.clearSpokenText();
+            if (skillConfig.challengeType === 'reading') voice.markHandled();
         } else if (skillConfig.id === 'memory') {
             setBattlingSkillId(null);
             setBattleDifficulty(null);
@@ -180,7 +181,10 @@ export const useBattleSession = ({ skills, setSkills, stats, setStats, checkAchi
             const currentChallenge = challengeDataRef.current;
             if (!currentChallenge || currentChallenge.type !== 'reading') return;
             const verdict = judgeSpokenWord(text, currentChallenge.answer);
-            if (verdict === 'correct') handleSuccessHit(targetId || battlingSkillId);
+            if (verdict === 'correct') {
+                handleSuccessHit(targetId || battlingSkillId);
+                setTimeout(() => voice.clearSpokenText(text), HEARD_TEXT_LINGER_MS);
+            }
             if (verdict === 'wrong') handleSuccessHit(targetId || battlingSkillId, 'WRONG');
         },
     });

@@ -86,3 +86,4 @@ Every change to the project has its own short note in this folder, written in th
 | 075 | 2026-11-15 | [The battle session lives in a hook](075-battle-session-hook.md) |
 | 076 | 2026-11-15 | [The Complete! button of the cleaning skill is a component](076-cleaning-challenge.md) |
 | 077 | 2026-11-15 | [The inside of a battle card is a component](077-battle-body.md) |
+| 087 | 2026-11-16 | [A word said inside a sentence counts, and what is heard is shown](087-voice-phrase-match.md) |
