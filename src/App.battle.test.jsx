@@ -87,7 +87,7 @@ describe('dying', () => {
         for (let miss = 0; miss < 10; miss++) answerWrong();
 
         expect(save().stats.totalDeaths).toBe(1);
-        expect(math()).toMatchObject({ level: 1, lostLevel: false, recoveryDifficulty: 1 });
+        expect(math()).toMatchObject({ level: 1, lostLevel: false });
     });
 
     it('at level 5, dying costs a level; the next victory only gives it back, its XP stays below the next level', () => {
@@ -96,12 +96,12 @@ describe('dying', () => {
         });
         startMathBattle();
         for (let miss = 0; miss < 10; miss++) answerWrong();
-        expect(math()).toMatchObject({ level: 4, lostLevel: true, recoveryDifficulty: 1 });
+        expect(math()).toMatchObject({ level: 4, lostLevel: true });
 
         wait(2000);
         startMathBattle();
         for (let hit = 0; hit < 5; hit++) answerRight();
-        expect(math()).toMatchObject({ level: 5, xp: 110, lostLevel: false, recoveryDifficulty: null });
+        expect(math()).toMatchObject({ level: 5, xp: 110, lostLevel: false });
     });
 });
 

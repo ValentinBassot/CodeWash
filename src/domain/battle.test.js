@@ -116,9 +116,9 @@ describe('resolveHit', () => {
     });
 
     it('a win after a death gives the lost level back, on top of the level earned', () => {
-        const skill = skillOf('math', { level: 4, mobHealth: 12, lostLevel: true, recoveryDifficulty: 1 });
+        const skill = skillOf('math', { level: 4, mobHealth: 12, lostLevel: true });
         const { skill: next, events } = resolveHit('math', skill);
-        expect(next).toMatchObject({ level: 5, lostLevel: false, recoveryDifficulty: null });
+        expect(next).toMatchObject({ level: 5, lostLevel: false });
         expect(events.levelRestored).toBe(true);
     });
 
@@ -207,7 +207,6 @@ describe('afterDeath', () => {
         expect(afterDeath(skill)).toMatchObject({
             level: 24,
             lostLevel: true,
-            recoveryDifficulty: 1,
             difficulty: 2,
             mobHealth: 100,
             mobMaxHealth: 180,

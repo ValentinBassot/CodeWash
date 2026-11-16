@@ -71,7 +71,6 @@ describe('save format of a new player', () => {
                 mobHealth: 60,
                 mobMaxHealth: 60,
                 lostLevel: false,
-                recoveryDifficulty: null,
             });
         }
     });
@@ -88,7 +87,6 @@ describe('save format of a new player', () => {
                 'mobHealth',
                 'mobMaxHealth',
                 'lostLevel',
-                'recoveryDifficulty',
                 'memoryMob',
                 'patternMob',
                 'currentMiniboss',
@@ -143,7 +141,6 @@ describe('loading an existing save', () => {
             earnedBadges: [],
             mobHealth: 60,
             lostLevel: false,
-            recoveryDifficulty: null,
         });
         expect(saveOf(1).skills.math.mathMob).toEqual(expect.any(String));
         expect(localStorage.getItem('heroSkills_v23')).not.toBeNull();

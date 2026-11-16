@@ -103,7 +103,7 @@ export const resolveHit = (skillId, skill) => {
     let currentMob = skill.currentMob;
     let newDifficulty = difficulty;
     let earnedBadges = [...(skill.earnedBadges || [])];
-    let { lostLevel, recoveryDifficulty } = skill;
+    let { lostLevel } = skill;
 
     events.defeated = defeatedMob(skill);
     const stableMobs = drawNextStableMobs(skillId, skill);
@@ -111,7 +111,6 @@ export const resolveHit = (skillId, skill) => {
     if (lostLevel) {
         level += 1;
         lostLevel = false;
-        recoveryDifficulty = null;
         events.levelRestored = true;
     }
 
@@ -142,7 +141,6 @@ export const resolveHit = (skillId, skill) => {
             mobHealth: calculateMobHealth(newDifficulty),
             mobMaxHealth: calculateMobHealth(newDifficulty),
             lostLevel,
-            recoveryDifficulty,
         },
         events,
     };
@@ -197,7 +195,6 @@ export const afterDeath = (skill) => {
         ...skill,
         level,
         lostLevel: skill.level > 1,
-        recoveryDifficulty: Math.max(1, (skill.difficulty || 1) - 1),
     };
     const allowed = getExpectedDifficulty(level);
     return (skill.difficulty || 1) > allowed ? withDifficulty(lost, allowed) : lost;
