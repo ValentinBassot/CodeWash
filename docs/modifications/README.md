@@ -83,3 +83,4 @@ Every change to the project has its own short note in this folder, written in th
 | 072 | 2026-11-13 | [The hit flash of a mob lives in a hook](072-hit-flash-hook.md) |
 | 078 | 2026-11-15 | [A corrupted save is no longer replaced in silence](078-corrupted-save-notice.md) |
 | 091 | 2026-11-16 | [The notifications stay inside the window, above the game](091-notifications-stack.md) |
+| 094 | 2026-11-16 | [The game asks for the microphone when it opens](094-microphone-permission.md) |

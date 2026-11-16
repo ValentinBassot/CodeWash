@@ -16,6 +16,7 @@ import { generateChallenge } from './domain/challenge';
 import { isSpeechRecognitionAvailable } from './io/speechRecognition';
 import { useVoiceListener } from './hooks/useVoiceListener';
 import { useCarousel } from './hooks/useCarousel';
+import { useMicrophoneAccess } from './hooks/useMicrophoneAccess';
 import { summarizeSavedProfile } from './persistence/profiles';
 import { useProfiles } from './hooks/useProfiles';
 import { useAchievementToast } from './hooks/useAchievementToast';
@@ -36,6 +37,7 @@ import SkillCard from './components/skills/SkillCard';
 import PhantomEvent from './components/PhantomEvent';
 import AchievementToast from './components/ui/AchievementToast';
 import SaveProblemNotice from './components/ui/SaveProblemNotice';
+import MicrophoneNotice from './components/ui/MicrophoneNotice';
 import NotificationStack from './components/ui/NotificationStack';
 import LevelToast from './components/ui/LevelToast';
 
@@ -486,6 +488,10 @@ const App = () => {
     const currentThemeData = THEME_CONFIG[activeTheme] || THEME_CONFIG.minecraft;
     const containerStyle = { ...currentThemeData.style, fontFamily: '"VT323", monospace' };
 
+    const microphoneAccess = useMicrophoneAccess();
+
+    const [isMicrophoneNoticeDismissed, setIsMicrophoneNoticeDismissed] = useState(false);
+
     const carousel = useCarousel({ items: SKILL_DATA, locked: Boolean(battlingSkillId) });
 
     return (
@@ -823,6 +829,10 @@ const App = () => {
             </main>
             <NotificationStack>
                 <SaveProblemNotice problem={saveProblem} onDismiss={dismissSaveProblem} />
+                <MicrophoneNotice
+                    access={isMicrophoneNoticeDismissed ? 'granted' : microphoneAccess}
+                    onDismiss={() => setIsMicrophoneNoticeDismissed(true)}
+                />
                 {lootBox && <LevelToast {...lootBox} />}
                 {achievementToast && (
                     <AchievementToast
