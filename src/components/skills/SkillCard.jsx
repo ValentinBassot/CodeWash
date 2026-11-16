@@ -6,6 +6,7 @@ import BattleInfoPanel from './card/BattleInfoPanel';
 import BattleBody from './card/BattleBody';
 import MobWithAura from '../ui/MobWithAura';
 import { useHitFlash } from '../../hooks/useHitFlash';
+import { HEARTS_SPACE, useBattleScale } from '../../hooks/useBattleScale';
 import { getLevelStyle, getBorderEffect, getButtonStyle, resolveMob } from './card/cardStyle';
 import { AURA_ADJECTIVES } from '../../utils/mobDisplayUtils';
 
@@ -39,6 +40,7 @@ const SkillCard = ({
     bossHealing,
 }) => {
     const isHit = useHitFlash(damageNumbers.length);
+    const { scale, showPanel } = useBattleScale();
 
     // Calculate HP percentage based on mobHealth/mobMaxHealth for HP bar display
     const mobHealth = data.mobHealth || 100;
@@ -213,18 +215,22 @@ const SkillCard = ({
         return (
             <>
                 {ReactDOM.createPortal(
-                    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onEndBattle}>
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center"
+                        style={{ paddingBottom: HEARTS_SPACE }}
+                        onClick={onEndBattle}
+                    >
                         <div className="flex items-center justify-center relative" onClick={(e) => e.stopPropagation()}>
                             {/* Battle Card - Centered */}
                             <div
                                 style={{
-                                    transform: 'scale(1.5)',
+                                    transform: `scale(${scale})`,
                                     transformOrigin: 'center center',
                                 }}
                             >
                                 {cardContent}
                             </div>
-                            {!['memory', 'cleaning'].includes(config.id) && (
+                            {showPanel && !['memory', 'cleaning'].includes(config.id) && (
                                 <BattleInfoPanel
                                     targetName={displayMobNameWithAura}
                                     skillName={skillName}

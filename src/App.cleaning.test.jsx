@@ -1,10 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import App from './App';
-import { playWith, pressCard, save, skill, typeInto, useGameClock } from './test/game';
+import { playWith, pressCard, save, showCard, skill, typeInto, useGameClock } from './test/game';
 
 const cleaning = () => skill('cleaning');
-const startCleaning = () => fireEvent.click(screen.getAllByRole('button', { name: 'Organize!' })[0]);
+const startCleaning = () => {
+    showCard('Organize!');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Organize!' })[0]);
+};
 const answerParentalCheck = (text) => {
     fireEvent.click(screen.getByRole('button', { name: 'Complete!' }));
     const form = screen.getByRole('button', { name: 'Submit' }).closest('form');

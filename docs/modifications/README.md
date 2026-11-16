@@ -89,9 +89,15 @@ Every change to the project has its own short note in this folder, written in th
 | 078 | 2026-11-15 | [A corrupted save is no longer replaced in silence](078-corrupted-save-notice.md) |
 | 079 | 2026-11-15 | [recoveryDifficulty is removed](079-remove-recovery-difficulty.md) |
 | 080 | 2026-11-15 | [The Jack of All Trades text shows real progress](080-jack-of-all-trades-text.md) |
+| 081 | 2026-11-15 | [The top of the screen fits a phone width](081-phone-layout.md) |
+| 082 | 2026-11-15 | [The phone layout is checked in a real browser and finished](082-phone-layout-checked.md) |
+| 083 | 2026-11-15 | [The battle card fits the screen](083-battle-fits-the-screen.md) |
+| 084 | 2026-11-15 | [The cards fit the screen height with a safe margin](084-cards-fit-the-screen.md) |
+| 086 | 2026-11-16 | [Far cards slide instead of popping in](086-carousel-far-cards.md) |
 | 087 | 2026-11-16 | [A word said inside a sentence counts, and what is heard is shown](087-voice-phrase-match.md) |
 | 088 | 2026-11-16 | [The mobs follow the theme](088-themed-mobs.md) |
 | 089 | 2026-11-16 | [The K-Pop Demon Hunters theme has its mobs](089-kpop-mobs.md) |
+| 090 | 2026-11-16 | [The cards that are not visible cannot be clicked](090-hidden-cards-inert.md) |
 | 091 | 2026-11-16 | [The notifications stay inside the window, above the game](091-notifications-stack.md) |
 | 093 | 2026-11-16 | [The word can be typed when the speech does not work](093-type-the-word.md) |
 | 094 | 2026-11-16 | [The game asks for the microphone when it opens](094-microphone-permission.md) |

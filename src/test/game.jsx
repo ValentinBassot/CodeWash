@@ -22,7 +22,18 @@ export const playWith = (edit) => {
     return render(<App />);
 };
 
-export const pressCard = (actionName) => fireEvent.click(screen.getByRole('button', { name: actionName }));
+const MAX_TURNS = 6;
+
+export const showCard = (actionName) => {
+    for (let turn = 0; turn < MAX_TURNS && screen.queryAllByRole('button', { name: actionName }).length === 0; turn++) {
+        fireEvent.click(screen.getByRole('button', { name: 'Next skill' }));
+    }
+};
+
+export const pressCard = (actionName) => {
+    showCard(actionName);
+    fireEvent.click(screen.getByRole('button', { name: actionName }));
+};
 
 export const typeInto = (input, value) => fireEvent.change(input, { target: { value } });
 
