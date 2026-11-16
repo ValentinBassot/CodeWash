@@ -82,3 +82,4 @@ Every change to the project has its own short note in this folder, written in th
 | 071 | 2026-11-13 | [The look of a card is computed by pure functions](071-skillcard-style-helpers.md) |
 | 072 | 2026-11-13 | [The hit flash of a mob lives in a hook](072-hit-flash-hook.md) |
 | 088 | 2026-11-16 | [The mobs follow the theme](088-themed-mobs.md) |
+| 089 | 2026-11-16 | [The K-Pop Demon Hunters theme has its mobs](089-kpop-mobs.md) |

@@ -9,11 +9,11 @@ const KINDS = ['hostile', 'miniboss', 'boss'];
 
 describe('theme rosters', () => {
     it('the themes with their own mobs are the same in the rosters and in the configuration', () => {
-        expect(Object.keys(THEME_ROSTERS)).toEqual(['pokemon']);
+        expect(Object.keys(THEME_ROSTERS).sort()).toEqual(['kpop', 'pokemon']);
         for (const theme of Object.keys(THEME_ROSTERS)) {
             expect(THEME_CONFIG[theme].assets.roster).toBe(THEME_ROSTERS[theme]);
         }
-        for (const theme of ['minecraft', 'kpop', 'spy']) expect(THEME_CONFIG[theme].assets.roster).toBeUndefined();
+        for (const theme of ['minecraft', 'spy']) expect(THEME_CONFIG[theme].assets.roster).toBeUndefined();
     });
 
     it.each(Object.keys(THEME_ROSTERS))('%s has mobs of every kind, with a name and a picture', (theme) => {
