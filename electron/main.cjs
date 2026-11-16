@@ -1,5 +1,15 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, session, systemPreferences } = require('electron');
 const path = require('path');
+
+const ALLOWED_PERMISSIONS = ['media', 'microphone', 'audioCapture', 'fullscreen'];
+
+function allowGamePermissions() {
+    const { defaultSession } = session;
+    defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+        callback(ALLOWED_PERMISSIONS.includes(permission));
+    });
+    defaultSession.setPermissionCheckHandler((webContents, permission) => ALLOWED_PERMISSIONS.includes(permission));
+}
 
 let mainWindow;
 
@@ -11,6 +21,7 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
+            autoplayPolicy: 'no-user-gesture-required',
         },
         // Remove menu bar for cleaner experience
         autoHideMenuBar: true,
@@ -39,7 +50,11 @@ function createWindow() {
 }
 
 // Create window when Electron is ready
-app.whenReady().then(createWindow);
+app.whenReady().then(async () => {
+    allowGamePermissions();
+    if (process.platform === 'darwin') await systemPreferences.askForMediaAccess('microphone');
+    createWindow();
+});
 
 // Quit when all windows are closed (Windows & Linux behavior)
 app.on('window-all-closed', () => {

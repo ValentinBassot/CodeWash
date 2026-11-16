@@ -16,6 +16,7 @@ export const useProfiles = (storage = browserStorage) => {
     const [profileNames, setProfileNames] = useState(() => readProfileNames(storage));
     const [parentStatus, setParentStatus] = useState(() => readParentStatus(storage));
     const [initialProfile] = useState(() => loadProfile(storage, currentProfile));
+    const [saveProblem, setSaveProblem] = useState(initialProfile.problem || null);
     const [skills, setSkills] = useState(initialProfile.skills);
     const [activeTheme, setActiveTheme] = useState(initialProfile.theme);
     const [stats, setStats] = useState(initialProfile.stats);
@@ -39,6 +40,7 @@ export const useProfiles = (storage = browserStorage) => {
         setStats(next.stats);
         setSelectedBorder(next.border.effect);
         setBorderColor(next.border.color);
+        setSaveProblem(next.problem || null);
         setCurrentProfile(profileId);
     };
 
@@ -64,6 +66,8 @@ export const useProfiles = (storage = browserStorage) => {
         setSelectedBorder,
         borderColor,
         setBorderColor,
+        saveProblem,
+        dismissSaveProblem: () => setSaveProblem(null),
         switchProfile,
         renameProfile,
         setParentVerified,

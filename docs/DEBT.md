@@ -166,7 +166,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 |---|---|---|---|---|---|---|---|---|---|
 | D26 | God component: `App` is one 1172-line function with 31 `useState` | `App.jsx:49` (also complexity 31 at `:94`, 24 at `:569`) | tight coupling | 5 | 4 | 20 | XL | P1 | In progress (048, 055, 057, 058, 059, 060, 061, 062, 073, 074, 075) |
 | D27 | `SkillCard`: 611-line function, complexity 107, every mini-game inside | `SkillCard.jsx:65` | complexity | 5 | 4 | 20 | XL | P1 | In progress (064, 067, 068, 069, 070, 071, 072, 076, 077) |
-| D28 | Errors swallowed (`console.warn`, empty `.play().catch`) | `App.jsx:168,180,197,237`, `soundManager.js:127,136,185,255,269,283` | silent error | 3 | 3 | 9 | S | P2 | In progress (043) |
+| D28 | Errors swallowed (`console.warn`, empty `.play().catch`) | `App.jsx:168,180,197,237`, `soundManager.js:127,136,185,255,269,283` | silent error | 3 | 3 | 9 | S | P2 | In progress (043, 078) |
 | D29 | 1217 lines of CSS inside a component | `GlobalStyles.jsx:3` | large file | 3 | 3 | 9 | M | P3 | Identified |
 | D47 | Tests that mount the whole App take 4 to 8 s each; under parallel coverage the slowest exceed 20 s, so the timeout was raised to 30 s | `src/App.*.test.jsx`, `vite.config.js` (`testTimeout`) | slow tests | 3 | 3 | 9 | M | P2 | Identified |
 | D52 | Side effects inside state updates: in development (`StrictMode`) React runs them twice, so one victory counts two defeated mobs and one death counts two deaths and costs two levels | `App.jsx` (`handleSuccessHit`: `setStats`, sounds and timers inside `setSkills` and `setPlayerHealth`) | tight coupling | 3 | 5 | 15 | S | P1 | Done (049) |

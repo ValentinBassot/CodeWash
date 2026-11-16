@@ -17,25 +17,25 @@ const GlobalStyles = () => (
 
     /* Animations */
     @keyframes toast-slide {
-      0% { transform: translate(-50%, 150%); opacity: 0; }
-      10% { transform: translate(-50%, 0); opacity: 1; }
-      85% { transform: translate(-50%, 0); opacity: 1; }
-      100% { transform: translate(-50%, 150%); opacity: 0; }
+      0% { transform: translateY(-150%); opacity: 0; }
+      10% { transform: translateY(0); opacity: 1; }
+      85% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-150%); opacity: 0; }
     }
 
     /* Achievement Toast Animation with Happy Dance */
     @keyframes achievement-toast {
-      0% { transform: translate(-50%, 150%); opacity: 0; }
-      8% { transform: translate(-50%, 0); opacity: 1; }
+      0% { transform: translateY(-150%); opacity: 0; }
+      8% { transform: translateY(0); opacity: 1; }
       /* Happy dance/shake phase */
-      12% { transform: translate(-50%, 0) rotate(-2deg) scale(1.02); }
-      16% { transform: translate(-50%, -5px) rotate(2deg) scale(1.05); }
-      20% { transform: translate(-50%, 0) rotate(-2deg) scale(1.02); }
-      24% { transform: translate(-50%, -3px) rotate(1deg) scale(1.03); }
-      28% { transform: translate(-50%, 0) rotate(0deg) scale(1); }
+      12% { transform: translateY(0) rotate(-2deg) scale(1.02); }
+      16% { transform: translateY(-5px) rotate(2deg) scale(1.05); }
+      20% { transform: translateY(0) rotate(-2deg) scale(1.02); }
+      24% { transform: translateY(-3px) rotate(1deg) scale(1.03); }
+      28% { transform: translateY(0) rotate(0deg) scale(1); }
       /* Hold phase */
-      82% { transform: translate(-50%, 0); opacity: 1; }
-      100% { transform: translate(-50%, 150%); opacity: 0; }
+      82% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-150%); opacity: 0; }
     }
     .animate-achievement-toast {
       animation: achievement-toast 6s ease-in-out;

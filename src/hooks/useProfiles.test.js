@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { useProfiles } from './useProfiles';
 import { createSeededRandom, resetRandomSource, setRandomSource } from '../domain/random';
@@ -120,5 +120,30 @@ describe('useProfiles', () => {
         expect(storage.data.heroSkills_v23_p1).toBeUndefined();
         expect(JSON.parse(storage.data.heroProfileNames_v1)).toEqual({ 1: 'Player 1', 2: 'Zed', 3: 'Player 3' });
         expect(JSON.parse(storage.data.heroParentStatus_v1)).toEqual({ 1: false, 2: true, 3: false });
+    });
+
+    it('reports a corrupted save of the opening profile until it is dismissed', () => {
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+        const { result } = renderHook(() => useProfiles(memoryStorage({ heroSkills_v23_p1: '{oops' })));
+        expect(result.current.saveProblem).toBe('corrupted');
+
+        act(() => result.current.dismissSaveProblem());
+        expect(result.current.saveProblem).toBeNull();
+    });
+
+    it('reports a corrupted save of the profile switched to, and none for a readable one', () => {
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+        const storage = memoryStorage({
+            heroSkills_v23_p2: '{oops',
+            heroSkills_v23_p3: savedProfile(3, 'minecraft', 0),
+        });
+        const { result } = renderHook(() => useProfiles(storage));
+        expect(result.current.saveProblem).toBeNull();
+
+        act(() => result.current.switchProfile(2));
+        expect(result.current.saveProblem).toBe('corrupted');
+
+        act(() => result.current.switchProfile(3));
+        expect(result.current.saveProblem).toBeNull();
     });
 });

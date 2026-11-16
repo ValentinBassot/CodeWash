@@ -4,6 +4,7 @@ export const SAVE_KEYS = {
     parentStatus: 'heroParentStatus_v1',
     legacySkills: 'heroSkills_v23',
     profileSave: (profileId) => `heroSkills_v23_p${profileId}`,
+    corruptedBackup: (profileId) => `heroSkills_v23_p${profileId}_corrupted`,
     borderEffect: (profileId) => `borderEffect_p${profileId}`,
     borderColor: (profileId) => `borderColor_p${profileId}`,
     phantomLastSpawn: 'phantomEvent_lastSpawn_v1',
@@ -13,6 +14,10 @@ export const readProfileSave = (storage, profileId) => {
     const own = storage.getItem(SAVE_KEYS.profileSave(profileId));
     if (!own && profileId === 1) return storage.getItem(SAVE_KEYS.legacySkills);
     return own;
+};
+
+export const backupCorruptedSave = (storage, profileId, raw) => {
+    storage.setItem(SAVE_KEYS.corruptedBackup(profileId), raw);
 };
 
 const isPlainObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);

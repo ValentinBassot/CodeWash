@@ -4,6 +4,7 @@ import { todayKey } from './domain/clock';
 import { PLAYER_MAX_HEALTH, getAuraForSkill, withDifficulty } from './domain/battle';
 import { useBattleSession } from './hooks/useBattleSession';
 import { useCarousel } from './hooks/useCarousel';
+import { useMicrophoneAccess } from './hooks/useMicrophoneAccess';
 import { summarizeSavedProfile } from './persistence/profiles';
 import { useProfiles } from './hooks/useProfiles';
 import { useAchievementToast } from './hooks/useAchievementToast';
@@ -23,6 +24,10 @@ import MenuDrawer from './components/drawers/MenuDrawer';
 import SkillCard from './components/skills/SkillCard';
 import PhantomEvent from './components/PhantomEvent';
 import AchievementToast from './components/ui/AchievementToast';
+import SaveProblemNotice from './components/ui/SaveProblemNotice';
+import MicrophoneNotice from './components/ui/MicrophoneNotice';
+import NotificationStack from './components/ui/NotificationStack';
+import LevelToast from './components/ui/LevelToast';
 
 // Utils & Constants
 import { getMobForSkill, getExpectedDifficulty } from './utils/gameUtils';
@@ -62,6 +67,8 @@ const App = () => {
         setSelectedBorder,
         borderColor,
         setBorderColor,
+        saveProblem,
+        dismissSaveProblem,
     } = profiles;
 
     const getProfileStats = (id, liveSkills = null) => {
@@ -255,6 +262,10 @@ const App = () => {
 
     const currentThemeData = THEME_CONFIG[activeTheme] || THEME_CONFIG.minecraft;
     const containerStyle = { ...currentThemeData.style, fontFamily: '"VT323", monospace' };
+
+    const microphoneAccess = useMicrophoneAccess();
+
+    const [isMicrophoneNoticeDismissed, setIsMicrophoneNoticeDismissed] = useState(false);
 
     const carousel = useCarousel({ items: SKILL_DATA, locked: Boolean(battlingSkillId) });
 
@@ -594,38 +605,20 @@ const App = () => {
                     })}
                 </div>
             </main>
-            {lootBox && (
-                <div className="fixed bottom-8 left-1/2 z-50 animate-toast w-full max-w-2xl pointer-events-none transform -translate-x-1/2">
-                    <div className="bg-black/80 border-4 border-yellow-500 rounded-full p-4 px-12 flex items-center justify-between shadow-[0_0_30px_rgba(255,215,0,0.6)] backdrop-blur-md mx-4">
-                        <div className="flex items-center gap-4">
-                            <div className="bg-yellow-500/20 p-3 rounded-full border-2 border-yellow-400">
-                                <Gift size={32} className="text-yellow-300 animate-bounce" />
-                            </div>
-                            <div className="text-left">
-                                <h2 className="text-2xl text-yellow-400 font-bold leading-none mb-1">
-                                    LEVEL {lootBox.level} REACHED!
-                                </h2>
-                                <p className="text-stone-300 text-sm">{lootBox.skillName}</p>
-                            </div>
-                        </div>
-                        <div className="text-right pl-8 border-l-2 border-stone-600 flex items-center gap-4">
-                            <SafeImage src={lootBox.img} alt="Badge" className="w-12 h-12 object-contain" />
-                            <div>
-                                <p className="text-stone-400 text-xs uppercase tracking-wider">Unlocked</p>
-                                <p className="text-2xl text-green-400 font-bold">{lootBox.item}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Achievement Toast */}
-            {achievementToast && (
-                <AchievementToast
-                    achievementId={achievementToast.achievementId}
-                    tierIndex={achievementToast.tierIndex}
+            <NotificationStack>
+                <SaveProblemNotice problem={saveProblem} onDismiss={dismissSaveProblem} />
+                <MicrophoneNotice
+                    access={isMicrophoneNoticeDismissed ? 'granted' : microphoneAccess}
+                    onDismiss={() => setIsMicrophoneNoticeDismissed(true)}
                 />
-            )}
+                {lootBox && <LevelToast {...lootBox} />}
+                {achievementToast && (
+                    <AchievementToast
+                        achievementId={achievementToast.achievementId}
+                        tierIndex={achievementToast.tierIndex}
+                    />
+                )}
+            </NotificationStack>
 
             {/* Death Overlay - Minecraft-style YOU DIED screen */}
             {showDeathOverlay && (
