@@ -99,5 +99,6 @@ Every change to the project has its own short note in this folder, written in th
 | 089 | 2026-11-16 | [The K-Pop Demon Hunters theme has its mobs](089-kpop-mobs.md) |
 | 090 | 2026-11-16 | [The cards that are not visible cannot be clicked](090-hidden-cards-inert.md) |
 | 091 | 2026-11-16 | [The notifications stay inside the window, above the game](091-notifications-stack.md) |
+| 092 | 2026-11-16 | [The border previews fit their card on a small screen](092-border-previews-fit.md) |
 | 093 | 2026-11-16 | [The word can be typed when the speech does not work](093-type-the-word.md) |
 | 094 | 2026-11-16 | [The game asks for the microphone when it opens](094-microphone-permission.md) |
