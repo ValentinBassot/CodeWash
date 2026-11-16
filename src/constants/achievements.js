@@ -83,6 +83,9 @@ export const SKILL_MASTERY_TIERS = [
 
 const skillLevels = (skills) => Object.values(skills).map((s) => s.level || 0);
 
+const nextMasteryLevel = (level) =>
+    (SKILL_MASTERY_TIERS.find((tier) => tier.level > level) || SKILL_MASTERY_TIERS.at(-1)).level;
+
 const lowestSkillLevel = (skills) => {
     const levels = skillLevels(skills);
     return levels.length === 0 ? 0 : Math.min(...levels);
@@ -125,9 +128,9 @@ export const ACHIEVEMENTS = {
         getProgress: (stats, skills) => lowestSkillLevel(skills),
         getProgressText: (stats, skills) => {
             const levels = skillLevels(skills);
-            const minLevel = lowestSkillLevel(skills);
-            const count = levels.filter((l) => l >= minLevel).length;
-            return `${count}/6 skills at level ${minLevel}+`;
+            const target = nextMasteryLevel(lowestSkillLevel(skills));
+            const count = levels.filter((level) => level >= target).length;
+            return `${count}/${levels.length} skills at level ${target}+`;
         },
     },
 

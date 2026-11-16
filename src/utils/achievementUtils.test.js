@@ -115,13 +115,19 @@ describe('tiered achievements', () => {
     it('Jack of All Trades follows the lowest skill', () => {
         expect(getCurrentTier('skill_mastery', stats(), skillsAt(20, 20, 20, 20, 20, 19))).toBe(-1);
         expect(getCurrentTier('skill_mastery', stats(), sixSkillsAt(40))).toBe(1);
-        expect(ACHIEVEMENTS.skill_mastery.getProgressText(stats(), sixSkillsAt(40))).toBe('6/6 skills at level 40+');
+    });
+
+    it('Jack of All Trades counts the skills that reached the level of the next tier', () => {
+        const text = (skills) => ACHIEVEMENTS.skill_mastery.getProgressText(stats(), skills);
+        expect(text(sixSkillsAt(40))).toBe('0/6 skills at level 60+');
+        expect(text(skillsAt(60, 60, 45, 45, 45, 45))).toBe('2/6 skills at level 60+');
+        expect(text(sixSkillsAt(170))).toBe('6/6 skills at level 160+');
     });
 
     it('with no skill at all, Jack of All Trades has no tier and no progress', () => {
         expect(getCurrentTier('skill_mastery', stats(), {})).toBe(-1);
         expect(isAchievementUnlocked('skill_mastery', stats(), {})).toBe(false);
-        expect(ACHIEVEMENTS.skill_mastery.getProgressText(stats(), {})).toBe('0/6 skills at level 0+');
+        expect(ACHIEVEMENTS.skill_mastery.getProgressText(stats(), {})).toBe('0/0 skills at level 20+');
     });
 
     it('progress inside a tier is a floored percentage, 100 at the top', () => {
