@@ -19,8 +19,11 @@ class FakeRecognition {
         this.stops += 1;
         this.onend?.();
     }
+    say(text) {
+        act(() => this.onresult({ results: [Object.assign([{ transcript: text }], { isFinal: false })] }));
+    }
     hear(text) {
-        act(() => this.onresult({ results: [[{ transcript: text }]] }));
+        act(() => this.onresult({ results: [Object.assign([{ transcript: text }], { isFinal: true })] }));
     }
     endOnItsOwn() {
         act(() => this.onend());
@@ -38,6 +41,10 @@ const recognition = () => FakeRecognition.instances.at(-1);
 const startReadingBattle = () => pressCard('Enchant!');
 const shownWord = () =>
     [...document.querySelectorAll('span')].map((s) => s.textContent).find((t) => READING_WORDS[3].includes(t));
+const typeWord = (text) => {
+    fireEvent.change(screen.getByLabelText('Type the word'), { target: { value: text } });
+    fireEvent.submit(screen.getByLabelText('Type the word').closest('form'));
+};
 const micButton = () => {
     const wordBox = [...document.querySelectorAll('span')].find((x) =>
         READING_WORDS[3].includes(x.textContent),
@@ -65,6 +72,24 @@ describe('reading battle without speech recognition', () => {
         fireEvent.click(micButton());
         expect(screen.getByText('Mic not available')).toBeTruthy();
     });
+
+    it('lets the player type the word instead, and it counts like the spoken word', () => {
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+        render(<App />);
+        startReadingBattle();
+        const word = shownWord();
+        typeWord(word.toLowerCase());
+        expect(reading()).toMatchObject({ xp: 20, mobHealth: 48 });
+    });
+
+    it('a wrong typed word costs a heart like a wrong spoken word, a single letter counts for nothing', () => {
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+        render(<App />);
+        startReadingBattle();
+        typeWord('a');
+        for (let miss = 0; miss < 10; miss++) typeWord('zzz');
+        expect(save().stats.totalDeaths).toBe(1);
+    });
 });
 
 describe('reading battle with speech recognition', () => {
@@ -72,6 +97,27 @@ describe('reading battle with speech recognition', () => {
         vi.stubGlobal('webkitSpeechRecognition', FakeRecognition);
         vi.spyOn(console, 'error').mockImplementation(() => {});
     });
+
+    it('does not ask to type the word while the speech service works', () => {
+        render(<App />);
+        startReadingBattle();
+        expect(screen.queryByLabelText('Type the word')).toBeNull();
+    });
+
+    it.each(['network', 'service-not-allowed', 'audio-capture'])(
+        'a %s error of the speech service shows a way to type the word, and typing it counts',
+        (error) => {
+            render(<App />);
+            startReadingBattle();
+            const word = shownWord();
+            act(() => {
+                recognition().onerror({ error });
+                recognition().onend();
+            });
+            typeWord(word);
+            expect(reading()).toMatchObject({ xp: 20, mobHealth: 48 });
+        },
+    );
 
     it('starts listening in English as soon as the battle starts', () => {
         render(<App />);
@@ -94,6 +140,28 @@ describe('reading battle with speech recognition', () => {
         recognition().hear(` ${shownWord().toLowerCase()}`);
         expect(reading()).toMatchObject({ xp: 20, mobHealth: 48 });
         expect(save().stats.totalDeaths).toBe(0);
+    });
+
+    it('the word inside a sentence counts, and the sentence stays shown a moment', () => {
+        render(<App />);
+        startReadingBattle();
+        const word = shownWord();
+        recognition().hear(`I think it is ${word.toLowerCase()}`);
+        expect(reading().xp).toBe(20);
+        expect(screen.getByText(`I THINK IT IS ${word}`)).toBeTruthy();
+        expect(document.querySelector('.animate-shake')).toBeNull();
+
+        wait(2100);
+        expect(screen.queryByText(`I THINK IT IS ${word}`)).toBeNull();
+    });
+
+    it('what is being said is shown at once and does not count until it is final', () => {
+        render(<App />);
+        startReadingBattle();
+        recognition().say('hello th');
+        expect(screen.getByText('HELLO TH')).toBeTruthy();
+        expect(reading().xp).toBe(0);
+        expect(document.querySelector('.animate-shake')).toBeNull();
     });
 
     it('five words read aloud defeat the mob', () => {

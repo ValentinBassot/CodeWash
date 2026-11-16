@@ -5,9 +5,18 @@ import { createSpeechRecognition, isSpeechRecognitionAvailable } from '../io/spe
 export const MIC_OFF_TEXT = 'Mic Off';
 const RESTART_DELAY_MS = 100;
 
+const ERROR_TEXTS = {
+    'not-allowed': 'Mic permission denied',
+    'service-not-allowed': 'Speech service not allowed',
+    'audio-capture': 'No microphone found',
+    network: 'Speech service unreachable',
+};
+
 export const useVoiceListener = ({ keepListening, onHeard }) => {
     const [isListening, setIsListening] = useState(false);
     const [spokenText, setSpokenText] = useState('');
+    const [isFinalSpeech, setIsFinalSpeech] = useState(false);
+    const [hasFailed, setHasFailed] = useState(false);
     const recognitionRef = useRef(null);
     const micRefusedRef = useRef(false);
     const callbacksRef = useRef({ keepListening, onHeard });
@@ -41,8 +50,10 @@ export const useVoiceListener = ({ keepListening, onHeard }) => {
         recognitionRef.current = recognition;
         recognition.lang = 'en-US';
         recognition.continuous = true;
+        recognition.interimResults = true;
 
         recognition.onstart = () => {
+            setHasFailed(false);
             setIsListening(true);
             setSpokenText('Listening...');
         };
@@ -66,16 +77,19 @@ export const useVoiceListener = ({ keepListening, onHeard }) => {
 
         recognition.onerror = (event) => {
             console.error('[Speech Recognition] Error:', event.error);
-            if (event.error !== 'not-allowed') return;
+            if (!ERROR_TEXTS[event.error]) return;
             micRefusedRef.current = true;
-            setSpokenText('Mic permission denied');
+            setHasFailed(true);
+            setSpokenText(ERROR_TEXTS[event.error]);
             setIsListening(false);
         };
 
         recognition.onresult = (event) => {
-            const text = normalizeSpeech(event.results[event.results.length - 1][0].transcript);
+            const heard = event.results[event.results.length - 1];
+            const text = normalizeSpeech(heard[0].transcript);
             setSpokenText(text);
-            callbacksRef.current.onHeard(text, targetId);
+            setIsFinalSpeech(heard.isFinal);
+            if (heard.isFinal) callbacksRef.current.onHeard(text, targetId);
         };
 
         try {
@@ -98,5 +112,16 @@ export const useVoiceListener = ({ keepListening, onHeard }) => {
         }
     };
 
-    return { isListening, spokenText, clearSpokenText: () => setSpokenText(''), start, stop, toggle };
+    return {
+        isListening,
+        spokenText,
+        isFinalSpeech,
+        hasFailed,
+        clearSpokenText: (onlyIf) =>
+            setSpokenText((current) => (onlyIf === undefined || current === onlyIf ? '' : current)),
+        markHandled: () => setIsFinalSpeech(false),
+        start,
+        stop,
+        toggle,
+    };
 };

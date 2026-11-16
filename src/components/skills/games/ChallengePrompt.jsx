@@ -31,12 +31,16 @@ const Word = ({ text }) => (
     </span>
 );
 
-const ChallengePrompt = ({ type, challenge, spokenText, isListening }) => {
+const ChallengePrompt = ({ type, challenge, spokenText, isSpeechFinal, isListening }) => {
     const [lastJudged, setLastJudged] = useState('');
     const [wrongFlash, setWrongFlash] = useState(false);
 
     const isNewSpeech =
-        type === 'reading' && spokenText && !STATUS_TEXTS.includes(spokenText) && spokenText !== lastJudged;
+        type === 'reading' &&
+        isSpeechFinal &&
+        spokenText &&
+        !STATUS_TEXTS.includes(spokenText) &&
+        spokenText !== lastJudged;
     if (isNewSpeech) {
         setLastJudged(spokenText);
         if (challenge?.answer && judgeSpokenWord(spokenText, challenge.answer) === 'wrong') setWrongFlash(true);

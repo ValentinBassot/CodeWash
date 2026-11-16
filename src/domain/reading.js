@@ -8,8 +8,11 @@ export const normalizeSpeech = (transcript) =>
         .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
         .trim();
 
+const wordsOf = (spoken) => spoken.split(/\s+/).filter(Boolean);
+
 export const judgeSpokenWord = (spoken, answer) => {
-    if (spoken === answer || HOMOPHONES[answer]?.includes(spoken)) return 'correct';
+    const accepted = [answer, ...(HOMOPHONES[answer] || [])];
+    if (wordsOf(spoken).some((word) => accepted.includes(word))) return 'correct';
     if (spoken.length >= MIN_SPOKEN_LENGTH) return 'wrong';
     return 'noise';
 };

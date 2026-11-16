@@ -81,3 +81,10 @@ Every change to the project has its own short note in this folder, written in th
 | 070 | 2026-11-13 | [The difficulty picker, the XP bar and the battle panel are components](070-skillcard-panels.md) |
 | 071 | 2026-11-13 | [The look of a card is computed by pure functions](071-skillcard-style-helpers.md) |
 | 072 | 2026-11-13 | [The hit flash of a mob lives in a hook](072-hit-flash-hook.md) |
+| 073 | 2026-11-15 | [What a wrong answer does is decided outside App](073-mistake-rules.md) |
+| 074 | 2026-11-15 | [The phantom bonus level is added by the domain](074-phantom-level.md) |
+| 075 | 2026-11-15 | [The battle session lives in a hook](075-battle-session-hook.md) |
+| 076 | 2026-11-15 | [The Complete! button of the cleaning skill is a component](076-cleaning-challenge.md) |
+| 077 | 2026-11-15 | [The inside of a battle card is a component](077-battle-body.md) |
+| 087 | 2026-11-16 | [A word said inside a sentence counts, and what is heard is shown](087-voice-phrase-match.md) |
+| 093 | 2026-11-16 | [The word can be typed when the speech does not work](093-type-the-word.md) |

@@ -4,9 +4,12 @@ import {
     getAuraForSkill,
     afterDeath,
     getChallengeDifficulty,
+    PLAYER_MAX_HEALTH,
     recordDefeat,
+    resolveMistake,
     resolveHit,
     withDifficulty,
+    withPhantomLevel,
 } from './battle';
 import { createNewSkill } from '../persistence/profileSave';
 import { getDefaultStats } from '../utils/achievementUtils';
@@ -244,5 +247,44 @@ describe('getChallengeDifficulty', () => {
     it('is one harder against a miniboss, never above 7', () => {
         expect(getChallengeDifficulty({ level: 10, difficulty: 2 })).toBe(3);
         expect(getChallengeDifficulty({ level: 130, difficulty: 7 })).toBe(7);
+    });
+});
+
+describe('resolveMistake', () => {
+    it('heals a boss to full health and spares the player', () => {
+        const boss = skillOf('math', { level: 20, mobHealth: 30, mobMaxHealth: 60 });
+        expect(resolveMistake(boss, 1)).toEqual({ kind: 'bossHeals', skill: { ...boss, mobHealth: 60 } });
+    });
+
+    it('costs a life against any other mob', () => {
+        expect(resolveMistake(skillOf('math'), 10)).toEqual({ kind: 'hurt', playerHealth: 9 });
+        expect(resolveMistake(skillOf('math', { level: 10 }), 2)).toEqual({ kind: 'hurt', playerHealth: 1 });
+    });
+
+    it('kills the player on the last life, takes a level and refills the lives', () => {
+        const skill = skillOf('math', { level: 5 });
+        expect(resolveMistake(skill, 1)).toEqual({
+            kind: 'death',
+            skill: afterDeath(skill),
+            playerHealth: PLAYER_MAX_HEALTH,
+        });
+    });
+
+    it('works without a skill in battle', () => {
+        expect(resolveMistake(null, 1)).toEqual({ kind: 'death', skill: null, playerHealth: PLAYER_MAX_HEALTH });
+        expect(resolveMistake(null, 5)).toEqual({ kind: 'hurt', playerHealth: 4 });
+    });
+});
+
+describe('withPhantomLevel', () => {
+    it('adds one level and keeps the rest of the skill', () => {
+        const skill = skillOf('math', { level: 7, xp: 12 });
+        expect(withPhantomLevel(skill)).toEqual({ ...skill, level: 8 });
+    });
+
+    it('does not change the skill it receives', () => {
+        const skill = skillOf('math', { level: 7 });
+        withPhantomLevel(skill);
+        expect(skill.level).toBe(7);
     });
 });

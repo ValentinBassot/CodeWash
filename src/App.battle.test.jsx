@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StrictMode } from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import App from './App';
 import { playWith, pressCard, save, skill, typeInto, useGameClock, wait } from './test/game';
 
@@ -32,6 +32,14 @@ describe('math battle against a regular mob', () => {
         startMathBattle();
         expect(screen.getByText(/^\d+ \+ \d+ = \?$/)).toBeTruthy();
         expect(mathInput()).toBeTruthy();
+    });
+
+    it('leaves the battle when the backdrop is clicked', () => {
+        render(<App />);
+        startMathBattle();
+        fireEvent.click(document.querySelector('div.fixed.inset-0.bg-black\\/50'));
+        expect(mathInput()).toBeNull();
+        expect(screen.getByRole('button', { name: 'Calculate!' })).toBeTruthy();
     });
 
     it('one right answer deals 12 damage and gives 20 XP', () => {
