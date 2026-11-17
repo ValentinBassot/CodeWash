@@ -1,7 +1,7 @@
 import React from 'react';
 
 const MESSAGES = {
-    denied: 'The microphone is blocked. Allow it in the settings of the browser or of the system to speak the words, or type them.',
+    denied: 'The microphone is blocked. Allow it in the privacy settings (Microphone), then reopen the game to speak the words, or type them.',
     unavailable: 'No microphone was found. You can type the words instead.',
 };
 
