@@ -13,8 +13,8 @@ export default defineConfig({
         env: { TZ: 'Europe/Paris' },
         coverage: {
             provider: 'v8',
-            include: ['src/**/*.{js,jsx}', 'scripts/**/*.mjs'],
-            exclude: ['**/*.test.*', 'src/main.jsx'],
+            include: ['src/**/*.{js,jsx}', 'scripts/**/*.mjs', 'electron/**/*.cjs'],
+            exclude: ['**/*.test.*', 'src/main.jsx', 'electron/main.cjs'],
             reporter: ['text', 'html', 'lcov', 'json-summary'],
             thresholds: {
                 lines: 90,

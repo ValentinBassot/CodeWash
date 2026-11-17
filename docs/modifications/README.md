@@ -102,3 +102,4 @@ Every change to the project has its own short note in this folder, written in th
 | 092 | 2026-11-16 | [The border previews fit their card on a small screen](092-border-previews-fit.md) |
 | 093 | 2026-11-16 | [The word can be typed when the speech does not work](093-type-the-word.md) |
 | 094 | 2026-11-16 | [The game asks for the microphone when it opens](094-microphone-permission.md) |
+| 095 | 2026-11-17 | [The Electron app opens the system microphone settings when the microphone is blocked](095-microphone-system-settings.md) |

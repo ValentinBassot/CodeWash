@@ -1,5 +1,6 @@
-const { app, BrowserWindow, session, systemPreferences } = require('electron');
+const { app, BrowserWindow, session, shell, systemPreferences } = require('electron');
 const path = require('path');
+const { ensureMicrophoneAccess } = require('./microphoneSettings.cjs');
 
 const ALLOWED_PERMISSIONS = ['media', 'microphone', 'audioCapture', 'fullscreen'];
 
@@ -52,8 +53,12 @@ function createWindow() {
 // Create window when Electron is ready
 app.whenReady().then(async () => {
     allowGamePermissions();
-    if (process.platform === 'darwin') await systemPreferences.askForMediaAccess('microphone');
     createWindow();
+    await ensureMicrophoneAccess({
+        platform: process.platform,
+        systemPreferences,
+        openExternal: (url) => shell.openExternal(url),
+    });
 });
 
 // Quit when all windows are closed (Windows & Linux behavior)
