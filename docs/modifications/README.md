@@ -93,6 +93,7 @@ Every change to the project has its own short note in this folder, written in th
 | 082 | 2026-11-15 | [The phone layout is checked in a real browser and finished](082-phone-layout-checked.md) |
 | 083 | 2026-11-15 | [The battle card fits the screen](083-battle-fits-the-screen.md) |
 | 084 | 2026-11-15 | [The cards fit the screen height with a safe margin](084-cards-fit-the-screen.md) |
+| 085 | 2026-11-15 | [The game opens in a native window on Windows, macOS and Linux](085-windows-native-window.md) |
 | 086 | 2026-11-16 | [Far cards slide instead of popping in](086-carousel-far-cards.md) |
 | 087 | 2026-11-16 | [A word said inside a sentence counts, and what is heard is shown](087-voice-phrase-match.md) |
 | 088 | 2026-11-16 | [The mobs follow the theme](088-themed-mobs.md) |

@@ -13,6 +13,8 @@
     "dev": "vite",
     "build": "vite build",
     "start": "npm run build && node scripts/run-electron.mjs",
+    "start:windows": "npm run build && node scripts/run-electron-windows.mjs",
+    "start:native": "npm run build && node scripts/run-electron-native.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

@@ -41,6 +41,8 @@ Every variable is optional. Values are read once at startup by `src/config.js`, 
 | `npm run doctor` | Checks the environment and prints a fix for each problem found |
 | `npm run dev` | Starts the game in the browser with hot reload (http://localhost:5173) |
 | `npm start` | Builds, then launches the desktop (Electron) version |
+| `npm run start:windows` | From WSL, builds then opens the game in a native Windows window instead of WSLg |
+| `npm run start:native` | Builds then opens the game natively wherever you are: a Windows window from WSL, the desktop app on macOS, Linux and Windows |
 | `npm test` | Runs the test suite once (Vitest) |
 | `npm run test:watch` | Re-runs the tests on every file change |
 | `npm run test:coverage` | Runs the tests and writes the coverage report to `coverage/` |

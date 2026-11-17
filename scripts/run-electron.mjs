@@ -9,7 +9,7 @@ export function electronEnv(env) {
     return clean;
 }
 
-function main() {
+export function runLocal() {
     const electronBinary = createRequire(import.meta.url)('electron');
     const child = spawn(electronBinary, ['.', ...process.argv.slice(2)], {
         stdio: 'inherit',
@@ -20,4 +20,4 @@ function main() {
     });
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) runLocal();
