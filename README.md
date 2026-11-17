@@ -42,7 +42,8 @@ Every variable is optional. Values are read once at startup by `src/config.js`, 
 | `npm run dev` | Starts the game in the browser with hot reload (http://localhost:5173) |
 | `npm start` | Builds, then launches the desktop (Electron) version |
 | `npm run start:windows` | From WSL, builds then opens the game in a native Windows window instead of WSLg |
-| `npm run start:native` | Builds then opens the game natively wherever you are: a Windows window from WSL, the desktop app on macOS, Linux and Windows |
+| `npm run start:native` | Builds then opens the game in a Chrome or Edge application window (voice recognition works there), or in Electron when none is installed: a Windows window from WSL, the desktop app elsewhere |
+| `npm run start:browser` | Builds, serves the game on `localhost:4173` and opens it in a Chrome or Edge application window, the only way to use voice recognition (Electron cannot) |
 | `npm test` | Runs the test suite once (Vitest) |
 | `npm run test:watch` | Re-runs the tests on every file change |
 | `npm run test:coverage` | Runs the tests and writes the coverage report to `coverage/` |
