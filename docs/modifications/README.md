@@ -109,4 +109,5 @@ Every change to the project has its own short note in this folder, written in th
 | 098 | 2026-11-26 | [A runbook for running, repairing and restoring the game](098-runbook.md) |
 | 099 | 2026-11-26 | [The launchers of the browser and of the Windows Electron are tested](099-launchers-tested.md) |
 | 110 | 2026-11-26 | [The game opens on a loading screen with a real percentage and starts lighter](110-loading-screen-with-percentage.md) |
+| 111 | 2026-11-26 | [The home screen does less work while it waits](111-lighter-home-screen.md) |
 | 130 | 2026-11-26 | [ShieldCI can generate the pipelines on the mirror](130-shieldci-workflow.md) |

@@ -3,7 +3,7 @@ import { playActionCardLeft, playActionCardRight } from '../utils/soundManager';
 
 const SWIPE_DISTANCE = 100;
 export const VISIBLE_EACH_SIDE = 2;
-export const CARDS_EACH_SIDE = 6;
+export const CARDS_EACH_SIDE = 4;
 
 export const getVisibleItems = (items, selectedIndex) => {
     const visible = [];
