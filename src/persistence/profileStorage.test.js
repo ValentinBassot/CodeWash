@@ -1,15 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import {
+    MAX_STORED_TICKETS,
     SAVE_KEYS,
+    addTicket,
+    clearGithubToken,
     readBorder,
     readCurrentProfile,
     readObject,
+    readGithubToken,
     readParentStatus,
     readPhantomLastSpawn,
     readProfileNames,
     readProfileSave,
+    readSaveFiles,
+    readTickets,
     resetProfile,
+    updateTicket,
     writeBorder,
+    writeGithubToken,
     writePhantomLastSpawn,
     writeProfileSave,
     writeProfiles,
@@ -41,6 +49,8 @@ describe('SAVE_KEYS', () => {
         expect(SAVE_KEYS.borderEffect(3)).toBe('borderEffect_p3');
         expect(SAVE_KEYS.borderColor(1)).toBe('borderColor_p1');
         expect(SAVE_KEYS.phantomLastSpawn).toBe('phantomEvent_lastSpawn_v1');
+        expect(SAVE_KEYS.bugTickets).toBe('bugTickets_v1');
+        expect(SAVE_KEYS.githubToken).toBe('bugReportGithubToken_v1');
     });
 });
 
@@ -178,5 +188,162 @@ describe('phantom last spawn', () => {
         writePhantomLastSpawn(storage, 1700000000000);
         expect(storage.data).toEqual({ phantomEvent_lastSpawn_v1: '1700000000000' });
         expect(readPhantomLastSpawn(storage)).toBe(1700000000000);
+    });
+});
+
+const TICKET = { title: 'T', description: 'D' };
+
+const failingStorage = () => ({
+    getItem: () => null,
+    setItem: () => {
+        throw new Error('quota exceeded');
+    },
+    removeItem: () => {},
+});
+
+describe('bug tickets', () => {
+    it('are empty when nothing is saved', () => {
+        expect(readTickets(memoryStorage())).toEqual([]);
+    });
+
+    it('are added with a number, a state and no issue yet', () => {
+        const storage = memoryStorage();
+        const first = addTicket(storage, { state: 'pending', ticket: TICKET });
+        const second = addTicket(storage, { state: 'opened', ticket: TICKET });
+        expect(first).toEqual({ id: 1, state: 'pending', issueUrl: null, issueNumber: null, ticket: TICKET });
+        expect(second.id).toBe(2);
+        expect(readTickets(storage)).toEqual([first, second]);
+        expect(Object.keys(storage.data)).toEqual(['bugTickets_v1']);
+    });
+
+    it('never reuse the number of a ticket that is still there', () => {
+        const storage = memoryStorage();
+        addTicket(storage, { state: 'pending', ticket: TICKET });
+        addTicket(storage, { state: 'pending', ticket: TICKET });
+        storage.data.bugTickets_v1 = JSON.stringify(readTickets(storage).slice(1));
+        expect(addTicket(storage, { state: 'pending', ticket: TICKET }).id).toBe(3);
+    });
+
+    it('keep only the most recent ones', () => {
+        const storage = memoryStorage();
+        for (let n = 0; n < MAX_STORED_TICKETS + 3; n++) addTicket(storage, { state: 'pending', ticket: TICKET });
+        const tickets = readTickets(storage);
+        expect(tickets).toHaveLength(MAX_STORED_TICKETS);
+        expect(tickets[0].id).toBe(4);
+        expect(tickets.at(-1).id).toBe(MAX_STORED_TICKETS + 3);
+    });
+
+    it('are updated by number, the others stay as they are', () => {
+        const storage = memoryStorage();
+        addTicket(storage, { state: 'pending', ticket: TICKET });
+        addTicket(storage, { state: 'pending', ticket: TICKET });
+        const link = { state: 'created', issueUrl: 'https://github.com/a/b/issues/5', issueNumber: 5 };
+        expect(updateTicket(storage, 2, link)).toBe(true);
+        const [first, second] = readTickets(storage);
+        expect(first.state).toBe('pending');
+        expect(second).toMatchObject({ id: 2, ...link });
+    });
+
+    it('cannot be updated when they do not exist', () => {
+        const storage = memoryStorage();
+        expect(updateTicket(storage, 9, { state: 'created' })).toBe(false);
+        expect(storage.data).toEqual({});
+    });
+
+    it.each([
+        ['not JSON', '{oops'],
+        ['not a list', '{"id":1}'],
+        ['null', 'null'],
+    ])('are empty when the entry is %s', (_, raw) => {
+        expect(readTickets(memoryStorage({ bugTickets_v1: raw }))).toEqual([]);
+    });
+
+    it('skip the records that are not tickets', () => {
+        const good = { id: 1, state: 'pending', issueUrl: null, issueNumber: null, ticket: TICKET };
+        const raw = JSON.stringify([
+            good,
+            null,
+            'text',
+            { id: 'x', state: 'pending', ticket: TICKET },
+            { ...good, state: 'lost' },
+            { ...good, ticket: 5 },
+        ]);
+        expect(readTickets(memoryStorage({ bugTickets_v1: raw }))).toEqual([good]);
+    });
+
+    it('are not added, without a crash, when the storage is full', () => {
+        expect(addTicket(failingStorage(), { state: 'pending', ticket: TICKET })).toBeNull();
+    });
+});
+
+describe('GitHub token', () => {
+    it('is missing by default, then stored under its own key, then removed', () => {
+        const storage = memoryStorage();
+        expect(readGithubToken(storage)).toBeNull();
+        writeGithubToken(storage, 'fake-token');
+        expect(storage.data).toEqual({ bugReportGithubToken_v1: 'fake-token' });
+        expect(readGithubToken(storage)).toBe('fake-token');
+        clearGithubToken(storage);
+        expect(readGithubToken(storage)).toBeNull();
+        expect(storage.data).toEqual({});
+    });
+
+    it('is never part of the tickets', () => {
+        const storage = memoryStorage();
+        writeGithubToken(storage, 'fake-token');
+        addTicket(storage, { state: 'pending', ticket: TICKET });
+        expect(storage.data.bugTickets_v1).not.toContain('fake-token');
+    });
+});
+
+describe('GitHub token with a storage that fails', () => {
+    const brokenStorage = () => ({
+        getItem: () => {
+            throw new Error('blocked');
+        },
+        setItem: () => {
+            throw new Error('quota exceeded');
+        },
+        removeItem: () => {
+            throw new Error('blocked');
+        },
+    });
+
+    it('is missing instead of crashing, and says when it could not be written or removed', () => {
+        const storage = brokenStorage();
+        expect(readGithubToken(storage)).toBeNull();
+        expect(writeGithubToken(storage, 'fake-token')).toBe(false);
+        expect(clearGithubToken(storage)).toBe(false);
+    });
+
+    it('says when it was written or removed', () => {
+        const storage = memoryStorage();
+        expect(writeGithubToken(storage, 'fake-token')).toBe(true);
+        expect(clearGithubToken(storage)).toBe(true);
+    });
+});
+
+describe('readSaveFiles', () => {
+    it('reads the three profiles, the names and the current profile', () => {
+        const storage = memoryStorage({
+            currentProfile_v1: '2',
+            heroSkills_v23_p1: '{"theme":"spy","skills":{}}',
+            heroSkills_v23_p3: '{oops',
+            heroProfileNames_v1: JSON.stringify({ 1: 'Robo', 2: 'Zed', 3: 'Kim' }),
+        });
+        expect(readSaveFiles(storage)).toEqual({
+            currentProfile: 2,
+            profileNames: { 1: 'Robo', 2: 'Zed', 3: 'Kim' },
+            saves: { 1: { theme: 'spy', skills: {} }, 2: null, 3: '{oops' },
+        });
+    });
+
+    it('keeps the text of a save that is not an object, and the legacy save of profile 1', () => {
+        const storage = memoryStorage({ heroSkills_v23: '{"reading":{"level":3}}', heroSkills_v23_p2: '[1]' });
+        expect(readSaveFiles(storage).saves).toEqual({ 1: { reading: { level: 3 } }, 2: '[1]', 3: null });
+    });
+
+    it('treats an empty entry as no save', () => {
+        expect(readSaveFiles(memoryStorage({ heroSkills_v23_p2: '' })).saves[2]).toBeNull();
     });
 });

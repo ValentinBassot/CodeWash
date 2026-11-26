@@ -1,3 +1,5 @@
+import { TICKET_STATES } from '../domain/ticket';
+
 export const SAVE_KEYS = {
     currentProfile: 'currentProfile_v1',
     profileNames: 'heroProfileNames_v1',
@@ -8,6 +10,8 @@ export const SAVE_KEYS = {
     borderEffect: (profileId) => `borderEffect_p${profileId}`,
     borderColor: (profileId) => `borderColor_p${profileId}`,
     phantomLastSpawn: 'phantomEvent_lastSpawn_v1',
+    bugTickets: 'bugTickets_v1',
+    githubToken: 'bugReportGithubToken_v1',
 };
 
 export const readProfileSave = (storage, profileId) => {
@@ -87,5 +91,89 @@ export const readPhantomLastSpawn = (storage) => parseInt(storage.getItem(SAVE_K
 export const writePhantomLastSpawn = (storage, time) => {
     storage.setItem(SAVE_KEYS.phantomLastSpawn, time.toString());
 };
+
+export const MAX_STORED_TICKETS = 20;
+
+const isTicketRecord = (value) =>
+    isPlainObject(value) &&
+    Number.isInteger(value.id) &&
+    TICKET_STATES.includes(value.state) &&
+    isPlainObject(value.ticket);
+
+export const readTickets = (storage) => {
+    try {
+        const parsed = JSON.parse(storage.getItem(SAVE_KEYS.bugTickets));
+        return Array.isArray(parsed) ? parsed.filter(isTicketRecord) : [];
+    } catch {
+        return [];
+    }
+};
+
+const writeTickets = (storage, tickets) => {
+    try {
+        storage.setItem(SAVE_KEYS.bugTickets, JSON.stringify(tickets.slice(-MAX_STORED_TICKETS)));
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+export const addTicket = (storage, { state, ticket }) => {
+    const tickets = readTickets(storage);
+    const id = tickets.reduce((highest, record) => Math.max(highest, record.id), 0) + 1;
+    const record = { id, state, issueUrl: null, issueNumber: null, ticket };
+    return writeTickets(storage, [...tickets, record]) ? record : null;
+};
+
+export const updateTicket = (storage, id, changes) => {
+    const tickets = readTickets(storage);
+    if (!tickets.some((record) => record.id === id)) return false;
+    return writeTickets(
+        storage,
+        tickets.map((record) => (record.id === id ? { ...record, ...changes } : record)),
+    );
+};
+
+export const readGithubToken = (storage) => {
+    try {
+        return storage.getItem(SAVE_KEYS.githubToken) || null;
+    } catch {
+        return null;
+    }
+};
+
+export const writeGithubToken = (storage, token) => {
+    try {
+        storage.setItem(SAVE_KEYS.githubToken, token);
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+export const clearGithubToken = (storage) => {
+    try {
+        storage.removeItem(SAVE_KEYS.githubToken);
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+const readableSave = (raw) => {
+    if (!raw) return null;
+    try {
+        const parsed = JSON.parse(raw);
+        return isPlainObject(parsed) ? parsed : raw;
+    } catch {
+        return raw;
+    }
+};
+
+export const readSaveFiles = (storage) => ({
+    currentProfile: readCurrentProfile(storage),
+    profileNames: readProfileNames(storage),
+    saves: Object.fromEntries(PROFILE_IDS.map((id) => [id, readableSave(readProfileSave(storage, id))])),
+});
 
 export const browserStorage = globalThis.localStorage;
