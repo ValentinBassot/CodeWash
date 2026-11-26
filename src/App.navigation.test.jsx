@@ -101,16 +101,6 @@ describe('drawers', () => {
     });
 });
 
-describe('bug report', () => {
-    it('KNOWN DEBT D37: the bug button opens a modal that only sympathizes', () => {
-        render(<App />);
-        fireEvent.click(topButton('bug'));
-        expect(screen.getByText('Discovered a bug?')).toBeTruthy();
-        expect(screen.getByText('Whoa... That sucks...')).toBeTruthy();
-        expect(screen.queryByRole('textbox')).toBeNull();
-    });
-});
-
 describe('difficulty picker', () => {
     it('appears once a boss is beaten and changes the difficulty of the next mobs', () => {
         playWith((s) => {

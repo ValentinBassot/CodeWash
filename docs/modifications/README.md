@@ -113,6 +113,8 @@ Every change to the project has its own short note in this folder, written in th
 | 102 | 2026-11-26 | [Tickets and the optional GitHub token are stored through profileStorage](102-ticket-storage.md) |
 | 103 | 2026-11-26 | [The game can create a GitHub issue](103-github-issues.md) |
 | 104 | 2026-11-26 | [A report can hold a screenshot, the game file and the full JSON report](104-report-attachments.md) |
+| 105 | 2026-11-26 | [The bug button opens a bug report drawer](105-bug-report-drawer.md) |
+| 106 | 2026-11-26 | [The bug report is safer: cleaned log, characters, private report, capture timeout](106-bug-report-hardening.md) |
 | 110 | 2026-11-26 | [The game opens on a loading screen with a real percentage and starts lighter](110-loading-screen-with-percentage.md) |
 | 111 | 2026-11-26 | [The home screen does less work while it waits](111-lighter-home-screen.md) |
 | 130 | 2026-11-26 | [ShieldCI can generate the pipelines on the mirror](130-shieldci-workflow.md) |

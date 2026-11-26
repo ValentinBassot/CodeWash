@@ -10,6 +10,7 @@ import { summarizeSavedProfile } from './persistence/profiles';
 import { useProfiles } from './hooks/useProfiles';
 import { useAchievementToast } from './hooks/useAchievementToast';
 import { grantParentPrivileges } from './domain/parent';
+import { installErrorLog } from './io/errorLog';
 
 // Modules
 import GlobalStyles from './components/ui/GlobalStyles';
@@ -18,7 +19,7 @@ import PixelHeart from './components/ui/PixelHeart';
 import { browserStorage } from './persistence/profileStorage';
 import { summarizeSkills } from './persistence/profileSave';
 import ResetModal from './components/modals/ResetModal';
-import BugReportModal from './components/modals/BugReportModal';
+import BugReportDrawer from './components/drawers/BugReportDrawer';
 import SettingsDrawer from './components/drawers/SettingsDrawer';
 import CosmeticsDrawer from './components/drawers/CosmeticsDrawer';
 import MenuDrawer from './components/drawers/MenuDrawer';
@@ -221,9 +222,21 @@ const App = () => {
             setIsSettingsOpen(false);
             setIsCosmeticsOpen(false);
             setIsMenuOpen(false);
+            setIsBugReportOpen(false);
         };
         document.addEventListener('keydown', closeDrawersOnEscape);
         return () => document.removeEventListener('keydown', closeDrawersOnEscape);
+    }, []);
+
+    useEffect(() => installErrorLog(), []);
+
+    const closeBugReport = useCallback(() => setIsBugReportOpen(false), []);
+    const otherDrawerOpen = useRef(false);
+    useEffect(() => {
+        otherDrawerOpen.current = isMenuOpen || isSettingsOpen || isCosmeticsOpen;
+    });
+    const openBugReport = useCallback(() => {
+        if (!otherDrawerOpen.current) setIsBugReportOpen(true);
     }, []);
 
     const handleSwitchProfile = (newId) => {
@@ -286,6 +299,7 @@ const App = () => {
                 onClick={() => {
                     setIsMenuOpen(false);
                     setIsCosmeticsOpen(false);
+                    setIsBugReportOpen(false);
                     setIsSettingsOpen(true);
                     playClick();
                 }}
@@ -298,6 +312,7 @@ const App = () => {
                 onClick={() => {
                     setIsMenuOpen(false);
                     setIsSettingsOpen(false);
+                    setIsBugReportOpen(false);
                     setIsCosmeticsOpen(true);
                     playClick();
                 }}
@@ -364,7 +379,6 @@ const App = () => {
                 currentSkills={skills}
             />
             <ResetModal isOpen={isResetOpen} onClose={() => setIsResetOpen(false)} onConfirm={handleReset} />
-            <BugReportModal isOpen={isBugReportOpen} onClose={() => setIsBugReportOpen(false)} />
 
             {/* Top Right Buttons */}
             {/* Button dimensions: p-3 (12px) + icon(48px) + p-3 (12px) + border-2*2 (4px) = 76px + 8px gap = 84px spacing */}
@@ -385,6 +399,7 @@ const App = () => {
                 onClick={() => {
                     setIsSettingsOpen(false);
                     setIsCosmeticsOpen(false);
+                    setIsBugReportOpen(false);
                     setIsMenuOpen(true);
                     playClick();
                 }}
@@ -404,6 +419,17 @@ const App = () => {
                 />
             )}
             <MenuDrawer isOpen={isMenuOpen} skills={skills} stats={stats} />
+
+            {isBugReportOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40"
+                    onClick={() => {
+                        setIsBugReportOpen(false);
+                        playClick();
+                    }}
+                />
+            )}
+            <BugReportDrawer isOpen={isBugReportOpen} onClose={closeBugReport} onOpen={openBugReport} />
 
             {/* Bottom Right Bug Report Button */}
             <button
