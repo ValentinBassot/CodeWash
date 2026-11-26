@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { normalizeSpeech } from '../domain/reading';
 import { createSpeechRecognition, isSpeechRecognitionAvailable } from '../io/speechRecognition';
+import { recordFlow } from '../monitoring';
 
 export const MIC_OFF_TEXT = 'Mic Off';
 const RESTART_DELAY_MS = 100;
@@ -78,6 +79,8 @@ export const useVoiceListener = ({ keepListening, onHeard }) => {
         recognition.onerror = (event) => {
             console.error('[Speech Recognition] Error:', event.error);
             if (!ERROR_TEXTS[event.error]) return;
+            recordFlow('speech-error', { reason: event.error });
+            if (event.error === 'not-allowed') recordFlow('mic-denied', { reason: 'speech' });
             micRefusedRef.current = true;
             setHasFailed(true);
             setSpokenText(ERROR_TEXTS[event.error]);

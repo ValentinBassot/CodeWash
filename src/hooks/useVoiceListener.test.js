@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { MIC_OFF_TEXT, useVoiceListener } from './useVoiceListener';
 import { resetSpeechRecognitionProvider, setSpeechRecognitionProvider } from '../io/speechRecognition';
+import { monitor } from '../monitoring';
 
 class FakeRecognition {
     static instances = [];
@@ -30,8 +31,11 @@ const listen = (options = {}) => {
     return { ...hook, onHeard, state };
 };
 
+const flows = () => monitor.getEvents().filter((event) => event.type === 'flow');
+
 beforeEach(() => {
     vi.useFakeTimers();
+    monitor.clear();
     FakeRecognition.instances = [];
     FakeRecognition.failOnStart = false;
     FakeRecognition.failOnStop = false;
@@ -41,6 +45,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+    monitor.clear();
     resetSpeechRecognitionProvider();
     vi.useRealTimers();
     vi.restoreAllMocks();
@@ -208,5 +213,28 @@ describe('useVoiceListener', () => {
         setSpeechRecognitionProvider(() => undefined);
         act(() => result.current.toggle('reading'));
         expect(result.current.spokenText).toBe('Mic not available');
+    });
+});
+
+describe('useVoiceListener monitoring', () => {
+    it('records a speech error with its reason', () => {
+        const { result } = listen();
+        act(() => result.current.start('reading'));
+        act(() => last().onerror({ error: 'network' }));
+        expect(flows()).toMatchObject([{ name: 'speech-error', detail: { reason: 'network' } }]);
+    });
+
+    it('records a refused microphone on top of the speech error', () => {
+        const { result } = listen();
+        act(() => result.current.start('reading'));
+        act(() => last().onerror({ error: 'not-allowed' }));
+        expect(flows().map((event) => event.name)).toEqual(['speech-error', 'mic-denied']);
+    });
+
+    it('records nothing for a silence', () => {
+        const { result } = listen();
+        act(() => result.current.start('reading'));
+        act(() => last().onerror({ error: 'no-speech' }));
+        expect(flows()).toEqual([]);
     });
 });

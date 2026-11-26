@@ -14,6 +14,7 @@ import {
 import { generateChallenge } from '../domain/challenge';
 import { isSpeechRecognitionAvailable } from '../io/speechRecognition';
 import { useVoiceListener } from './useVoiceListener';
+import { recordFlow } from '../monitoring';
 import { BASE_ASSETS, HOSTILE_MOBS, SKILL_DATA } from '../constants/gameData';
 import {
     playClick,
@@ -45,6 +46,7 @@ export const useBattleSession = ({ skills, setSkills, stats, setStats, checkAchi
     const [showLevelRestored, setShowLevelRestored] = useState(false);
     const [bossHealing, setBossHealing] = useState(null);
     const battlingSkillIdRef = useRef(null);
+    const battleEndedRef = useRef(false);
     const liveRef = useRef({ skills, stats, playerHealth });
     const challengeDataRef = useRef(null);
     const damageIdRef = useRef(0);
@@ -56,6 +58,14 @@ export const useBattleSession = ({ skills, setSkills, stats, setStats, checkAchi
     useEffect(() => {
         battlingSkillIdRef.current = battlingSkillId;
     }, [battlingSkillId]);
+
+    useEffect(
+        () => () => {
+            const skillId = battlingSkillIdRef.current;
+            if (skillId && !battleEndedRef.current) recordFlow('battle-end', { skillId, outcome: 'left' });
+        },
+        [],
+    );
 
     useEffect(() => {
         liveRef.current = { skills, stats, playerHealth };
@@ -99,6 +109,8 @@ export const useBattleSession = ({ skills, setSkills, stats, setStats, checkAchi
         }
 
         playDeath();
+        battleEndedRef.current = true;
+        recordFlow('battle-end', { skillId: battlingId, outcome: 'death' });
         setShowDeathOverlay(true);
         recordStats((current) => ({ ...current, totalDeaths: (current.totalDeaths || 0) + 1 }));
         if (battlingId) {
@@ -170,6 +182,7 @@ export const useBattleSession = ({ skills, setSkills, stats, setStats, checkAchi
             setChallengeData(generateChallenge(skillConfig.challengeType, challengeDiff));
             if (skillConfig.challengeType === 'reading') voice.markHandled();
         } else if (skillConfig.id === 'memory') {
+            recordFlow('battle-end', { skillId, outcome: 'completed' });
             setBattlingSkillId(null);
             setBattleDifficulty(null);
         }
@@ -224,11 +237,15 @@ export const useBattleSession = ({ skills, setSkills, stats, setStats, checkAchi
         setBattleDifficulty(challengeDiff);
         setChallengeData(generateChallenge(skill.challengeType, challengeDiff));
         playClick();
+        battleEndedRef.current = false;
+        recordFlow('battle-start', { skillId: id });
         startBGM();
         if (skill.challengeType === 'reading' && isSpeechRecognitionAvailable()) voice.start(id);
     };
 
     const endBattle = () => {
+        if (!battleEndedRef.current) recordFlow('battle-end', { skillId: battlingSkillIdRef.current, outcome: 'left' });
+        battleEndedRef.current = true;
         setBattlingSkillId(null);
         setBattleDifficulty(null);
         setChallengeData(null);
