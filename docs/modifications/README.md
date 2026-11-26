@@ -109,3 +109,4 @@ Every change to the project has its own short note in this folder, written in th
 | 098 | 2026-11-26 | [A runbook for running, repairing and restoring the game](098-runbook.md) |
 | 099 | 2026-11-26 | [The launchers of the browser and of the Windows Electron are tested](099-launchers-tested.md) |
 | 130 | 2026-11-26 | [ShieldCI can generate the pipelines on the mirror](130-shieldci-workflow.md) |
+| 132 | 2026-11-26 | [The chests and the farm follow the theme](132-no-minecraft-in-themes.md) |

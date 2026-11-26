@@ -5,7 +5,7 @@ import { THEME_ROSTERS } from './themeRosters';
 import { THEME_CONFIG } from './gameData';
 
 const onDisk = (src) => existsSync(resolve('public', src));
-const KINDS = ['hostile', 'miniboss', 'boss'];
+const KINDS = ['hostile', 'miniboss', 'boss', 'chest', 'memory'];
 
 describe('theme rosters', () => {
     it('the themes with their own mobs are the same in the rosters and in the configuration', () => {
