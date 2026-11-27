@@ -21,7 +21,7 @@
 ## Limits
 
 - The Windows and macOS calls were not run on those systems: only the decision is tested, with fake system functions.
-- The speech service of Chromium stays unreachable in Electron (no Google key, see D66): the typed word remains the fallback.
+- The speech service of Chromium stays unreachable in Electron (no Google key, see D67 and 096): the typed word remains the fallback.
 
 ## Proof
 

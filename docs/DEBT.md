@@ -184,6 +184,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D64 | Three effects of `SkillCard` copy a prop into state after it changes (the typed answer, the hit flash, the wrong-word flash); the lint rule `react-hooks/set-state-in-effect` was switched off for this file | `SkillCard.jsx`, `eslint.config.js` | complexity | 2 | 3 | 6 | S | P3 | Done (072) |
 | D65 | Three `eslint-disable-next-line` remain although the team rule is to fix the configuration instead: two for `react-hooks/set-state-in-effect` (`SafeImage.jsx`, `ProfileCard.jsx`) and one for `react-hooks/exhaustive-deps` (`App.jsx`, the login date) | `SafeImage.jsx:6`, `ProfileCard.jsx:13`, `App.jsx` | lint exception | 2 | 3 | 6 | S | P3 | Identified |
 | D66 | About 315 comment lines remain in 20 source files although the team rule is no comments in the code (explanations go in `docs/` and in the PRs) | `App.jsx`, `soundManager.js`, `gameUtils.js`, drawers and others | comments | 1 | 5 | 5 | M | P3 | Identified |
+| D67 | Voice recognition fails in the Electron app with the error `network`: Chromium in Electron has no Google speech key, although the microphone itself works | `electron/main.cjs`, `src/io/speechRecognition.js` | external dependency | 4 | 5 | 20 | M | P1 | Worked around (096): `npm run start:browser` opens the game in Chrome or Edge, where it works; Electron keeps the typed word |
 
 ### Phase 4: features and their debt
 
