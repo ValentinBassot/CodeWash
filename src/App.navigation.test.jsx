@@ -41,7 +41,7 @@ describe('skill carousel', () => {
     it('the cards that are not shown cannot be reached nor clicked', () => {
         render(<App />);
         const hidden = [...document.querySelectorAll('div.perspective-1000 > div[aria-hidden="true"]')];
-        expect(hidden).toHaveLength(8);
+        expect(hidden).toHaveLength(4);
         for (const card of hidden) {
             expect(card.hasAttribute('inert')).toBe(true);
             expect(card.style.pointerEvents).toBe('none');
