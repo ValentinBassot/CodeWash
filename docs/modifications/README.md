@@ -117,4 +117,11 @@ Every change to the project has its own short note in this folder, written in th
 | 106 | 2026-11-26 | [The bug report is safer: cleaned log, characters, private report, capture timeout](106-bug-report-hardening.md) |
 | 110 | 2026-11-26 | [The game opens on a loading screen with a real percentage and starts lighter](110-loading-screen-with-percentage.md) |
 | 111 | 2026-11-26 | [The home screen does less work while it waits](111-lighter-home-screen.md) |
+| 120 | 2026-11-26 | [The events of the app are recorded in a bounded local buffer](120-monitoring-event-collector.md) |
+| 121 | 2026-11-26 | [The events are summed up and a ticket can be suggested](121-monitoring-analysis.md) |
+| 122 | 2026-11-26 | [Sensors watch the errors, the long tasks and the frames](122-monitoring-sensors.md) |
+| 123 | 2026-11-26 | [A crash of React shows a clear screen instead of a white page](123-error-boundary.md) |
+| 124 | 2026-11-26 | [The App health drawer shows the summary](124-health-drawer.md) |
+| 125 | 2026-11-26 | [The battle and speech hooks record key moments](125-monitoring-key-moments.md) |
+| 126 | 2026-11-26 | [The summary can be written in the Prometheus text format](126-prometheus-text-export.md) |
 | 130 | 2026-11-26 | [ShieldCI can generate the pipelines on the mirror](130-shieldci-workflow.md) |
