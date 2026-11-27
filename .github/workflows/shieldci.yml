@@ -1,0 +1,30 @@
+name: ShieldCI
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Print the generated workflows in the job summary without opening a pull request
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: Richonn/ShieldCI@ab5388255e0c2f860312ccc1b0ea8d9a025aafe9
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          language: node
+          docker: 'false'
+          kubernetes: 'false'
+          enable-trivy: 'false'
+          enable-gitleaks: 'true'
+          enable-sast: 'true'
+          sast-tool: semgrep
+          dry-run: ${{ inputs.dry-run }}

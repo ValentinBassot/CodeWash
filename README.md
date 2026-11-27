@@ -58,10 +58,11 @@ Every variable is optional. Values are read once at startup by `src/config.js`, 
 `.github/workflows/ci.yml` runs on every pull request and push to `develop` and `main`:
 
 1. **quality** (Linux): `npm ci`, `npm run doctor`, `npm run lint`, `npm run format:check`, `npm run test:coverage` (fails if coverage drops below the thresholds in `vite.config.js`), `npm run build`. The coverage table is shown in the run summary and the full report is uploaded as an artifact.
-2. **windows-build**: builds `LevelUpRPG-Portable.exe` and uploads it as an artifact.
-3. **release**: only on a push to `main`, publishes the `.exe` as a GitHub release.
+2. **sast** (Linux): Semgrep scan of the code, fails on any finding.
+3. **windows-build**: builds `LevelUpRPG-Portable.exe` and uploads it as an artifact.
+4. **release**: only on a push to `main`, publishes the `.exe` as a GitHub release.
 
-No merge on red: a failing step blocks the pull request.
+No merge on red: a failing step blocks the pull request. The runs of the mirror are at https://github.com/ValentinBassot/CodeWash/actions. The list of gates and how to reproduce each one locally is in [docs/QUALITY_GATES.md](docs/QUALITY_GATES.md).
 
 ## Troubleshooting
 
@@ -91,5 +92,8 @@ docs/                 Project documentation
 - [docs/DEBT.md](docs/DEBT.md): technical debt register (map, metrics, items, risk matrix, plan)
 - [docs/modifications/](docs/modifications/README.md): one short note per change (what, why, proof)
 - [docs/adr/](docs/adr/README.md): architecture decision records (why the design is the way it is)
+- [docs/RUNBOOK.md](docs/RUNBOOK.md): run, build, test, troubleshoot, restore a save, what to do when the CI fails
+- [docs/SHIELDCI.md](docs/SHIELDCI.md): run ShieldCI on the mirror and create the token it needs
+- [docs/QUALITY_GATES.md](docs/QUALITY_GATES.md): the CI gates, how to reproduce them locally, branch protection on the mirror
 - [docs/LAUNCH.md](docs/LAUNCH.md): first-launch log, the problems found and how they were fixed
 - [docs/MICROPHONE_FEATURE.md](docs/MICROPHONE_FEATURE.md): how voice recognition works in the Reading game

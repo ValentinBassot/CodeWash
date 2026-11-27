@@ -7,6 +7,9 @@ on:
     branches: [develop, main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -63,8 +66,25 @@ jobs:
       - name: Build
         run: npm run build
 
+  sast:
+    runs-on: ubuntu-latest
+    env:
+      SEMGREP_SEND_METRICS: 'off'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Semgrep
+        run: pip install semgrep==1.187.0
+
+      - name: Static application security testing
+        run: semgrep scan --config p/javascript --config p/react --error --metrics=off
+
   windows-build:
-    needs: quality
+    needs: [quality, sast]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
