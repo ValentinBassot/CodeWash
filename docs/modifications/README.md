@@ -108,6 +108,13 @@ Every change to the project has its own short note in this folder, written in th
 | 097 | 2026-11-26 | [A security scan in the CI and the list of quality gates](097-sast-and-quality-gates.md) |
 | 098 | 2026-11-26 | [A runbook for running, repairing and restoring the game](098-runbook.md) |
 | 099 | 2026-11-26 | [The launchers of the browser and of the Windows Electron are tested](099-launchers-tested.md) |
+| 100 | 2026-11-26 | [The game keeps the last errors of the page in memory](100-error-log.md) |
+| 101 | 2026-11-26 | [A bug ticket is a pure, tested object](101-ticket-domain.md) |
+| 102 | 2026-11-26 | [Tickets and the optional GitHub token are stored through profileStorage](102-ticket-storage.md) |
+| 103 | 2026-11-26 | [The game can create a GitHub issue](103-github-issues.md) |
+| 104 | 2026-11-26 | [A report can hold a screenshot, the game file and the full JSON report](104-report-attachments.md) |
+| 105 | 2026-11-26 | [The bug button opens a bug report drawer](105-bug-report-drawer.md) |
+| 106 | 2026-11-26 | [The bug report is safer: cleaned log, characters, private report, capture timeout](106-bug-report-hardening.md) |
 | 110 | 2026-11-26 | [The game opens on a loading screen with a real percentage and starts lighter](110-loading-screen-with-percentage.md) |
 | 111 | 2026-11-26 | [The home screen does less work while it waits](111-lighter-home-screen.md) |
 | 130 | 2026-11-26 | [ShieldCI can generate the pipelines on the mirror](130-shieldci-workflow.md) |

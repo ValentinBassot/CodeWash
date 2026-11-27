@@ -197,7 +197,7 @@ Measured on 2026-11-06 on the code as received. Each line gives the command, so 
 | D34 | Music and sounds not tied to the theme | `soundManager.js:7-13` | hardcoded values | 3 | 5 | 15 | M | P2 | Identified |
 | D35 | Minecraft branding hard-coded | `gameData.jsx:411-416`, `achievements.js`, UI texts | hardcoded values | 3 | 5 | 15 | M | P2 | Identified |
 | D36 | No translation system: UI texts hard-coded in English | `src/components/**`, `gameData.jsx`, `achievements.js` | hardcoded values | 3 | 5 | 15 | L | P2 | Identified |
-| D37 | Bug report button opens a placeholder | `BugReportModal.jsx` | missing feature | 3 | 5 | 15 | M | P2 | Pinned (022) |
+| D37 | Bug report button opens a placeholder | `BugReportModal.jsx` | missing feature | 3 | 5 | 15 | M | P2 | Done (100 to 106) |
 | D38 | 201 MB of uncompressed WAV shipped in the `.exe` | `public/assets/sounds/` | large assets | 4 | 4 | 16 | L | P1 | Identified |
 | D39 | Speech recognition feels very slow | `App.jsx:999-1090`, `SkillCard.jsx:266-282` | I/O in domain | 3 | 5 | 15 | M | P2 | Identified |
 | D40 | Achievements copy the mob, boss and miniboss lists by hand | `achievements.js` | duplication | 3 | 3 | 9 | S | P2 | Identified |
