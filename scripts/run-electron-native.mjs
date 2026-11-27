@@ -26,13 +26,14 @@ export const launchNative = ({
     return launcher;
 };
 
-if (process.argv[1] === fileURLToPath(import.meta.url))
-    launchNative({
-        platform: process.platform,
-        env: process.env,
-        kernel: release(),
-        browser: canOpenInBrowser(),
-        openInBrowser,
-        runWindows,
-        runLocal,
-    });
+export const nodeSystem = () => ({
+    platform: process.platform,
+    env: process.env,
+    kernel: release(),
+    browser: canOpenInBrowser(),
+    openInBrowser,
+    runWindows,
+    runLocal,
+});
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) launchNative(nodeSystem());

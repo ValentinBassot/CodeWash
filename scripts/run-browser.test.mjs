@@ -1,5 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EventEmitter } from 'node:events';
+import { execFileSync, spawn } from 'node:child_process';
+import { get } from 'node:http';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
     PORT,
@@ -7,6 +11,9 @@ import {
     browserCandidates,
     canOpenInBrowser,
     findBrowser,
+    listen,
+    nodeSystem,
+    openInBrowser,
     profileDirectory,
     runBrowser,
     staticHandler,
@@ -214,5 +221,117 @@ describe('canOpenInBrowser', () => {
             },
         });
         expect(seen[0]).toMatch(/^\/mnt\/c\//);
+    });
+});
+
+describe('listen', () => {
+    const folders = [];
+    const servers = [];
+
+    afterEach(() => {
+        servers.splice(0).forEach((server) => server.close());
+        folders.splice(0).forEach((folder) => rmSync(folder, { recursive: true, force: true }));
+    });
+
+    const serve = async (port = 0) => {
+        const folder = mkdtempSync(path.join(tmpdir(), 'codewash-site-'));
+        folders.push(folder);
+        writeFileSync(path.join(folder, 'index.html'), '<p>hello</p>');
+        const server = await listen(folder, port);
+        servers.push(server);
+        return server;
+    };
+
+    const fetchPage = (port) =>
+        new Promise((resolve, reject) => {
+            get(`http://127.0.0.1:${port}/`, (response) => {
+                let body = '';
+                response.on('data', (chunk) => {
+                    body += chunk;
+                });
+                response.on('end', () => resolve({ status: response.statusCode, body }));
+            }).on('error', reject);
+        });
+
+    it('serves the folder on the local address', async () => {
+        const server = await serve();
+        expect(await fetchPage(server.address().port)).toEqual({ status: 200, body: '<p>hello</p>' });
+    });
+
+    it('rejects when the port is already taken', async () => {
+        const first = await serve();
+        await expect(serve(first.address().port)).rejects.toThrow(/EADDRINUSE/);
+    });
+});
+
+describe('nodeSystem', () => {
+    it('plugs the real Node functions', () => {
+        const system = nodeSystem();
+        expect(system.execFile).toBe(execFileSync);
+        expect(system.spawnProcess).toBe(spawn);
+        expect(system.listen).toBe(listen);
+        expect(system.log).toBe(console.error);
+        expect(system.context.platform).toBe(process.platform);
+        expect(system.dist).toBe(path.join(process.cwd(), 'dist'));
+    });
+
+    it('sets the exit code of the process', () => {
+        const before = process.exitCode;
+        try {
+            nodeSystem().setExitCode(0);
+            expect(process.exitCode).toBe(0);
+        } finally {
+            process.exitCode = before;
+        }
+    });
+});
+
+describe('openInBrowser', () => {
+    const setup = (context = {}) => {
+        const child = new EventEmitter();
+        const server = { close: vi.fn() };
+        const system = {
+            context: {
+                platform: 'linux',
+                env: { WSL_DISTRO_NAME: 'Ubuntu' },
+                kernel: WSL_KERNEL,
+                home: '/home/a',
+                exists: () => true,
+                ...context,
+            },
+            dist: '/site',
+            execFile: vi.fn(() => 'C:\\Users\\a\\AppData\\Local\r\n'),
+            spawnProcess: vi.fn(() => child),
+            listen: vi.fn(() => Promise.resolve(server)),
+            log: vi.fn(),
+            setExitCode: vi.fn(),
+        };
+        return { system, child };
+    };
+
+    it('serves the build, opens Chrome with the Windows profile and reports the exit code', async () => {
+        const { system, child } = setup();
+        const done = openInBrowser(system);
+        await vi.waitFor(() => expect(system.spawnProcess).toHaveBeenCalled());
+        expect(system.listen).toHaveBeenCalledWith('/site', PORT);
+        expect(system.execFile).toHaveBeenCalledWith('cmd.exe', ['/c', 'echo %LOCALAPPDATA%'], {
+            encoding: 'utf8',
+            cwd: '/mnt/c',
+        });
+        const [command, args, options] = system.spawnProcess.mock.calls[0];
+        expect(command).toBe('/mnt/c/Program Files/Google/Chrome/Application/chrome.exe');
+        expect(args).toContain('--user-data-dir=C:\\Users\\a\\AppData\\Local\\CodeWash\\browser');
+        expect(options).toEqual({ stdio: 'inherit' });
+        child.emit('exit', 3);
+        await done;
+        expect(system.setExitCode).toHaveBeenCalledWith(3);
+    });
+
+    it('reports a failure when no browser is installed', async () => {
+        const { system } = setup({ exists: () => false });
+        await openInBrowser(system);
+        expect(system.log).toHaveBeenCalledWith(expect.stringContaining('No Chrome or Edge found'));
+        expect(system.setExitCode).toHaveBeenCalledWith(1);
+        expect(system.spawnProcess).not.toHaveBeenCalled();
     });
 });

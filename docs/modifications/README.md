@@ -105,3 +105,5 @@ Every change to the project has its own short note in this folder, written in th
 | 094 | 2026-11-16 | [The game asks for the microphone when it opens](094-microphone-permission.md) |
 | 095 | 2026-11-17 | [The Electron app opens the system microphone settings when the microphone is blocked](095-microphone-system-settings.md) |
 | 096 | 2026-11-17 | [The game opens in Chrome or Edge, where voice recognition works](096-start-in-browser.md) |
+| 097 | 2026-11-26 | [A security scan in the CI and the list of quality gates](097-sast-and-quality-gates.md) |
+| 099 | 2026-11-26 | [The launchers of the browser and of the Windows Electron are tested](099-launchers-tested.md) |

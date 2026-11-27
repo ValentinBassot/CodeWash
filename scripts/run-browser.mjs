@@ -133,7 +133,7 @@ export const runBrowser = ({
     );
 };
 
-const listen = (dir, port) =>
+export const listen = (dir, port) =>
     new Promise((resolve, reject) => {
         const server = createServer(staticHandler(dir));
         server.once('error', reject);
@@ -156,17 +156,27 @@ export const canOpenInBrowser = (context = systemContext()) =>
         exists: context.exists,
     }) !== null;
 
-export const openInBrowser = () =>
-    runBrowser({
-        ...systemContext(),
-        dist: path.join(root, 'dist'),
-        windowsLocalAppData: () =>
-            execFileSync('cmd.exe', ['/c', 'echo %LOCALAPPDATA%'], { encoding: 'utf8', cwd: '/mnt/c' }).trim(),
-        startServer: listen,
-        launch: (command, args) => spawn(command, args, { stdio: 'inherit' }),
-        log: console.error,
-    }).then((code) => {
+export const nodeSystem = () => ({
+    context: systemContext(),
+    execFile: execFileSync,
+    spawnProcess: spawn,
+    listen,
+    log: console.error,
+    dist: path.join(root, 'dist'),
+    setExitCode: (code) => {
         process.exitCode = code;
-    });
+    },
+});
+
+export const openInBrowser = (system = nodeSystem()) =>
+    runBrowser({
+        ...system.context,
+        dist: system.dist,
+        windowsLocalAppData: () =>
+            system.execFile('cmd.exe', ['/c', 'echo %LOCALAPPDATA%'], { encoding: 'utf8', cwd: '/mnt/c' }).trim(),
+        startServer: system.listen,
+        launch: (command, args) => system.spawnProcess(command, args, { stdio: 'inherit' }),
+        log: system.log,
+    }).then(system.setExitCode);
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) openInBrowser();

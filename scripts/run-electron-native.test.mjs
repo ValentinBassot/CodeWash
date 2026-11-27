@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { launchNative, pickLauncher } from './run-electron-native.mjs';
+import { canOpenInBrowser, openInBrowser } from './run-browser.mjs';
+import { runWindows } from './run-electron-windows.mjs';
+import { runLocal } from './run-electron.mjs';
+import { launchNative, nodeSystem, pickLauncher } from './run-electron-native.mjs';
 
 const WSL_KERNEL = '6.6.114.1-microsoft-standard-WSL2';
 
@@ -69,5 +72,17 @@ describe('launchNative', () => {
         expect(runLocal).toHaveBeenCalledTimes(1);
         expect(runWindows).not.toHaveBeenCalled();
         expect(openInBrowser).not.toHaveBeenCalled();
+    });
+});
+
+describe('nodeSystem', () => {
+    it('plugs the real launchers and the machine', () => {
+        const system = nodeSystem();
+        expect(system.platform).toBe(process.platform);
+        expect(system.env).toBe(process.env);
+        expect(system.browser).toBe(canOpenInBrowser());
+        expect(system.openInBrowser).toBe(openInBrowser);
+        expect(system.runWindows).toBe(runWindows);
+        expect(system.runLocal).toBe(runLocal);
     });
 });
