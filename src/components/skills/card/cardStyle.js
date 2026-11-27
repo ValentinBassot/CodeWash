@@ -74,7 +74,12 @@ const themedMob = (roster, mobName) => {
 };
 
 export const resolveMob = (skillId, mobName, themeMobs, roster) => {
-    if (skillId === 'memory') return { src: 'assets/skills/farm_icon.png', name: mobName };
+    if (skillId === 'memory') {
+        const themedFarm = roster?.memory?.[0];
+        return themedFarm
+            ? { src: themedFarm.src, name: themedFarm.name }
+            : { src: 'assets/skills/farm_icon.png', name: mobName };
+    }
     const themed = themedMob(roster, mobName);
     if (themed) return { src: themed.src, name: themed.name };
     if (skillId === 'cleaning') {

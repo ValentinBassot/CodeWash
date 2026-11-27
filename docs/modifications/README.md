@@ -125,3 +125,4 @@ Every change to the project has its own short note in this folder, written in th
 | 125 | 2026-11-26 | [The battle and speech hooks record key moments](125-monitoring-key-moments.md) |
 | 126 | 2026-11-26 | [The summary can be written in the Prometheus text format](126-prometheus-text-export.md) |
 | 130 | 2026-11-26 | [ShieldCI can generate the pipelines on the mirror](130-shieldci-workflow.md) |
+| 132 | 2026-11-26 | [The chests and the farm follow the theme](132-no-minecraft-in-themes.md) |

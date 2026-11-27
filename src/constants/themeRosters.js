@@ -12,6 +12,8 @@ export const THEME_ROSTERS = {
         hostile: kpop(['Angry Fighter', 'Flame Hunter', 'Energy Boy', 'Kneeling Boy', 'Star Wand Boy']),
         miniboss: kpop(['Chibi Girl', 'Pink Mic', 'Pink Singer']),
         boss: kpop(['Purple Singer', 'Fiery Hunter']),
+        chest: kpop(['Pink Mic', 'Chibi Girl', 'Star Wand Boy', 'Kneeling Boy', 'Energy Boy', 'Pink Singer']),
+        memory: kpop(['Chibi Girl']),
     },
     pokemon: {
         hostile: pokemon([
@@ -38,5 +40,7 @@ export const THEME_ROSTERS = {
         ]),
         miniboss: pokemon(['Arcanine', 'Alakazam', 'Machamp', 'Gyarados']),
         boss: pokemon(['Mewtwo', 'Charizard', 'Dragonite', 'Lugia']),
+        chest: pokemon(['Geodude', 'Onix', 'Snorlax', 'Psyduck', 'Meowth', 'Zubat']),
+        memory: pokemon(['Eevee']),
     },
 };

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import BattleBody from './BattleBody';
 import { SKILL_DATA } from '../../../constants/gameData';
@@ -25,6 +25,14 @@ const setup = (id, props = {}) => {
 };
 
 describe('BattleBody', () => {
+    beforeEach(() => {
+        vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     it('shows the memory game with its pairs for the difficulty', () => {
         setup('memory');
         expect(document.querySelectorAll('div.perspective-1000')).toHaveLength(6);
